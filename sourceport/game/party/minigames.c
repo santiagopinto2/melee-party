@@ -6,31 +6,10 @@
 
 #include "party.h"
 
-/* ---- placeholder: a short free-for-all (until the real minigames land) ---- */
+extern const PartyMinigame mg_volleyball;
 
-static int ffa_frames;
-
-static void ffa_frame(void)
-{
-    if (++ffa_frames == 15 * 60) {
-        gm_8016B328();
-    }
-}
-
-static void ffa_setup(StartMeleeData* start)
-{
-    ffa_frames = 0;
-    party_rules_base(&start->rules, St_Kind_Battle);
-    start->rules.on_frame_start = ffa_frame;
-}
-
-static void ffa_result(s8 place[PARTY_PLAYERS])
-{
-    memset(place, 0, PARTY_PLAYERS);
-}
-
-static const PartyMinigame table[] = {
-    { "Free-for-all", "ffa", ffa_setup, NULL, ffa_result },
+static const PartyMinigame* const table[] = {
+    &mg_volleyball,
 };
 
 #define COUNT ((int) (sizeof table / sizeof table[0]))
@@ -42,14 +21,14 @@ int minigame_count(void)
 
 const PartyMinigame* minigame_get(int index)
 {
-    return &table[index >= 0 && index < COUNT ? index : 0];
+    return table[index >= 0 && index < COUNT ? index : 0];
 }
 
 int minigame_find(const char* id)
 {
     int i;
     for (i = 0; i < COUNT; i++) {
-        if (strcmp(table[i].id, id) == 0) {
+        if (strcmp(table[i]->id, id) == 0) {
             return i;
         }
     }

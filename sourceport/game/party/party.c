@@ -185,7 +185,9 @@ static void party_start(const VsModeData* vs)
             } while (ckind_taken(ck, i));
             pp->ckind = ck;
             pp->color = 0;
-            pp->slot_type = (vs == NULL && i == 0) ? Gm_PKind_Human : Gm_PKind_Cpu;
+            pp->slot_type = (vs == NULL && i == 0 && !party_env_int("MELEE_PARTY_ALL_CPU", 0))
+                                ? Gm_PKind_Human
+                                : Gm_PKind_Cpu;
             pp->cpu_level = 5;
             pp->nametag = GM_NAMETAG_COUNT;
         }
