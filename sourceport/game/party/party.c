@@ -263,9 +263,23 @@ static void board_prep(GameModeState* state)
     party_preload(start);
 }
 
+/* L+R+A+Start (No Contest) in any party match leaves the party for the menu. */
+static int quit(GameModeState* state)
+{
+    MatchExitInfo* exit = gm_GetGameModeStateExitData(state);
+    if (exit == NULL || exit->match_end.outcome != OUTCOME_NO_CONTEST) {
+        return 0;
+    }
+    party_log("quit (No Contest) at turn %d", party.turn);
+    gm_ChangeGameModeAfterCurrentScene(GM_MENU);
+    return 1;
+}
+
 static void board_decide(GameModeState* state)
 {
-    (void) state;
+    if (quit(state)) {
+        return;
+    }
     party.minigame = minigame_pick();
     party_log("turn %d: board done, minigame %s", party.turn, minigame_get(party.minigame)->name);
     party_preload_next(minigame_get(party.minigame)->stkind, minigame_get(party.minigame)->extra_ckind);
@@ -295,7 +309,10 @@ static void minigame_prep(GameModeState* state)
 
 static void minigame_decide(GameModeState* state)
 {
-    (void) state;
+    if (quit(state)) {
+        party.round = 0;
+        return;
+    }
     if (minigame_round_end()) {
         gm_SetNextGameModeStateId(PARTY_STATE_MINIGAME);
         return;
