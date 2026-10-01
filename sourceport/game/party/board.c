@@ -35,6 +35,7 @@
 #define DIE_MAX 10
 #define ARRIVE 2.5f      /* close enough to a space */
 #define STALL_FRAMES 600 /* a mover that cannot reach its space gives up */
+#define HUMAN_ROLL_WAIT 600
 
 enum SpaceKind { SPACE_BLUE, SPACE_RED };
 
@@ -131,6 +132,11 @@ static void say(const char* fmt, int a, int b)
 }
 
 /* ---- turn logic ---- */
+
+static int human_roll_wait(void)
+{
+    return party_env_int("MELEE_PARTY_AUTO_ROLL", 0) ? 30 : HUMAN_ROLL_WAIT;
+}
 
 static int mover_human(void)
 {
@@ -321,7 +327,10 @@ static void board_frame(void)
         bd.timer++;
         bd.die = (bd.timer / 3) % DIE_MAX + 1;
         party_hud_set(bd.text, bd.line_big, "%d", bd.die);
-        if (mover_human() ? a_pressed(party.mover) : bd.timer >= bd.cpu_wait) {
+        /* A human who does not press A rolls after HUMAN_ROLL_WAIT (an idle player online must
+         * not stop the party; frame-counted, so both sides roll on the same frame). */
+        if (mover_human() ? a_pressed(party.mover) || bd.timer >= human_roll_wait()
+                          : bd.timer >= bd.cpu_wait) {
             if (!mover_human()) {
                 bd.die = party_rand(DIE_MAX) + 1;   /* a human gets the number they stopped on */
             }

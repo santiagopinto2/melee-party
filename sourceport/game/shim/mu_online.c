@@ -1268,6 +1268,8 @@ void mu_online_start_melee(StartMeleeData* data)
     mu_online.rng_offset = be32(mu_online.match_state + MSRB_RNG_OFFSET);
     *HSD_RandSeedPtr = mu_online.rng_offset;
     mu_replay_apply_game_info(data, mu_online.match_state + MSRB_GAME_INFO_BLOCK);
+    /* Melee Party online: the party's match over the negotiated one (same on both sides). */
+    mu_party_online_start_melee(data);
     delay = mu_online.match_state[MSRB_DELAY_FRAMES];
     if (delay < MIN_DELAY) {
         delay = MIN_DELAY;
@@ -1291,8 +1293,11 @@ void mu_online_start_melee(StartMeleeData* data)
     mu_online_audio_match_start(mu_online.local_index, mu_online.input_source);
     logf_("online: match starts, local port %d, delay %d, rng offset %08X", mu_online.local_index,
           mu_online.delay, (int) mu_online.rng_offset);
-    /* SendGameInfo (8016E74C, right after InitOnlinePlay): every online match is recorded. */
-    mu_replay_online_start(data, mu_online.match_state);
+    /* SendGameInfo (8016E74C, right after InitOnlinePlay): every online match is recorded, except
+     * Melee Party's, which a replay could not play back. */
+    if (!mu_party_online_running()) {
+        mu_replay_online_start(data, mu_online.match_state);
+    }
 }
 
 /* What Slippi's recording reads from the online state (FlushFrameBuffer, SendGameEnd). */

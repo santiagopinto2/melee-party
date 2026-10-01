@@ -554,6 +554,11 @@ bool read_cosmetic(uint32_t offset, void* dst, uint32_t size, bool* ok) {
 bool g_slippi_menus_requested = true;   // --slippi-menus on|off
 bool g_slippi_menus = false;            // requested and the layer loaded
 bool g_party = true;                    // --party on|off: Melee Party (sourceport/game/party)
+// Melee Party's online identity: sha256("melee-party online protocol 1"). Change the string when
+// a change to the party would make two builds play different matches.
+const char* const kPartyFingerprint = "4889355cda6f9a3802a15f988126fe062d8fbb0672c4cb69a603ad3a6cff4460";
+// Online party: with --party on and no other mod content (whose own build Direct must advertise).
+bool party_online() { return g_party && g_view_alias.empty(); }
 struct SystemFile { std::string path; uint32_t start; std::vector<uint8_t> data; };
 std::vector<SystemFile> g_system_files;
 constexpr uint32_t kSystemFileBase = 0xC0000000u;   // past the mod overlay range (0xA0000000)
@@ -757,6 +762,7 @@ uint32_t h_game_options() {
          (host::options.vanilla_game ? MU_GAME_OPTION_VANILLA : 0u) |
          (g_slippi_menus ? MU_GAME_OPT_SLIPPI_MENUS : 0u) |
          (g_party && !g_replaying ? MU_GAME_OPTION_PARTY : 0u) |
+         (party_online() && !g_replaying ? MU_GAME_OPTION_PARTY_ONLINE : 0u) |
          (mods::status().tmce && !g_replaying ? MU_GAME_OPTION_TMCE : 0u) |
          (g_replaying ? g_replay_feature_options
                    : gx::RenderOptions::live_te_options() & (mods::status().te_owned ? 0x00007FF0u : 0u));
@@ -1159,6 +1165,16 @@ int32_t h_slippi_command(uint8_t command, const uint8_t* payload, uint32_t paylo
 // build the opponent is told follow it.
 slippi::online::LocalBuild content_build_for_mode(int mode) {
   const bool mods = !g_view_alias.empty();
+  // Melee Party over Direct: the opponent must run the same party (sourceport/game/party/
+  // party_online.c), so the party is advertised as a build of its own. A Direct connection to the
+  // retail game, another mod or another party protocol is refused by the existing build check.
+  if (party_online() && mode == 2) {
+    slippi::online::LocalBuild build;
+    build.mod_view = true;
+    build.fingerprint = kPartyFingerprint;
+    build.name = "Melee Party";
+    return build;
+  }
   const bool retail = mods && mode >= 0 && !(mode == 2 && gx::RenderOptions::live_mods_in_direct());
   slippi::online::LocalBuild build;
   build.mod_view = mods && !retail;

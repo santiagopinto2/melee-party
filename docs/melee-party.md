@@ -29,6 +29,49 @@ Then go to **VS. Mode → Tournament Melee**.
 | Bag Bash | Final Destination | Everyone against one Sandbag for 25 s. Damage you deal to it scores, and knocking it out of the stage scores 40. |
 | Food Frenzy | Battlefield | Food rains for 30 s. Pick food up with A to eat it. The player who eats the most wins. |
 
+## Playing online
+
+Online party works over Slippi Online's **Direct** mode, with the same connect codes, the same
+connection and the same rollback netcode as Slippi Direct.
+
+1. **Connect.** Both players run Melee Party with `--party on` (the default) and no other mod
+   active. Open Online Play → Direct, enter each other's connect code, and pick a character.
+2. **Play.** When both players lock in, the party starts. The two of you are P1 and P2, and two
+   CPUs join as P3 and P4. Every board turn, minigame and the podium is a separate online game.
+   Between games there is a short pause, about 2 seconds, while the next game is agreed, then it
+   starts by itself. You do not go back to the character select.
+3. **Finish.** When the party ends, both players return to the online character select.
+   L+R+A+Start in any party game, a disconnect, or an opponent who does not start the next game
+   within 30 seconds also ends the party there.
+
+How it fits together:
+
+- **Who can connect.** In Direct, the host tells the opponent it is the "Melee Party" build (an
+  identity of its own, `kPartyFingerprint` in `port/app/source_host.cpp`). The existing build
+  check then only connects two Melee Party builds of the same protocol. The retail game, Slippi
+  Dolphin and other mods are refused. Change the protocol string whenever a change to the party
+  would make two builds play different matches.
+- **Unranked and Teams.** These modes are unchanged and still play normal Melee.
+- **Rollback.** The party's state lives in the game DLL's memory, which the rollback snapshots
+  already cover. Nothing about rollback is party-specific.
+- **Idle players.** If a human doesn't press A on the board, they roll automatically after
+  10 seconds, so an idle player cannot stall the game.
+- **Replays.** Party games are not recorded as `.slp` replays, because a replay of one could not
+  be played back.
+
+### Testing online locally
+
+```
+MELEE_PARTY_ONLINE_TEST=1 MELEE_PARTY_TURNS=2 MELEE_PARTY_AUTO_ROLL=1   python tools/online_pair.py --exe build-review/port/Release/melee_source.exe     --script port/scripts/online_bot.txt --frames 16000
+```
+
+- `MELEE_PARTY_ONLINE_TEST=1` lets the local test pair, which connects through Unranked, play the
+  party.
+- `MELEE_PARTY_AUTO_ROLL=1` rolls for idle humans after half a second.
+- To force rollbacks, add `MELEE_NET_LAG_MS=80` to one of the two instances (run them with
+  `--only A` and `--only B`).
+- Each instance logs `checksums agree ... 0 mismatched` and `re-simulations` counts.
+
 ## Building
 
 Building follows [build-source-port.md](build-source-port.md).
@@ -47,9 +90,10 @@ decomp. Each hook is a few lines under `#ifdef MU_NATIVE`.
   assets (`party_draw.c`). Text is drawn with the game's own font (`party_hud.c`).
 - **Party state.** Players, coins, stars, the turn and a private random number generator live
   in the DLL. They carry over from one match to the next.
-- **Retail behaviour.** The hooks only act when the host sets `MU_GAME_OPTION_PARTY`. The host
-  never sets it during replay playback, and the game keeps it off online. With party off, the
-  menus, VS and online play are unchanged.
+- **Retail behaviour.** The hooks only act when the host sets `MU_GAME_OPTION_PARTY` (and, for
+  online, `MU_GAME_OPTION_PARTY_ONLINE`). The host never sets either during replay playback. The
+  online party runs only in Direct, against another Melee Party build. With party off, the menus,
+  VS and online play are unchanged.
 
 | File | Contents |
 |---|---|
@@ -58,6 +102,7 @@ decomp. Each hook is a few lines under `#ifdef MU_NATIVE`.
 | `minigames.c` | The minigame table, picking a minigame, and rewards |
 | `mg_volley.c`, `mg_sandbag.c`, `mg_food.c` | The three minigames |
 | `results.c` | The podium |
+| `party_online.c` | The party over Slippi Direct |
 
 ### Adding a minigame
 
@@ -79,6 +124,8 @@ Set these as environment variables for `melee_source.exe`.
 | `MELEE_PARTY_ORDER=food,volley,...` | Minigames in this order. |
 | `MELEE_PARTY_TURNS=n` | Number of turns. The default is 10. |
 | `MELEE_PARTY_SEED=n` | A fixed seed for the party's own random numbers. |
+| `MELEE_PARTY_AUTO_ROLL=1` | Idle humans roll after half a second instead of 10 seconds. |
+| `MELEE_PARTY_ONLINE_TEST=1` | Online party in any online mode, for the local test pair. |
 
 For example, to watch a whole three-turn party with CPUs:
 
@@ -91,4 +138,5 @@ For example, to watch a whole three-turn party with CPUs:
 - The board is a single 12-space loop on Final Destination.
 - Coin space events, items and shops are not implemented.
 - The CPU scripts are simple, and the ball in Volleyball needs tuning in real play.
-- Party is local only. The host does not offer it online or in replays.
+- Online party is for two players in Direct; Teams (four humans) is not supported.
+- Between online games the screen holds for about 2 seconds while the next game is agreed.

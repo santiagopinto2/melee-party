@@ -24,6 +24,7 @@ enum {
     PARTY_STATE_BOARD = 1,
     PARTY_STATE_MINIGAME = 2,
     PARTY_STATE_RESULTS = 3,   /* a scripted match: the podium */
+    PARTY_END = -1,
 };
 
 typedef struct PartyPlayer {
@@ -47,12 +48,21 @@ typedef struct PartyState {
     int minigame;    /* index into the minigame table of the one being played */
     u32 mg_played;   /* bit per minigame already played this cycle */
     int round;       /* sub-match of a minigame played in rounds, 0-based */
+    int phase;       /* the PARTY_STATE_* of the match being played */
     u32 rng;
 } PartyState;
 
 extern PartyState party;
 
 /* party.c */
+void party_start(const VsModeData* vs, u32 seed); /* NULL vs: CPUs (and P1 human) */
+int party_advance(int phase);                  /* the phase after a match, or PARTY_END */
+void party_setup_phase(int phase, StartMeleeData* start);
+void party_preload_phase(int phase);
+int party_test_minigame(void);
+
+/* party_online.c: the party over Slippi Direct (the online major's VS state). */
+int party_online_running(void);
 int party_rand(int n);                         /* 0..n-1 from the party's own stream */
 void party_fill_players(StartMeleeData* start); /* the four party players into a VS start */
 void party_preload(StartMeleeData* start);     /* fighters, stage and sound banks */

@@ -382,6 +382,9 @@ typedef struct MuHostApi {
 /* Melee Party (sourceport/game/party): the board mode on the Vs. menu's Tournament entry. Never
  * set during replay playback; the game also keeps it off online. */
 #define MU_GAME_OPTION_PARTY               0x20000000u
+/* Melee Party over Slippi Direct: set with MU_GAME_OPTION_PARTY when no other mod is active (the
+ * host then advertises the Melee Party build in Direct). */
+#define MU_GAME_OPTION_PARTY_ONLINE        0x40000000u
 #define MU_GAME_OPTION_TE_TOURNAMENT_SAFE                                                         \
     (MU_GAME_OPTION_TE_HOLD_START_PAUSE | MU_GAME_OPTION_TE_FROZEN_STAGES |                     \
      MU_GAME_OPTION_TE_CPU_ZELDA_SHEIK | MU_GAME_OPTION_TE_HANDICAP_STOCKS)

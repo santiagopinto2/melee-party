@@ -42,7 +42,8 @@ static int party_enabled(void)
 
 int mu_party_active(void)
 {
-    return installed && party_enabled() && gm_GetCurrentGameMode() == PARTY_MODE;
+    return (installed && party_enabled() && gm_GetCurrentGameMode() == PARTY_MODE) ||
+           party_online_running();
 }
 
 /* ---- helpers ---- */
@@ -180,13 +181,16 @@ static int ckind_taken(s8 ckind, int upto)
     return 0;
 }
 
-/* The CSS's players; empty slots become CPUs with characters nobody picked. */
-static void party_start(const VsModeData* vs)
+/* The CSS's players; empty slots become CPUs with characters nobody picked. seed 0: one from the
+ * game's generator (offline); online both sides pass the match's shared seed. */
+void party_start(const VsModeData* vs, u32 seed)
 {
     int i;
-    u32 seed = (u32) HSD_Randi(0x7FFFFFFF) ^ 0x9E3779B9u;
     int forced = party_env_int("MELEE_PARTY_SEED", 0);
 
+    if (seed == 0) {
+        seed = (u32) HSD_Randi(0x7FFFFFFF) ^ 0x9E3779B9u;
+    }
     memset(&party, 0, sizeof party);
     party.rng = forced ? (u32) forced : (seed ? seed : 1);
     party.max_turns = party_env_int("MELEE_PARTY_TURNS", 10);
@@ -252,15 +256,68 @@ static void css_decide(GameModeState* state)
         return;
     }
     gmVsMelee_ExitCss(state, &party_vs);
-    party_start(&party_vs);
+    party_start(&party_vs, 0);
     gm_SetNextGameModeStateId(PARTY_STATE_BOARD);
 }
 
-static void board_prep(GameModeState* state)
+int party_test_minigame(void)
 {
-    StartMeleeData* start = gm_GetGameModeStateEnterData(state);
-    board_setup(start);
-    party_preload(start);
+    return test_minigame;
+}
+
+/* What follows a party match: the next phase (a PARTY_STATE_*), or PARTY_END. Shared by the
+ * offline mode's states and the online party (party_online.c), so both play the same party. */
+int party_advance(int phase)
+{
+    switch (phase) {
+    case PARTY_STATE_BOARD:
+        party.minigame = minigame_pick();
+        party_log("turn %d: board done, minigame %s", party.turn, minigame_get(party.minigame)->name);
+        return PARTY_STATE_MINIGAME;
+    case PARTY_STATE_MINIGAME:
+        if (minigame_round_end()) {
+            return PARTY_STATE_MINIGAME;
+        }
+        minigame_finish();
+        if (test_minigame >= 0) {
+            return PARTY_STATE_MINIGAME;
+        }
+        return party.turn >= party.max_turns ? PARTY_STATE_RESULTS : PARTY_STATE_BOARD;
+    default:
+        party_log("party over");
+        return PARTY_END;
+    }
+}
+
+/* Sets up the match of a phase into start (stage, rules, players, callbacks). */
+void party_setup_phase(int phase, StartMeleeData* start)
+{
+    party.phase = phase;
+    switch (phase) {
+    case PARTY_STATE_BOARD:
+        board_setup(start);
+        break;
+    case PARTY_STATE_MINIGAME:
+        if (test_minigame >= 0) {
+            party.minigame = test_minigame;
+        }
+        minigame_setup(start);
+        break;
+    default:
+        results_setup(start);
+        break;
+    }
+}
+
+/* The next phase's fighters and stage, preloaded while the scene before it ends. */
+void party_preload_phase(int phase)
+{
+    if (phase == PARTY_STATE_MINIGAME) {
+        party_preload_next(minigame_get(party.minigame)->stkind,
+                           minigame_get(party.minigame)->extra_ckind);
+    } else if (phase == PARTY_STATE_BOARD || phase == PARTY_STATE_RESULTS) {
+        party_preload_next(St_Kind_Last, -1);
+    }
 }
 
 /* L+R+A+Start (No Contest) in any party match leaves the party for the menu. */
@@ -271,23 +328,11 @@ static int quit(GameModeState* state)
         return 0;
     }
     party_log("quit (No Contest) at turn %d", party.turn);
+    party.round = 0;
     gm_ChangeGameModeAfterCurrentScene(GM_MENU);
     return 1;
 }
 
-static void board_decide(GameModeState* state)
-{
-    if (quit(state)) {
-        return;
-    }
-    party.minigame = minigame_pick();
-    party_log("turn %d: board done, minigame %s", party.turn, minigame_get(party.minigame)->name);
-    party_preload_next(minigame_get(party.minigame)->stkind, minigame_get(party.minigame)->extra_ckind);
-    gm_SetNextGameModeStateId(PARTY_STATE_MINIGAME);
-}
-
-/* The end of the party. Until the party results screen exists (M4) the standings go to the log
- * and the party returns to the menu. */
 static void party_finish(void)
 {
     int i;
@@ -297,49 +342,26 @@ static void party_finish(void)
     gm_ChangeGameModeAfterCurrentScene(GM_MENU);
 }
 
-static void minigame_prep(GameModeState* state)
+static void match_prep(GameModeState* state)
 {
     StartMeleeData* start = gm_GetGameModeStateEnterData(state);
-    if (test_minigame >= 0) {
-        party.minigame = test_minigame;
-    }
-    minigame_setup(start);
+    party_setup_phase(state->id, start);
     party_preload(start);
 }
 
-static void minigame_decide(GameModeState* state)
+static void match_decide(GameModeState* state)
 {
+    int next;
     if (quit(state)) {
-        party.round = 0;
         return;
     }
-    if (minigame_round_end()) {
-        gm_SetNextGameModeStateId(PARTY_STATE_MINIGAME);
+    next = party_advance(state->id);
+    if (next == PARTY_END) {
+        party_finish();
         return;
     }
-    minigame_finish();
-    if (test_minigame >= 0) {
-        gm_SetNextGameModeStateId(PARTY_STATE_MINIGAME);
-        return;
-    }
-    if (party.turn >= party.max_turns) {
-        gm_SetNextGameModeStateId(PARTY_STATE_RESULTS);
-        return;
-    }
-    gm_SetNextGameModeStateId(PARTY_STATE_BOARD);
-}
-
-static void results_prep(GameModeState* state)
-{
-    StartMeleeData* start = gm_GetGameModeStateEnterData(state);
-    results_setup(start);
-    party_preload(start);
-}
-
-static void results_decide(GameModeState* state)
-{
-    (void) state;
-    party_finish();
+    party_preload_phase(next);
+    gm_SetNextGameModeStateId((u8) next);
 }
 
 static void party_on_load(void)
@@ -353,7 +375,7 @@ static void party_on_load(void)
     test_minigame = mg != NULL ? minigame_find(mg) : -1;
 
     if (party_env_int("MELEE_PARTY_SKIP_CSS", 0) || test_minigame >= 0) {
-        party_start(NULL);
+        party_start(NULL, 0);
         gm_SetGameModeStateId(test_minigame >= 0 ? PARTY_STATE_MINIGAME : PARTY_STATE_BOARD);
     }
     party_log("mode loaded%s", test_minigame >= 0 ? " (single minigame test)" : "");
@@ -367,11 +389,11 @@ static void party_on_unload(void)
 static GameModeState party_states[] = {
     { PARTY_STATE_CSS, lbDvdPreload_3, 0, css_prep, css_decide,
       { GS_CSS, &gmVsMelee_CssData, &gmVsMelee_CssData } },
-    { PARTY_STATE_BOARD, lbDvdPreload_3, 0, board_prep, board_decide,
+    { PARTY_STATE_BOARD, lbDvdPreload_3, 0, match_prep, match_decide,
       { GS_VS, &gmVsMelee_StartData, &gmVsMelee_VsExitInfo } },
-    { PARTY_STATE_MINIGAME, lbDvdPreload_3, 0, minigame_prep, minigame_decide,
+    { PARTY_STATE_MINIGAME, lbDvdPreload_3, 0, match_prep, match_decide,
       { GS_VS, &gmVsMelee_StartData, &gmVsMelee_VsExitInfo } },
-    { PARTY_STATE_RESULTS, lbDvdPreload_3, 0, results_prep, results_decide,
+    { PARTY_STATE_RESULTS, lbDvdPreload_3, 0, match_prep, match_decide,
       { GS_VS, &gmVsMelee_StartData, &gmVsMelee_VsExitInfo } },
     { GM_GAMEMODESTATE_TERMINATE },
 };
@@ -427,7 +449,7 @@ int mu_party_menu_enter(int previous_mode, unsigned char* menu_kind, unsigned ch
 /* ft/kinds/ftCommon/ftpickupitem.c: a fighter ate a healing item (food). */
 void mu_party_item_eaten(int slot, int item_kind)
 {
-    if (mu_party_active() && gm_GetCurrentSceneIndex() == PARTY_STATE_MINIGAME) {
+    if (mu_party_active() && party.phase == PARTY_STATE_MINIGAME) {
         minigame_item_eaten(slot, item_kind);
     }
 }
@@ -438,7 +460,7 @@ void mu_party_fighter_input(struct Fighter* fp)
     if (!mu_party_active()) {
         return;
     }
-    switch (gm_GetCurrentSceneIndex()) {
+    switch (party.phase) {
     case PARTY_STATE_BOARD:
         board_fighter_input(fp);
         break;

@@ -84,6 +84,14 @@ int mu_party_vs_menu_mode(int retail_mode);                /* mnmain.c Tournamen
 int mu_party_menu_enter(int previous_mode, unsigned char* menu_kind, unsigned char* hovered);
 void mu_party_fighter_input(struct Fighter* fp);           /* ft/fighter.c Fighter_procInput */
 void mu_party_item_eaten(int slot, int item_kind);         /* ftpickupitem.c: food eaten */
+/* Melee Party online (party/party_online.c): Slippi Direct between two Melee Party builds. */
+#define MU_OPTION_PARTY_ONLINE 0x40000000u
+struct GameModeState;
+struct StartMeleeData;
+int mu_party_online_running(void);
+int mu_party_online_vs_prep(struct GameModeState* state);   /* 1: the party set the match up */
+int mu_party_online_vs_decide(struct GameModeState* state); /* 1: the party chose the next state */
+void mu_party_online_start_melee(struct StartMeleeData* data);
 /* 20XX Tournament Edition features (shim/mu_te.c). mu_te(feature) is nonzero when the player turned
  * the feature on, 20XX TE is on, Tournament Mode allows it, and this is neither an online match nor
  * replay playback. Values match MU_GAME_OPTION_TE_* in mu_host.h. */
@@ -436,6 +444,7 @@ const char* mu_slippi_user_name(void);
 const char* mu_slippi_user_code(void);
 int mu_slippi_load_match_state(MuMatchState* out);        /* B3; 0 on success */
 const MuMatchState* mu_slippi_match_state(void);
+const MuSlippiSelections* mu_slippi_last_selections(void);   /* Melee Party online */
 void mu_slippi_find_opponent(int mode, const unsigned char* code_sjis18);   /* B4 */
 void mu_slippi_set_selections(const MuSlippiSelections* s);                /* B5 */
 void mu_slippi_cleanup_connections(void);                                   /* BA */

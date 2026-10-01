@@ -194,10 +194,19 @@ void mu_slippi_find_opponent(int mode, const unsigned char* code_sjis18)
     mu_slippi_cmd(CMD_FIND_OPPONENT, b, sizeof b, NULL, 0, NULL);
 }
 
+static MuSlippiSelections last_selections;
+
+/* The last selection sent (Melee Party online locks in again with it between its matches). */
+const MuSlippiSelections* mu_slippi_last_selections(void)
+{
+    return &last_selections;
+}
+
 /* Player Selections Transfer Buffer. */
 void mu_slippi_set_selections(const MuSlippiSelections* s)
 {
     u8 b[9];
+    last_selections = *s;
     b[0] = s->team_id;
     b[1] = s->char_id;
     b[2] = s->char_color;
@@ -586,6 +595,11 @@ static void sss_decide(GameModeState* state)
 /* VS ScenePrep (vanilla 801b1588), then InitOnlinePlay arms the scene as an online match. */
 static void vs_prep(GameModeState* state)
 {
+    /* Melee Party online: the party sets the match up (sourceport/game/party/party_online.c). */
+    if (mu_party_online_vs_prep(state)) {
+        mu_online_arm(slp.mode, gm_801677F0());
+        return;
+    }
     gmVsMelee_EnterVs(state, gmVsMelee_GetVsData(), NULL, NULL);
     mu_online_arm(slp.mode, gm_801677F0());
 }
@@ -630,6 +644,10 @@ static void vs_decide(GameModeState* state)
     int local;
     ssize_t i;
 
+    /* Melee Party online: the next party match, or back to the CSS when the party is over. */
+    if (mu_party_online_vs_decide(state)) {
+        return;
+    }
     /* gmvsmode.c onExitVs */
     gmVsMelee_ExitVs(state, gmVsMode_State_Results, gmVsMode_State_SuddenDeath);
     mei = gm_GetGameModeStateExitData(state);
