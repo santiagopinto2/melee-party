@@ -419,5 +419,6 @@ static void volley_result(s8 place[PARTY_PLAYERS])
 }
 
 const PartyMinigame mg_volleyball = {
-    "Volleyball", "volley", volley_setup, volley_fighter_input, volley_result,
+    "Volleyball", "volley", volley_setup, volley_fighter_input, volley_result, 0, NULL,
+    St_Kind_Last, -1,
 };

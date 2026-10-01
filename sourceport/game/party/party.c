@@ -122,20 +122,43 @@ void party_preload(StartMeleeData* start)
     int i;
 
     lbDvd_SetupVsPreloadCache();
-    for (i = 0; i < PARTY_PLAYERS; i++) {
-        cache->game_cache.entries[i].char_id = start->players[i].ckind;
-        cache->game_cache.entries[i].color = start->players[i].color;
+    /* Every slot a minigame uses, the fifth (Bag Bash's Sandbag) included. */
+    for (i = 0; i < GM_MAX_PLAYERS; i++) {
+        int used = start->players[i].slot_type != Gm_PKind_NA;
+        cache->game_cache.entries[i].char_id = used ? start->players[i].ckind : ChKind_None;
+        cache->game_cache.entries[i].color = used ? start->players[i].color : 0;
     }
     cache->game_cache.stkind = start->rules.stkind;
     lbDvd_80018254();
+    /* The loads are queued, not done: wait for them as the Slippi splash does, or a fighter new
+     * to this scene (Bag Bash's Sandbag after a board turn) starts with its files half read. */
+    lbDvd_80018C2C(199);
+    lbDvd_80017700(4);
 
     lbAudioAx_80026F2C(0x1C);
-    for (i = 0; i < PARTY_PLAYERS; i++) {
-        mask |= lbAudioAx_80026E84((CharacterKind) start->players[i].ckind);
+    for (i = 0; i < GM_MAX_PLAYERS; i++) {
+        if (start->players[i].slot_type != Gm_PKind_NA) {
+            mask |= lbAudioAx_80026E84((CharacterKind) start->players[i].ckind);
+        }
     }
     mask |= lbAudioAx_80026EBC((StKind) start->rules.stkind);
     lbAudioAx_8002702C(4, mask);
     lbAudioAx_80027168();
+}
+
+/* From a state's decide: the next match's fighters and stage, so they load while this scene ends
+ * and before the next one is prepared (the state runner preloads before the prep callback). */
+void party_preload_next(int stkind, int extra_ckind)
+{
+    static StartMeleeData next;
+    party_fill_players(&next);
+    if (extra_ckind >= 0) {
+        gm_SetupPlayerDefaults(&next.players[4]);
+        next.players[4].ckind = (s8) extra_ckind;
+        next.players[4].slot_type = Gm_PKind_Cpu;
+    }
+    next.rules.stkind = (u16) stkind;
+    party_preload(&next);
 }
 
 /* ---- the party ---- */
@@ -245,6 +268,7 @@ static void board_decide(GameModeState* state)
     (void) state;
     party.minigame = minigame_pick();
     party_log("turn %d: board done, minigame %s", party.turn, minigame_get(party.minigame)->name);
+    party_preload_next(minigame_get(party.minigame)->stkind, minigame_get(party.minigame)->extra_ckind);
     gm_SetNextGameModeStateId(PARTY_STATE_MINIGAME);
 }
 
@@ -272,16 +296,33 @@ static void minigame_prep(GameModeState* state)
 static void minigame_decide(GameModeState* state)
 {
     (void) state;
+    if (minigame_round_end()) {
+        gm_SetNextGameModeStateId(PARTY_STATE_MINIGAME);
+        return;
+    }
     minigame_finish();
     if (test_minigame >= 0) {
         gm_SetNextGameModeStateId(PARTY_STATE_MINIGAME);
         return;
     }
     if (party.turn >= party.max_turns) {
-        party_finish();
+        gm_SetNextGameModeStateId(PARTY_STATE_RESULTS);
         return;
     }
     gm_SetNextGameModeStateId(PARTY_STATE_BOARD);
+}
+
+static void results_prep(GameModeState* state)
+{
+    StartMeleeData* start = gm_GetGameModeStateEnterData(state);
+    results_setup(start);
+    party_preload(start);
+}
+
+static void results_decide(GameModeState* state)
+{
+    (void) state;
+    party_finish();
 }
 
 static void party_on_load(void)
@@ -312,6 +353,8 @@ static GameModeState party_states[] = {
     { PARTY_STATE_BOARD, lbDvdPreload_3, 0, board_prep, board_decide,
       { GS_VS, &gmVsMelee_StartData, &gmVsMelee_VsExitInfo } },
     { PARTY_STATE_MINIGAME, lbDvdPreload_3, 0, minigame_prep, minigame_decide,
+      { GS_VS, &gmVsMelee_StartData, &gmVsMelee_VsExitInfo } },
+    { PARTY_STATE_RESULTS, lbDvdPreload_3, 0, results_prep, results_decide,
       { GS_VS, &gmVsMelee_StartData, &gmVsMelee_VsExitInfo } },
     { GM_GAMEMODESTATE_TERMINATE },
 };
@@ -364,6 +407,14 @@ int mu_party_menu_enter(int previous_mode, unsigned char* menu_kind, unsigned ch
     return 1;
 }
 
+/* ft/kinds/ftCommon/ftpickupitem.c: a fighter ate a healing item (food). */
+void mu_party_item_eaten(int slot, int item_kind)
+{
+    if (mu_party_active() && gm_GetCurrentSceneIndex() == PARTY_STATE_MINIGAME) {
+        minigame_item_eaten(slot, item_kind);
+    }
+}
+
 /* ft/fighter.c Fighter_procInput, after the pad (or the CPU) and the replay hook. */
 void mu_party_fighter_input(struct Fighter* fp)
 {
@@ -373,6 +424,9 @@ void mu_party_fighter_input(struct Fighter* fp)
     switch (gm_GetCurrentSceneIndex()) {
     case PARTY_STATE_BOARD:
         board_fighter_input(fp);
+        break;
+    case PARTY_STATE_RESULTS:
+        results_fighter_input(fp);
         break;
     case PARTY_STATE_MINIGAME:
         if (party.minigame >= 0 && minigame_get(party.minigame)->fighter_input != NULL) {

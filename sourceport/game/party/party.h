@@ -23,7 +23,7 @@ enum {
     PARTY_STATE_CSS = 0,
     PARTY_STATE_BOARD = 1,
     PARTY_STATE_MINIGAME = 2,
-    PARTY_STATE_RESULTS = 3,
+    PARTY_STATE_RESULTS = 3,   /* a scripted match: the podium */
 };
 
 typedef struct PartyPlayer {
@@ -46,6 +46,7 @@ typedef struct PartyState {
     int star_space;
     int minigame;    /* index into the minigame table of the one being played */
     u32 mg_played;   /* bit per minigame already played this cycle */
+    int round;       /* sub-match of a minigame played in rounds, 0-based */
     u32 rng;
 } PartyState;
 
@@ -55,6 +56,7 @@ extern PartyState party;
 int party_rand(int n);                         /* 0..n-1 from the party's own stream */
 void party_fill_players(StartMeleeData* start); /* the four party players into a VS start */
 void party_preload(StartMeleeData* start);     /* fighters, stage and sound banks */
+void party_preload_next(int stkind, int extra_ckind);   /* the next scene's, from a decide */
 void party_rules_base(StartMeleeRules* rules, int stkind);
 int party_env_int(const char* name, int fallback);
 void party_log(const char* fmt, ...);
@@ -71,8 +73,14 @@ typedef struct PartyMinigame {
     const char* id;                            /* --party-minigame / MELEE_PARTY_MINIGAME */
     void (*setup)(StartMeleeData* start);      /* stage, rules and teams; players are filled */
     void (*fighter_input)(struct Fighter* fp); /* optional: after the pad or the CPU */
-    /* Placements, 0 = first; ties share a place. Called once, when the match ends. */
+    /* Placements, 0 = first; ties share a place. Called once, after the last round. */
     void (*result)(s8 place[PARTY_PLAYERS]);
+    int rounds;                                /* sub-matches (party.round); 0 or 1 = one */
+    void (*round_end)(void);                   /* after each sub-match, before the next setup */
+    /* What the match loads, known before it is set up: the files are preloaded while the scene
+     * before it ends (party_preload_next), as Home-Run Contest's CSS preloads the Sandbag. */
+    u16 stkind;
+    s8 extra_ckind;                            /* a fifth fighter (slot 4), or -1 */
 } PartyMinigame;
 
 int minigame_count(void);
@@ -80,6 +88,15 @@ const PartyMinigame* minigame_get(int index);
 int minigame_find(const char* id);             /* -1 if none */
 int minigame_pick(void);                       /* random, no repeat until all were played */
 void minigame_setup(StartMeleeData* start);    /* the chosen one, party.minigame */
+int minigame_round_end(void);                  /* 1 if the minigame has another round */
 void minigame_finish(void);                    /* placements into coins */
+
+/* minigames.c: a fighter ate an item (the party patch's hook in ftpickupitem.c). */
+void minigame_item_eaten(int slot, int item_kind);
+extern void (*minigame_on_eaten)(int slot, int item_kind);   /* set in a minigame's setup */
+
+/* results.c: the party's last match, the standings on a podium. */
+void results_setup(StartMeleeData* start);
+void results_fighter_input(struct Fighter* fp);
 
 #endif

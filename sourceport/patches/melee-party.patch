@@ -11,6 +11,21 @@ index ae50f7598..438df3ebe 100644
  #endif
              Fighter_procInput_Inner1(fp);
  
+diff --git a/src/melee/ft/kinds/ftCommon/ftpickupitem.c b/src/melee/ft/kinds/ftCommon/ftpickupitem.c
+index 0d0e9f7af..c480ad838 100644
+--- a/src/melee/ft/kinds/ftCommon/ftpickupitem.c
++++ b/src/melee/ft/kinds/ftCommon/ftpickupitem.c
+@@ -165,6 +165,10 @@ bool ftpickupitem_8009447C(Fighter_GObj* gobj, Item_GObj* item_gobj)
+             Item_8026A8EC(item_gobj);
+             break;
+         case It_Kind_Foods:
++#ifdef MU_NATIVE
++            /* Melee Party: Food Frenzy counts who ate it. */
++            mu_party_item_eaten(fp->player_idx, It_Kind_Foods);
++#endif
+             Fighter_8006CF5C(fp, it_8026B47C(item_gobj));
+             Item_8026A8EC(item_gobj);
+             break;
 diff --git a/src/melee/gm/gm_1A3F.c b/src/melee/gm/gm_1A3F.c
 index a10fc2904..ba4a696de 100644
 --- a/src/melee/gm/gm_1A3F.c

@@ -83,6 +83,7 @@ unsigned char mu_party_boot_mode(unsigned char mode);      /* gmboot.c bootOnLea
 int mu_party_vs_menu_mode(int retail_mode);                /* mnmain.c Tournament Melee */
 int mu_party_menu_enter(int previous_mode, unsigned char* menu_kind, unsigned char* hovered);
 void mu_party_fighter_input(struct Fighter* fp);           /* ft/fighter.c Fighter_procInput */
+void mu_party_item_eaten(int slot, int item_kind);         /* ftpickupitem.c: food eaten */
 /* 20XX Tournament Edition features (shim/mu_te.c). mu_te(feature) is nonzero when the player turned
  * the feature on, 20XX TE is on, Tournament Mode allows it, and this is neither an online match nor
  * replay playback. Values match MU_GAME_OPTION_TE_* in mu_host.h. */
