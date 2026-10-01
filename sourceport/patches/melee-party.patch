@@ -1,0 +1,71 @@
+diff --git a/src/melee/ft/fighter.c b/src/melee/ft/fighter.c
+index ae50f7598..438df3ebe 100644
+--- a/src/melee/ft/fighter.c
++++ b/src/melee/ft/fighter.c
+@@ -2046,6 +2046,8 @@ void Fighter_procInput(Fighter_GObj* gobj)
+ #ifdef MU_NATIVE
+             /* Slippi playback, RestoreGameFrame: the recorded inputs replace the pad's. */
+             mu_replay_input(fp);
++            /* Melee Party: the board walks fighters; minigames may steer them. */
++            mu_party_fighter_input(fp);
+ #endif
+             Fighter_procInput_Inner1(fp);
+ 
+diff --git a/src/melee/gm/gm_1A3F.c b/src/melee/gm/gm_1A3F.c
+index a10fc2904..ba4a696de 100644
+--- a/src/melee/gm/gm_1A3F.c
++++ b/src/melee/gm/gm_1A3F.c
+@@ -447,6 +447,8 @@ void gm_801A4510(void)
+ #ifdef MU_NATIVE
+     /* Slippi online menus, "Slippi Online Scene" main: the online major replaces GM_HANYU_CSS. */
+     mu_slippi_scene_install();
++    /* Melee Party: the party mode replaces GM_HANYU_SSS (sourceport/game/party). */
++    mu_party_scene_install();
+ #endif
+ #ifdef MU_NATIVE
+     /* General Codes, "Random CSS Music v3" picks the menu song once at boot as well. */
+diff --git a/src/melee/gm/gmboot.c b/src/melee/gm/gmboot.c
+index 6c08a34b5..a4e9c344c 100644
+--- a/src/melee/gm/gmboot.c
++++ b/src/melee/gm/gmboot.c
+@@ -80,7 +80,8 @@ void bootOnLeave(GameModeState* data)
+     // Gekko "boot to CSS" code changes scene_id to a hardcoded 2 (::GM_VS)
+ #ifdef MU_NATIVE
+     /* Slippi online menus, boot.asm: straight to the main menu, which opens the online submenu. */
+-    gm_ChangeGameModeAfterCurrentScene(mu_slippi_boot_mode(scene_data->mode_id));
++    gm_ChangeGameModeAfterCurrentScene(
++        mu_party_boot_mode(mu_slippi_boot_mode(scene_data->mode_id)));
+ #else
+     gm_ChangeGameModeAfterCurrentScene(scene_data->mode_id);
+ #endif
+diff --git a/src/melee/gm/gmmenumode.c b/src/melee/gm/gmmenumode.c
+index 4cc751176..c8b7dd391 100644
+--- a/src/melee/gm/gmmenumode.c
++++ b/src/melee/gm/gmmenumode.c
+@@ -108,6 +108,12 @@ void onEnter(GameModeState* scene)
+     if (previous_mode == GM_CHALLENGER_APPROACH) {
+         previous_mode = gm_801737D8();
+     }
++#ifdef MU_NATIVE
++    /* Melee Party: back from the party, on its Vs. menu entry. */
++    if (mu_party_menu_enter(previous_mode, &data->menu_kind, &data->hovered_selection)) {
++        return;
++    }
++#endif
+ #ifdef MU_NATIVE
+     /* Slippi online menus: back from the online major, and the first menu after boot, open the
+      * online submenu (OnReturnFromOnline, boot.asm OnFirstMenuLoad). */
+diff --git a/src/melee/mn/mnmain.c b/src/melee/mn/mnmain.c
+index 870aa23cc..b1d3c9015 100644
+--- a/src/melee/mn/mnmain.c
++++ b/src/melee/mn/mnmain.c
+@@ -2504,7 +2504,8 @@ void mn_8022D594(HSD_GObj* gp)
+             data = gm_GetCurrentSceneExitData();
+ #ifdef MU_NATIVE
+             /* General Codes, "Debug Menu": the Tournament entry opens the debug menu. */
+-            data->pending_mode = mu_general_codes() ? GM_DEBUG : GM_TOURNAMENT;
++            /* Melee Party: the entry opens the party when the host turned it on. */
++            data->pending_mode = mu_party_vs_menu_mode(mu_general_codes() ? GM_DEBUG : GM_TOURNAMENT);
+ #else
+             data->pending_mode = GM_TOURNAMENT;
+ #endif

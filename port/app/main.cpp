@@ -1442,6 +1442,9 @@ static int melee_main(int argc, char** argv) {
     else if (a == "--slippi-menus") { const std::string v = next();
       if (v != "on" && v != "off") { std::fprintf(stderr, "--slippi-menus on|off\n"); return 2; }
       source_port::set_slippi_menus(v == "on"); }
+    else if (a == "--party") { const std::string v = next();
+      if (v != "on" && v != "off") { std::fprintf(stderr, "--party on|off\n"); return 2; }
+      source_port::set_party(v == "on"); }
     else if (a == "--online-test") { if (!source_port::set_online_test(next())) {
       std::fprintf(stderr, "--online-test direct|unranked|teams[:<character>[:<color>]] (with --local-peer)\n"); return 2; } }
 #endif

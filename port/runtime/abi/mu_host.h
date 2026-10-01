@@ -379,6 +379,9 @@ typedef struct MuHostApi {
 /* Slippi's "Widescreen 16:9" optional code, native (shim/mu_gecko.c). Only what is drawn changes,
  * so it follows each player's own setting online and in replays. */
 #define MU_GAME_OPTION_WIDESCREEN          0x10000000u
+/* Melee Party (sourceport/game/party): the board mode on the Vs. menu's Tournament entry. Never
+ * set during replay playback; the game also keeps it off online. */
+#define MU_GAME_OPTION_PARTY               0x20000000u
 #define MU_GAME_OPTION_TE_TOURNAMENT_SAFE                                                         \
     (MU_GAME_OPTION_TE_HOLD_START_PAUSE | MU_GAME_OPTION_TE_FROZEN_STAGES |                     \
      MU_GAME_OPTION_TE_CPU_ZELDA_SHEIK | MU_GAME_OPTION_TE_HANDICAP_STOCKS)

@@ -553,6 +553,7 @@ bool read_cosmetic(uint32_t offset, void* dst, uint32_t size, bool* ok) {
 // mod assets. Any failure turns the menus off for the run instead of mixing vanilla and patched.
 bool g_slippi_menus_requested = true;   // --slippi-menus on|off
 bool g_slippi_menus = false;            // requested and the layer loaded
+bool g_party = true;                    // --party on|off: Melee Party (sourceport/game/party)
 struct SystemFile { std::string path; uint32_t start; std::vector<uint8_t> data; };
 std::vector<SystemFile> g_system_files;
 constexpr uint32_t kSystemFileBase = 0xC0000000u;   // past the mod overlay range (0xA0000000)
@@ -755,6 +756,7 @@ uint32_t h_game_options() {
          (gecko::option_widescreen ? MU_GAME_OPTION_WIDESCREEN : 0u) |   // the viewer's own, also in replays
          (host::options.vanilla_game ? MU_GAME_OPTION_VANILLA : 0u) |
          (g_slippi_menus ? MU_GAME_OPT_SLIPPI_MENUS : 0u) |
+         (g_party && !g_replaying ? MU_GAME_OPTION_PARTY : 0u) |
          (mods::status().tmce && !g_replaying ? MU_GAME_OPTION_TMCE : 0u) |
          (g_replaying ? g_replay_feature_options
                    : gx::RenderOptions::live_te_options() & (mods::status().te_owned ? 0x00007FF0u : 0u));
@@ -2183,6 +2185,7 @@ bool set_online_test(const char* spec) {
 }
 
 void set_slippi_menus(bool on) { g_slippi_menus_requested = on; }
+void set_party(bool on) { g_party = on; }
 
 void set_mod_directory(const char* path) {
   g_mod_layers.push_back({mods::LayerKind::Dir, std::filesystem::u8path(path)});

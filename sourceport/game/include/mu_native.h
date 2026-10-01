@@ -73,6 +73,16 @@ void mu_poll(void);
  * it loads, with Slippi's offscreen-bubble and nametag values. Nonzero while the player has it on. */
 #define MU_OPTION_WIDESCREEN 0x10000000u
 int mu_widescreen(void);
+/* Melee Party (sourceport/game/party): the board mode. Every hook returns the retail value unless
+ * the host set MU_OPTION_PARTY (latched at boot), and never in replays or online. */
+#define MU_OPTION_PARTY 0x20000000u
+struct Fighter;
+int mu_party_active(void);                                 /* the party mode is running */
+void mu_party_scene_install(void);                         /* gm_801A4510: takes GM_HANYU_SSS */
+unsigned char mu_party_boot_mode(unsigned char mode);      /* gmboot.c bootOnLeave */
+int mu_party_vs_menu_mode(int retail_mode);                /* mnmain.c Tournament Melee */
+int mu_party_menu_enter(int previous_mode, unsigned char* menu_kind, unsigned char* hovered);
+void mu_party_fighter_input(struct Fighter* fp);           /* ft/fighter.c Fighter_procInput */
 /* 20XX Tournament Edition features (shim/mu_te.c). mu_te(feature) is nonzero when the player turned
  * the feature on, 20XX TE is on, Tournament Mode allows it, and this is neither an online match nor
  * replay playback. Values match MU_GAME_OPTION_TE_* in mu_host.h. */

@@ -146,6 +146,9 @@ file(GLOB_RECURSE SHIM_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/sh
 # Replacements for SDK files written against the hardware itself (see the REMOVE_ITEM above).
 file(GLOB GXNATIVE_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/gxnative/*.c")
 list(APPEND SHIM_SOURCES ${GXNATIVE_SOURCES})
+# Melee Party: the board mode and its minigames (party/party.h).
+file(GLOB PARTY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/party/*.c")
+list(APPEND SHIM_SOURCES ${PARTY_SOURCES})
 # Akaneia's added fighters, native (akaneia/INTEGRATION.md): the registry and each fighter's own C.
 # The fighters themselves are work in progress: they build only with -DMU_AKANEIA_FIGHTERS=ON, so a
 # release never carries an unfinished fighter (the registry alone keeps every added fighter locked).
