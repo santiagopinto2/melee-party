@@ -31,13 +31,19 @@ Then go to **VS. Mode → Tournament Melee**.
 
 ## Playing online
 
-Online party works over Slippi Online's **Direct** mode, with the same connect codes, the same
-connection and the same rollback netcode as Slippi Direct.
+Online party works over Slippi Online with the existing connect codes, connection and rollback
+netcode. There are two ways in:
 
-1. **Connect.** Both players run Melee Party with `--party on` (the default) and no other mod
-   active. Open Online Play → Direct, enter each other's connect code, and pick a character.
-2. **Play.** When both players lock in, the party starts. The two of you are P1 and P2, and two
-   CPUs join as P3 and P4. Every board turn, minigame and the podium is a separate online game.
+| Players | Mode | How to connect |
+|---|---|---|
+| 2 | **Direct** | Enter each other's connect code. Two CPUs join as P3 and P4. |
+| 3 or 4 | **Teams** | Everyone enters the same connect code, the way Slippi Teams forms a private group. Any seat left empty becomes a CPU. |
+
+1. **Connect.** Every player runs Melee Party with `--party on` (the default) and no other mod
+   active. Open Online Play → Direct or Teams, enter the code, and pick a character. The team
+   colours on the Teams character select do not matter, because the party decides its own teams.
+2. **Play.** When everyone locks in, the party starts. Every board turn, minigame and the podium
+   is a separate online game.
    Between games there is a short pause, about 2 seconds, while the next game is agreed, then it
    starts by itself. You do not go back to the character select.
 3. **Finish.** When the party ends, both players return to the online character select.
@@ -46,12 +52,13 @@ connection and the same rollback netcode as Slippi Direct.
 
 How it fits together:
 
-- **Who can connect.** In Direct, the host tells the opponent it is the "Melee Party" build (an
-  identity of its own, `kPartyFingerprint` in `port/app/source_host.cpp`). The existing build
-  check then only connects two Melee Party builds of the same protocol. The retail game, Slippi
+- **Who can connect.** In Direct and Teams, the host tells the other players it is the "Melee
+  Party" build (an identity of its own, `kPartyFingerprint` in `port/app/source_host.cpp`). The
+  existing build check (`build_verdict`, which now applies the same-build rule to Teams for this
+  build) then only connects Melee Party builds of the same protocol. The retail game, Slippi
   Dolphin and other mods are refused. Change the protocol string whenever a change to the party
   would make two builds play different matches.
-- **Unranked and Teams.** These modes are unchanged and still play normal Melee.
+- **Unranked.** This mode is unchanged and still plays normal Melee.
 - **Rollback.** The party's state lives in the game DLL's memory, which the rollback snapshots
   already cover. Nothing about rollback is party-specific.
 - **Idle players.** If a human doesn't press A on the board, they roll automatically after
@@ -71,6 +78,9 @@ MELEE_PARTY_ONLINE_TEST=1 MELEE_PARTY_TURNS=2 MELEE_PARTY_AUTO_ROLL=1   python t
 - To force rollbacks, add `MELEE_NET_LAG_MS=80` to one of the two instances (run them with
   `--only A` and `--only B`).
 - Each instance logs `checksums agree ... 0 mismatched` and `re-simulations` counts.
+- For 3 or 4 players through the real Teams menus and connect-code entry, use
+  `MELEE_PARTY_TURNS=1 MELEE_PARTY_AUTO_ROLL=1 python tools/online_quad.py --players 4
+  --engines build-review/port/Release/melee_source.exe --lag-ms 40 --frames 14000`.
 
 ## Building
 
@@ -138,5 +148,6 @@ For example, to watch a whole three-turn party with CPUs:
 - The board is a single 12-space loop on Final Destination.
 - Coin space events, items and shops are not implemented.
 - The CPU scripts are simple, and the ball in Volleyball needs tuning in real play.
-- Online party is for two players in Direct; Teams (four humans) is not supported.
+- Online parties need 2 to 4 players. 3 or 4 players go through Teams, which requires the Slippi
+  matchmaking server to group everyone who entered the same code.
 - Between online games the screen holds for about 2 seconds while the next game is agreed.

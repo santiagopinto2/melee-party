@@ -1165,10 +1165,11 @@ int32_t h_slippi_command(uint8_t command, const uint8_t* payload, uint32_t paylo
 // build the opponent is told follow it.
 slippi::online::LocalBuild content_build_for_mode(int mode) {
   const bool mods = !g_view_alias.empty();
-  // Melee Party over Direct: the opponent must run the same party (sourceport/game/party/
-  // party_online.c), so the party is advertised as a build of its own. A Direct connection to the
-  // retail game, another mod or another party protocol is refused by the existing build check.
-  if (party_online() && mode == 2) {
+  // Melee Party over Direct (2 players) and Teams (up to 4): every player must run the same party
+  // (sourceport/game/party/party_online.c), so the party is advertised as a build of its own. A
+  // connection to the retail game, another mod or another party protocol is refused by the
+  // existing build check (build_verdict, which applies the same-build rule to Teams for it).
+  if (party_online() && (mode == 2 || mode == 3)) {
     slippi::online::LocalBuild build;
     build.mod_view = true;
     build.fingerprint = kPartyFingerprint;

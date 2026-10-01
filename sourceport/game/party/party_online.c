@@ -43,9 +43,11 @@ static int online_allowed(void)
     if (!(mu_game_options() & MU_OPTION_PARTY_ONLINE) || mu_replay_on()) {
         return 0;
     }
-    /* Direct only: the mode in which both sides are known to run this build. A local test pair
-     * (--local-peer) can play it in any mode with MELEE_PARTY_ONLINE_TEST=1. */
+    /* Direct (two players) and Teams (up to four, everyone entering the same code): the modes
+     * in which every player is known to run this build. A local test group (--local-peer) can play
+     * it in any mode with MELEE_PARTY_ONLINE_TEST=1. */
     return mu_slippi_state()->mode == MU_SLP_MODE_DIRECT ||
+           mu_slippi_state()->mode == MU_SLP_MODE_TEAMS ||
            party_env_int("MELEE_PARTY_ONLINE_TEST", 0) != 0;
 }
 

@@ -652,10 +652,12 @@ void prepare_online_match_state(std::vector<uint8_t>& q);
 // Direct with a mod: every opponent must be on the same mod build (or, at the player's word, send
 // no build: Slippi Dolphin with the same mod). Retail game: an opponent who says it is on a mod is
 // refused, since their fighters and stages would not exist here. Other modes play the retail game on
-// both sides; an opponent claiming a mod there is refused too.
+// both sides; an opponent claiming a mod there is refused too. Teams with a build of its own
+// (Melee Party, which plays its 4-player party there) follows the Direct rule: the same build only.
 int build_verdict(uint8_t remote_count, std::string* why) {
   if (!g_netplay) return 1;
-  const bool direct = g_last_search.mode == Matchmaking::DIRECT;
+  const bool direct = g_last_search.mode == Matchmaking::DIRECT ||
+                      (g_last_search.mode == Matchmaking::TEAMS && g_local_build.mod_view);
   bool waiting = false;
   for (int i = 0; i < remote_count; ++i) {
     const auto rb = g_netplay->GetRemoteBuild(i);
