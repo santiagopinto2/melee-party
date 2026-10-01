@@ -11,6 +11,7 @@
 #ifndef MU_HOST_H
 #define MU_HOST_H
 
+#include <stddef.h>
 #include <stdint.h>
 #include "mu_native_pose.h"
 #include "mu_lcancel_view.h"

@@ -427,8 +427,8 @@ BOOL OSGetResetSwitchState(void) { return mu_host->reset_switch(); }
 u32 OSGetPhysicalMemSize(void) { return 24u << 20; }
 u32 OSGetConsoleSimulatedMemSize(void) { return 24u << 20; }
 u32 OSGetSoundMode(void) { return (u32) mu_host->sound_mode(); }
-void OSSetSoundMode(unsigned long mode) { mu_host->set_sound_mode((int32_t) mode); }
-unsigned long OSGetProgressiveMode(void) { return (unsigned long) mu_host->progressive_mode(); }
+void OSSetSoundMode(u32 mode) { mu_host->set_sound_mode((int32_t) mode); }
+u32 OSGetProgressiveMode(void) { return (u32) mu_host->progressive_mode(); }
 void OSSetProgressiveMode(u32 mode) { mu_host->set_progressive_mode((int32_t) mode); }
 
 /* OSInit brought up the console's low memory, exceptions and heaps. The host has already placed

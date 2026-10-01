@@ -29,27 +29,53 @@ target_compile_definitions(game_flags INTERFACE MU_NATIVE VERSION_GALE01 BUILD_V
 target_compile_options(game_flags INTERFACE
   -O2 -g
   -include "${CMAKE_CURRENT_SOURCE_DIR}/include/mu_native.h"   # only C targets link game_flags
-  -mno-ms-bitfields          # the console compiler packs a u8 and a u16 bitfield into one run; the MS layout does not
   -fno-strict-aliasing       # the sources read floats through integer pointers throughout
   -fwrapv
   -fno-builtin               # no folding sin() at compile time or sqrt() into an instruction: the game's own maths decides
   -ffp-contract=on           # fuse a*b+c only inside one expression, as the console compiler did
   -fexec-charset=CP932       # the game's string literals are Shift-JIS at run time
   -w)
+if(WIN32)
+  # the console compiler packs a u8 and a u16 bitfield into one run; the MS layout does not (GCC's
+  # ELF targets use the GNU layout already)
+  target_compile_options(game_flags INTERFACE -mno-ms-bitfields)
+endif()
+# The ELF build (sourceport/cmake/linux-elf-*.cmake) for the Linux and Android hosts: a freestanding
+# shared object the host's own loader maps at its fixed address (port/platform/elf_loader.cpp). Its
+# C library calls are bound to the host process's at load time, so no glibc-only entry points:
+# no fortified variants, no stack-protector canary.
+if(MELEE_ELF_TARGET)
+  # long is 64 bits here (LP64), where the SDK's sources assume 32: s32/u32 are int (dolphin/types.h),
+  # and the SDK's own unsigned long pointers meeting u32 pointers stay warnings (GCC 14+ makes them
+  # errors). Struct fields declared long are audited separately (tools/lp64_long_audit.py).
+  target_compile_options(game_flags INTERFACE -fPIC -fno-stack-protector -U_FORTIFY_SOURCE
+    -D_FORTIFY_SOURCE=0 -fno-plt -Wno-error=incompatible-pointer-types)
+endif()
 # M0 evidence build only: counts non-finite inputs to the maths routines (include/mu_math_audit.h).
 option(MU_MATH_AUDIT "Count non-finite inputs to audited maths routines" OFF)
 if(MU_MATH_AUDIT)
   target_compile_definitions(game_flags INTERFACE MU_MATH_AUDIT)
 endif()
 set(MELEE_CPU_BASELINE "AVX2" CACHE STRING "Instruction set baseline, matching the host: AVX2, AVX or SSE2")
-if(MELEE_CPU_BASELINE STREQUAL "AVX2")
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+  # aarch64 always has fused multiply-add, as the PC baseline does with -mfma: -ffp-contract=on
+  # fuses the same expressions on both, which online play between them depends on.
+elseif(MELEE_CPU_BASELINE STREQUAL "AVX2")
   target_compile_options(game_flags INTERFACE -mavx2 -mfma)
 elseif(MELEE_CPU_BASELINE STREQUAL "AVX")
   target_compile_options(game_flags INTERFACE -mavx)
 endif()
 # Disc pointers are 32-bit slots holding real addresses, so everything the game can point at has to
 # sit below 4 GB: the image at a fixed base with relocation off, MEM1 placed by the host.
-set(LOW_IMAGE_LINK_OPTIONS -static-libgcc -static-libstdc++ -Wl,--disable-dynamicbase -Wl,--disable-high-entropy-va)
+if(MELEE_ELF_TARGET)
+  # Linked to run at its fixed address: the loader maps every segment at its link address.
+  set(LOW_IMAGE_LINK_OPTIONS -nostdlib -Wl,-Bsymbolic -Wl,-z,norelro -Wl,-z,max-page-size=0x10000
+    -Wl,--hash-style=both)
+  set(GAME_IMAGE_BASE_OPTION -Wl,-Ttext-segment=0x82800000)
+else()
+  set(LOW_IMAGE_LINK_OPTIONS -static-libgcc -static-libstdc++ -Wl,--disable-dynamicbase -Wl,--disable-high-entropy-va)
+  set(GAME_IMAGE_BASE_OPTION -Wl,--image-base,0x82800000)
+endif()
 
 add_executable(mu_disc_layout_test EXCLUDE_FROM_ALL tests/disc_layout.c shim/mu_disc_layout.c)
 set_target_properties(mu_disc_layout_test PROPERTIES C_STANDARD 11 C_EXTENSIONS ON)
@@ -181,9 +207,19 @@ set(TMCE "${CMAKE_CURRENT_SOURCE_DIR}/tmce")
 get_filename_component(TMCE_TOOLCHAIN_BIN "${CMAKE_C_COMPILER}" DIRECTORY)
 # No debug info: TM-CE declares types with the decomp's names (ColorOverlay, CollData...), and the
 # layout tools (tools/tmce/gdb_decomp_info.py) must find only the decomp's in melee_game.dbg.
-set(TMCE_FLAGS -O2 -g0 -funsigned-char -fno-strict-aliasing -fwrapv -mno-ms-bitfields -mcmodel=small
+set(TMCE_FLAGS -O2 -g0 -funsigned-char -fno-strict-aliasing -fwrapv -mcmodel=small
   -fno-builtin -ffp-contract=on -w)
-if(MELEE_CPU_BASELINE STREQUAL "AVX2")
+if(WIN32)
+  list(APPEND TMCE_FLAGS -mno-ms-bitfields)
+  set(TMCE_LD "${TMCE_TOOLCHAIN_BIN}/ld.exe")
+  set(TMCE_NM "${TMCE_TOOLCHAIN_BIN}/nm.exe")
+else()
+  list(APPEND TMCE_FLAGS -fPIC -fno-stack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0)
+  set(TMCE_LD "${CMAKE_LINKER}")
+  set(TMCE_NM "${CMAKE_NM}")
+endif()
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+elseif(MELEE_CPU_BASELINE STREQUAL "AVX2")
   list(APPEND TMCE_FLAGS -mavx2 -mfma)
 elseif(MELEE_CPU_BASELINE STREQUAL "AVX")
   list(APPEND TMCE_FLAGS -mavx)
@@ -203,7 +239,7 @@ function(tmce_module name exports)
   set(out "${CMAKE_CURRENT_BINARY_DIR}/tmce_${name}.o")
   add_custom_command(OUTPUT "${out}"
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../../tools/tmce/link_module.py"
-            --ld "${TMCE_TOOLCHAIN_BIN}/ld.exe" --objcopy "${CMAKE_OBJCOPY}" --name ${name} --exports "${exports}"
+            --ld "${TMCE_LD}" --nm "${TMCE_NM}" --objcopy "${CMAKE_OBJCOPY}" --name ${name} --exports "${exports}"
             ${keep} --redefine "${TMCE}/MexTK/mextk_redefine.txt" --out "${out}" $<TARGET_OBJECTS:tmce_${name}_objs>
     DEPENDS tmce_${name}_objs $<TARGET_OBJECTS:tmce_${name}_objs> "${TMCE}/MexTK/mextk_redefine.txt"
             "${CMAKE_CURRENT_SOURCE_DIR}/../../tools/tmce/link_module.py"
@@ -229,8 +265,11 @@ target_link_libraries(melee_game PRIVATE game_flags)
 # Right after MEM1 (see port/app/source_host.cpp): the image's statics then have physical addresses
 # GX can hold. The debug information goes to melee_game.dbg so the loaded image stays small enough
 # to fit below 64 MB physical; addr2line reads the .dbg.
-target_link_options(melee_game PRIVATE ${LOW_IMAGE_LINK_OPTIONS} -Wl,--image-base,0x82800000
+target_link_options(melee_game PRIVATE ${LOW_IMAGE_LINK_OPTIONS} ${GAME_IMAGE_BASE_OPTION}
   "-Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/melee_game.map")
+if(MELEE_ELF_TARGET)
+  target_link_libraries(melee_game PRIVATE gcc)   # compiler helpers, statically
+endif()
 add_custom_command(TARGET melee_game POST_BUILD
   COMMAND "${CMAKE_OBJCOPY}" --only-keep-debug $<TARGET_FILE:melee_game> $<TARGET_FILE_DIR:melee_game>/melee_game.dbg
   COMMAND "${CMAKE_OBJCOPY}" --strip-debug --add-gnu-debuglink=$<TARGET_FILE_DIR:melee_game>/melee_game.dbg $<TARGET_FILE:melee_game>
@@ -260,6 +299,7 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/extracted_spline.c"
   COMMAND "${Python3_EXECUTABLE}" "${MU_TOOLS}/fma_exact/extract_funcs.py"
           "${D}/src/sysdolphin/baselib/spline.c" "${CMAKE_CURRENT_BINARY_DIR}/extracted_spline.c" splGetHelmite
   DEPENDS "${D}/src/sysdolphin/baselib/spline.c" "${MU_TOOLS}/fma_exact/extract_funcs.py" VERBATIM)
+if(WIN32)
 add_library(mu_parity SHARED parity/parity_table.c parity/parity_stubs.c shim/mu_math.c $<TARGET_OBJECTS:sdk_math>
   "${CMAKE_CURRENT_BINARY_DIR}/extracted_lbcoll.c" "${CMAKE_CURRENT_BINARY_DIR}/extracted_mplib.c"
   "${CMAKE_CURRENT_BINARY_DIR}/extracted_spline.c"
@@ -269,6 +309,7 @@ add_library(mu_parity SHARED parity/parity_table.c parity/parity_stubs.c shim/mu
 set_target_properties(mu_parity PROPERTIES PREFIX "" C_STANDARD 11 C_EXTENSIONS ON)
 target_link_libraries(mu_parity PRIVATE game_flags)
 target_link_options(mu_parity PRIVATE ${LOW_IMAGE_LINK_OPTIONS} -Wl,--image-base,0x58000000)
+endif()
 
 # Record the actual configured game inputs for the source-only package audit.
 file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/native-game-sources.txt"

@@ -124,7 +124,7 @@ s32 CARDReadAsync(CARDFileInfo* fileInfo, void* buf, s32 length, s32 offset, CAR
     return mu_card_complete(callback, fileInfo->chan, CARDRead(fileInfo, buf, length, offset));
 }
 
-long CARDWrite(struct CARDFileInfo* fileInfo, void* buf, long length, long offset)
+s32 CARDWrite(struct CARDFileInfo* fileInfo, void* buf, s32 length, s32 offset)
 {
     s32 result = mu_host->card_write(fileInfo->chan, fileInfo->fileNo, buf, (uint32_t) length, (uint32_t) offset);
     if (result == MU_CARD_READY)
@@ -132,7 +132,7 @@ long CARDWrite(struct CARDFileInfo* fileInfo, void* buf, long length, long offse
     return result;
 }
 
-long CARDWriteAsync(struct CARDFileInfo* fileInfo, void* buf, long length, long offset, void (*callback)(long, long))
+s32 CARDWriteAsync(struct CARDFileInfo* fileInfo, void* buf, s32 length, s32 offset, void (*callback)(s32, s32))
 {
     return mu_card_complete((CARDCallback) callback, fileInfo->chan, CARDWrite(fileInfo, buf, length, offset));
 }

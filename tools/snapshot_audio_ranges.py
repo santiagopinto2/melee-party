@@ -20,18 +20,34 @@ import sys
 
 FILES = ("synth.c.obj", "axdriver.c.obj", "AXVPB.c.obj", "AXAux.c.obj", "AXCL.c.obj", "AXOut.c.obj",
          "AXAlloc.c.obj", "AXSPB.c.obj", "AXProf.c.obj")
-LINE = re.compile(r"^ \.(bss|data)\s+0x([0-9a-fA-F]+)\s+0x([0-9a-fA-F]+) (\S+)$")
+# PE maps name .bss and .data; ELF ones (the Linux and Android builds, objects named .c.o) also have
+# .data.rel.local and friends for data holding addresses, and put a long section name on a line of
+# its own with the addresses on the next.
+LINE = re.compile(r"^ \.(bss|data)(?:\.[\w.]+)?\s+0x([0-9a-fA-F]+)\s+0x([0-9a-fA-F]+) (\S+)$")
+WRAPPED = re.compile(r"^ \.(?:bss|data)(?:\.[\w.]+)?$")
+
+
+def object_name(path):
+    name = path.replace("\\", "/").rsplit("/", 1)[-1]
+    return name + "bj" if name.endswith(".c.o") else name
 
 
 def main():
     map_path, base, out_path = sys.argv[1], int(sys.argv[2], 16), sys.argv[3]
     rows = []
+    pending = None
     for line in open(map_path, encoding="utf-8", errors="replace"):
-        m = LINE.match(line.rstrip("\n"))
+        line = line.rstrip("\n")
+        if pending is not None:
+            line, pending = pending + line, None
+        elif WRAPPED.match(line):
+            pending = line
+            continue
+        m = LINE.match(line)
         if not m:
             continue
         section, address, size, obj = m.group(1), int(m.group(2), 16), int(m.group(3), 16), m.group(4)
-        name = obj.replace("\\", "/").rsplit("/", 1)[-1]
+        name = object_name(obj)
         if name in FILES and size:
             rows.append((address - base, size, section, name))
     missing = sorted(set(FILES) - {r[3] for r in rows})

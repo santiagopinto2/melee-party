@@ -22,6 +22,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--ld', required=True)
     ap.add_argument('--objcopy', required=True)
+    ap.add_argument('--nm', default=None)
     ap.add_argument('--name', required=True)
     ap.add_argument('--exports', default='-')
     ap.add_argument('--keep', action='append', default=[])
@@ -53,7 +54,7 @@ def main():
 
     # Only the names this module uses (MexTK has several names for some functions), each target once
     # per pass: objcopy refuses two renames to one name in a single map.
-    nm = os.path.join(os.path.dirname(a.ld), 'nm.exe')
+    nm = a.nm or os.path.join(os.path.dirname(a.ld), 'nm.exe')
     used = set()
     for line in subprocess.run([nm, kept], capture_output=True, text=True, check=True).stdout.splitlines():
         parts = line.split()

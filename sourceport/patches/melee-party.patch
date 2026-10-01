@@ -1,3 +1,32 @@
+diff --git a/libs/dolphin/include/dolphin/types.h b/libs/dolphin/include/dolphin/types.h
+index a5566ddb7..1750196f4 100644
+--- a/libs/dolphin/include/dolphin/types.h
++++ b/libs/dolphin/include/dolphin/types.h
+@@ -6,8 +6,9 @@ typedef unsigned char u8;
+ typedef signed short int s16;
+ typedef unsigned short int u16;
+ /* MU_NATIVE keeps the console's long (32 bits on Windows too): the native shims and the GX
+- * register block were written against it. */
+-#if defined(__MWERKS__) || defined(MU_NATIVE)
++ * register block were written against it. Where long is 64 bits (Linux, Android: LP64) the 32-bit
++ * types are int, so every structure keeps its console layout. */
++#if defined(__MWERKS__) || (defined(MU_NATIVE) && !defined(__LP64__))
+ typedef signed long s32;
+ typedef unsigned long u32;
+ #else
+diff --git a/libs/dolphin/src/dolphin/gx/GXDisplayList.c b/libs/dolphin/src/dolphin/gx/GXDisplayList.c
+index 9699e7da9..acd1029e1 100644
+--- a/libs/dolphin/src/dolphin/gx/GXDisplayList.c
++++ b/libs/dolphin/src/dolphin/gx/GXDisplayList.c
+@@ -38,7 +38,7 @@ void GXBeginDisplayList(void* list, u32 size)
+     GXSetCPUFifo((GXFifoObj*) &DisplayListFifo);
+ }
+ 
+-unsigned long GXEndDisplayList(void)
++u32 GXEndDisplayList(void)
+ {
+     u32 ov;
+     u32 reg;
 diff --git a/src/melee/ft/fighter.c b/src/melee/ft/fighter.c
 index ae50f7598..438df3ebe 100644
 --- a/src/melee/ft/fighter.c
