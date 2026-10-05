@@ -27,6 +27,60 @@ index 9699e7da9..acd1029e1 100644
  {
      u32 ov;
      u32 reg;
+diff --git a/src/melee/cm/camera.c b/src/melee/cm/camera.c
+index 83f2d6ead..5506f97a9 100644
+--- a/src/melee/cm/camera.c
++++ b/src/melee/cm/camera.c
+@@ -4151,6 +4151,37 @@ void Camera_800304E0(HSD_GObj* gobj)
+     }
+ }
+ 
++#ifdef MU_NATIVE
++/* Melee Party: a minigame may split the screen. The scene is drawn once per view, each with the
++ * view's own eye, fov, viewport and scissor (the erase only clears the view's own rectangle). */
++static void mu_camera_draw_views(HSD_GObj* gobj, intptr_t arg1)
++{
++    HSD_CObj* cobj = gobj->hsd_obj;
++    int views = mu_party_camera_views();
++    HSD_RectF32 viewport;
++    Scissor scissor;
++    f32 aspect;
++    int i;
++
++    if (views <= 1) {
++        fn_800301D0(gobj, arg1);
++        return;
++    }
++    viewport = cobj->viewport;
++    scissor = cobj->scissor;
++    aspect = HSD_CObjGetAspect(cobj);
++    /* Last view first: every pass renders its shadows in the top-left corner of the frame before
++     * drawing, which only the first view (the left one) covers again. */
++    for (i = views - 1; i >= 0; i--) {
++        mu_party_camera_view(i, cobj);
++        fn_800301D0(gobj, arg1);
++    }
++    cobj->viewport = viewport;
++    cobj->scissor = scissor;
++    HSD_CObjSetAspect(cobj, aspect);
++}
++#endif
++
+ void Camera_Create(void)
+ {
+     HSD_GObj* gobj;
+@@ -4166,7 +4197,11 @@ void Camera_Create(void)
+         HSD_GObjObject_80390A70(gobj, HSD_GObj_CameraKind, c);
+     }
+ 
++#ifdef MU_NATIVE
++    GObj_SetupGXLinkMax(gobj, mu_camera_draw_views, 2);
++#else
+     GObj_SetupGXLinkMax(gobj, fn_800301D0, 2);
++#endif
+     HSD_GObj_SetupProc(gobj, fn_8002F360, 0x12);
+ }
+ 
 diff --git a/src/melee/ft/fighter.c b/src/melee/ft/fighter.c
 index ae50f7598..5022c8749 100644
 --- a/src/melee/ft/fighter.c

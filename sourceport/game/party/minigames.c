@@ -10,12 +10,14 @@ extern const PartyMinigame mg_volleyball;
 extern const PartyMinigame mg_sandbag;
 extern const PartyMinigame mg_food;
 extern const PartyMinigame mg_domination;
+extern const PartyMinigame mg_dungeon;
 
 static const PartyMinigame* const table[] = {
     &mg_volleyball,
     &mg_sandbag,
     &mg_food,
     &mg_domination,
+    &mg_dungeon,
 };
 
 /* Set by the minigame being played; called from the party patch's food hook. */

@@ -93,6 +93,9 @@ int mu_party_special_menu_mode(int selection);             /* Special Melee subm
 int mu_party_vs_submenu(int selection);                    /* Vs. menu: boards or minigames */
 int mu_party_special_back(int retail_selection);           /* Special Melee submenu: B */
 void mu_party_item_eaten(int slot, int item_kind);         /* ftpickupitem.c: food eaten */
+struct HSD_CObj;
+int mu_party_camera_views(void);                           /* cm/camera.c: views a frame (split screen) */
+void mu_party_camera_view(int view, struct HSD_CObj* cobj); /* sets the camera up for one of them */
 /* Melee Party online (party/party_online.c): Slippi Direct between two Melee Party builds. */
 #define MU_OPTION_PARTY_ONLINE 0x40000000u
 struct GameModeState;

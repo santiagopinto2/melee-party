@@ -122,6 +122,10 @@ typedef struct PartyMinigame {
     float (*knockback)(struct Fighter* fp, float kb);
     /* fighter_input drops every pad input (the minigame plays the fighters itself) */
     u8 owns_input;
+    /* optional: a split screen. The match camera draws the scene camera_views() times a frame,
+     * calling camera_view(i, cobj) before each to set that view's camera and viewport. */
+    int (*camera_views)(void);
+    void (*camera_view)(int view, struct HSD_CObj* cobj);
 } PartyMinigame;
 
 int minigame_count(void);

@@ -120,3 +120,10 @@ void party_hud_color(HSD_Text* t, int idx, GXColor color)
         HSD_SisLib_803A74F0(t, idx, &color);
     }
 }
+
+void party_hud_move(HSD_Text* t, int idx, float x, float y)
+{
+    if (t != NULL && idx >= 0) {
+        HSD_SisLib_803A746C(t, idx, x, y);
+    }
+}

@@ -22,5 +22,10 @@ void party_draw_floor_arrow(GXColor color, float y, float x, float z, float dx, 
                             float width);
 /* A slice of a flat disc on the floor, from angle a0 to a1 (radians, 0 = +x, toward +z). */
 void party_draw_floor_sector(GXColor color, float x, float y, float z, float r, float a0, float a1);
+/* `count` triangles of one color, nine floats each (three corners' x, y, z). */
+void party_draw_tris(GXColor color, const float* xyz, int count);
+/* A box from (x0, y0, z0) to (x1, y1, z1): its top in `top`, its sides in `side`. */
+void party_draw_box(GXColor top, GXColor side, float x0, float y0, float z0, float x1, float y1,
+                    float z1);
 
 #endif

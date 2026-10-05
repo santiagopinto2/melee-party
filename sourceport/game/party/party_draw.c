@@ -151,3 +151,48 @@ void party_draw_floor_sector(GXColor color, float x, float y, float z, float r, 
     }
     GXEnd();
 }
+
+void party_draw_tris(GXColor color, const float* xyz, int count)
+{
+    int i;
+    if (count <= 0) {
+        return;
+    }
+    mpLib_SetupDraw(color);
+    GXBegin(GX_TRIANGLES, GX_VTXFMT0, (u16) (3 * count));
+    for (i = 0; i < 3 * count; i++) {
+        GXPosition3f32(xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
+    }
+    GXEnd();
+}
+
+void party_draw_box(GXColor top, GXColor side, float x0, float y0, float z0, float x1, float y1,
+                    float z1)
+{
+    mpLib_SetupDraw(side);
+    GXBegin(GX_QUADS, GX_VTXFMT0, 16);
+    GXPosition3f32(x0, y0, z1);   /* front */
+    GXPosition3f32(x1, y0, z1);
+    GXPosition3f32(x1, y1, z1);
+    GXPosition3f32(x0, y1, z1);
+    GXPosition3f32(x0, y0, z0);   /* back */
+    GXPosition3f32(x0, y1, z0);
+    GXPosition3f32(x1, y1, z0);
+    GXPosition3f32(x1, y0, z0);
+    GXPosition3f32(x0, y0, z0);   /* left */
+    GXPosition3f32(x0, y0, z1);
+    GXPosition3f32(x0, y1, z1);
+    GXPosition3f32(x0, y1, z0);
+    GXPosition3f32(x1, y0, z0);   /* right */
+    GXPosition3f32(x1, y1, z0);
+    GXPosition3f32(x1, y1, z1);
+    GXPosition3f32(x1, y0, z1);
+    GXEnd();
+    mpLib_SetupDraw(top);
+    GXBegin(GX_QUADS, GX_VTXFMT0, 4);
+    GXPosition3f32(x0, y1, z0);
+    GXPosition3f32(x0, y1, z1);
+    GXPosition3f32(x1, y1, z1);
+    GXPosition3f32(x1, y1, z0);
+    GXEnd();
+}

@@ -622,6 +622,31 @@ float mu_party_knockback(struct Fighter* fp, float kb)
     return kb;
 }
 
+static const PartyMinigame* split_minigame(void)
+{
+    const PartyMinigame* mg;
+    if (!mu_party_active() || party.phase != PARTY_STATE_MINIGAME || party.minigame < 0) {
+        return NULL;
+    }
+    mg = minigame_get(party.minigame);
+    return mg->camera_views != NULL && mg->camera_view != NULL ? mg : NULL;
+}
+
+/* cm/camera.c: how many times the match camera draws the scene this frame (a split screen). */
+int mu_party_camera_views(void)
+{
+    const PartyMinigame* mg = split_minigame();
+    return mg != NULL ? mg->camera_views() : 1;
+}
+
+void mu_party_camera_view(int view, struct HSD_CObj* cobj)
+{
+    const PartyMinigame* mg = split_minigame();
+    if (mg != NULL) {
+        mg->camera_view(view, cobj);
+    }
+}
+
 /* ft/fighter.c, once the fighter's model is placed at cur_pos (Fighter_procMap's end and
  * Fighter_procAccessory). */
 void mu_party_fighter_drawn(struct Fighter* fp)

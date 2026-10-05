@@ -15,5 +15,6 @@ HSD_Text* party_hud_text(void);       /* NULL if the HUD could not be created */
 int party_hud_line(HSD_Text* t, float x, float y, float scale, GXColor color);
 void party_hud_set(HSD_Text* t, int idx, const char* fmt, ...);
 void party_hud_color(HSD_Text* t, int idx, GXColor color);
+void party_hud_move(HSD_Text* t, int idx, float x, float y);
 
 #endif
