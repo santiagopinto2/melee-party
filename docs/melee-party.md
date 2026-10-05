@@ -55,7 +55,7 @@ netcode. There are two ways in:
 | Players | Mode | How to connect |
 |---|---|---|
 | 2 | **Direct** | Enter each other's connect code. Two CPUs join as P3 and P4. |
-| 3 or 4 | **Teams** | Everyone enters the same connect code, the way Slippi Teams forms a private group. Any seat left empty becomes a CPU. |
+| 4 | **Teams** | All four enter the same connect code, the way Slippi Teams forms a private group. Slippi's matchmaking server only forms that group once four players have entered the code, so three players cannot start a Teams party this way. |
 
 1. **Connect.** Every player runs Melee Party with `--party on` (the default) and no other mod
    active. Open Online Play → Direct or Teams, enter the code, and pick a character. The team
@@ -102,7 +102,8 @@ MELEE_PARTY_ONLINE_TEST=1 MELEE_PARTY_TURNS=2 MELEE_PARTY_AUTO_ROLL=1   python t
 - To force rollbacks, add `MELEE_NET_LAG_MS=80` to one of the two instances (run them with
   `--only A` and `--only B`).
 - Each instance logs `checksums agree ... 0 mismatched` and `re-simulations` counts.
-- For 3 or 4 players through the real Teams menus and connect-code entry, use
+- For 3 or 4 players through the Teams menus and connect-code entry, connected to each other
+  directly rather than through Slippi's matchmaking server, use
   `MELEE_PARTY_TURNS=1 MELEE_PARTY_AUTO_ROLL=1 python tools/online_quad.py --players 4
   --engines build-review/port/Release/melee_source.exe --lag-ms 40 --frames 14000`.
 
@@ -207,6 +208,8 @@ For example, to watch a whole three-turn party with CPUs:
 - The roulette has no Goomba bribe and no free-choice pockets: it picks one of its four ways at
   random.
 - The CPU scripts are simple, and the ball in Volleyball needs tuning in real play.
-- Online parties need 2 to 4 players. 3 or 4 players go through Teams, which requires the Slippi
-  matchmaking server to group everyone who entered the same code.
+- Online parties through Slippi's servers are for 2 players (Direct) or 4 (Teams). Slippi's
+  matchmaking server forms a Teams group only once four players entered the code, so three
+  players have no way in yet. The 3-player test (`tools/online_quad.py --players 3`) connects
+  the instances to each other directly and does not go through that server.
 - Between online games the screen holds for about 2 seconds while the next game is agreed.
