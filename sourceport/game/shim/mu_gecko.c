@@ -80,6 +80,11 @@ static struct {
 
 static int ucf_port(const Fighter* fp)
 {
+    /* Melee Party drops every input of a fighter it walks (the board, the results, some
+     * minigames): UCF reads the raw pad after that, and would hand the sticks back. */
+    if (mu_party_owns_input((Fighter*) fp)) {
+        return -1;
+    }
     return fp->pad_port < 4 ? fp->pad_port : -1;
 }
 

@@ -28,7 +28,7 @@ index 9699e7da9..acd1029e1 100644
      u32 ov;
      u32 reg;
 diff --git a/src/melee/ft/fighter.c b/src/melee/ft/fighter.c
-index ae50f7598..438df3ebe 100644
+index ae50f7598..5022c8749 100644
 --- a/src/melee/ft/fighter.c
 +++ b/src/melee/ft/fighter.c
 @@ -2046,6 +2046,8 @@ void Fighter_procInput(Fighter_GObj* gobj)
@@ -40,6 +40,51 @@ index ae50f7598..438df3ebe 100644
  #endif
              Fighter_procInput_Inner1(fp);
  
+@@ -2682,6 +2684,8 @@ void Fighter_procMap(Fighter_GObj* gobj)
+ #ifdef MU_NATIVE
+         /* Slippi recording, ResetLCancelStatus (8006C324). */
+         mu_replay_lcancel_reset(fp);
++        /* Melee Party: the board places fighters around its ring, off the 2D line. */
++        mu_party_fighter_map(fp);
+ #endif
+         HSD_JObjSetTranslate(gobj->hsd_obj, &fp->cur_pos);
+ 
+@@ -2708,6 +2712,10 @@ void Fighter_procMap(Fighter_GObj* gobj)
+         }
+ 
+         HSD_JObjSetTranslate(gobj->hsd_obj, &fp->cur_pos);
++#ifdef MU_NATIVE
++        /* Melee Party: a minigame may draw the fighter away from where it collides. */
++        mu_party_fighter_drawn(fp);
++#endif
+     }
+ }
+ 
+@@ -2742,6 +2750,9 @@ void Fighter_procAccessory(Fighter_GObj* gobj)
+             fp->accessory1_cb(gobj);
+             HSD_JObjSetTranslate(gobj->hsd_obj, &fp->cur_pos);
+         }
++#ifdef MU_NATIVE
++        mu_party_fighter_drawn(fp);
++#endif
+     }
+ }
+ 
+diff --git a/src/melee/ft/kinds/ftCommon/ftCo_Damage.c b/src/melee/ft/kinds/ftCommon/ftCo_Damage.c
+index e98aadd04..9bf63bc79 100644
+--- a/src/melee/ft/kinds/ftCommon/ftCo_Damage.c
++++ b/src/melee/ft/kinds/ftCommon/ftCo_Damage.c
+@@ -130,6 +130,10 @@ void ftCo_Damage_CalcKnockback(Fighter* fp)
+     if (!fp->dmg.kb_applied) {
+         return;
+     }
++#ifdef MU_NATIVE
++    /* Melee Party: a minigame may take the knockback down (Bag Bash's Sandbags). */
++    fp->dmg.kb_applied = mu_party_knockback(fp, fp->dmg.kb_applied);
++#endif
+     if (fp->motion_id == ftCo_MS_Squat || fp->motion_id == ftCo_MS_SquatWait) {
+         fp->dmg.kb_applied *= p_ftCommonData->kb_squat_mul;
+     }
 diff --git a/src/melee/ft/kinds/ftCommon/ftpickupitem.c b/src/melee/ft/kinds/ftCommon/ftpickupitem.c
 index 0d0e9f7af..c480ad838 100644
 --- a/src/melee/ft/kinds/ftCommon/ftpickupitem.c
@@ -100,10 +145,40 @@ index 4cc751176..c8b7dd391 100644
      /* Slippi online menus: back from the online major, and the first menu after boot, open the
       * online submenu (OnReturnFromOnline, boot.asm OnFirstMenuLoad). */
 diff --git a/src/melee/mn/mnmain.c b/src/melee/mn/mnmain.c
-index 870aa23cc..b1d3c9015 100644
+index 870aa23cc..b7a031950 100644
 --- a/src/melee/mn/mnmain.c
 +++ b/src/melee/mn/mnmain.c
-@@ -2504,7 +2504,8 @@ void mn_8022D594(HSD_GObj* gp)
+@@ -781,6 +781,12 @@ static void mn_80229A7C(MainMenuData* data, MenuKind menu_kind, int selection)
+         HSD_SisLib_803A5CC4(data->description);
+         data->description = NULL;
+     }
++#ifdef MU_NATIVE
++    /* Melee Party: the descriptions of the entries it changed. */
++    if ((data->description = mu_party_menu_description(menu_kind, selection)) != NULL) {
++        return;
++    }
++#endif
+     sis_idx = mn_803EB6B0[menu_kind].description_indices;
+     if (sis_idx != 0) {
+         text = HSD_SisLib_803A5ACC(0, mn_804D6BB4, -9.5f, 9.1f, 17.0f,
+@@ -1927,6 +1933,16 @@ void mn_8022C4F4(HSD_GObj* gp)
+     if (buttons & MenuInput_Confirm) {
+         mn_804D6BC8.cooldown = 5;
+         mn_804A04F0.entering_menu = 1;
++#ifdef MU_NATIVE
++        /* Melee Party, Party Minigames: the rows are the minigames. */
++        int party_mode = mu_party_special_menu_mode(mn_804A04F0.hovered_selection);
++        if (party_mode >= 0) {
++            sfxForward();
++            data = gm_GetCurrentSceneExitData();
++            data->pending_mode = (u8) party_mode;
++            gm_801A4B60();
++        } else
++#endif
+         switch (mn_804A04F0.hovered_selection) {
+         case SEL_SPECIAL_VS_CAMERA:
+             sfxForward();
+@@ -2504,7 +2520,8 @@ void mn_8022D594(HSD_GObj* gp)
              data = gm_GetCurrentSceneExitData();
  #ifdef MU_NATIVE
              /* General Codes, "Debug Menu": the Tournament entry opens the debug menu. */
@@ -113,3 +188,12 @@ index 870aa23cc..b1d3c9015 100644
  #else
              data->pending_mode = GM_TOURNAMENT;
  #endif
+@@ -2964,6 +2981,8 @@ void mnMain_Scene_OnEnter(void* user_data)
+         if (mu_tmce_active()) {
+             mu_tmce_ess_remove_event_texture(mn_804D6BB8);
+         }
++        /* Melee Party: the Vs. entries' names and the Party Minigames rows. */
++        mu_party_menu_loaded();
+ #endif
+ 
+         if (lbLang_IsSavedLanguageUS()) {

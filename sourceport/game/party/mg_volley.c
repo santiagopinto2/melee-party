@@ -5,10 +5,17 @@
  * it cannot be picked up or nudged, and its motion is ours. Every frame end the ball's position is
  * written from our physics; a hit (the egg's damage callback) relaunches it along the attack's
  * knockback angle, away from the attacker. The ball touching the floor is a point for the other
- * side; first to VOLLEY_POINTS, or the higher score when time runs out. */
+ * side; first to VOLLEY_POINTS, or the higher score when time runs out.
+ *
+ * The match camera frames the ball as well as the fighters (the ball gets a camera subject, as
+ * some items have), with room above it, so a high ball stays in sight; and nobody can cross the
+ * net, an invisible wall from the floor up (volley_fighter_map). */
 #include <math.h>
 #include <string.h>
 
+#include <melee/cm/camera.h>
+#include <melee/cm/forward.h>
+#include <melee/cm/types.h>
 #include <melee/ft/inlines.h>
 #include <melee/ft/kinds/ftCommon/ftCo_0A01.h>
 #include <melee/ft/types.h>
@@ -42,6 +49,10 @@
 #define GRAVITY 0.045f
 #define FALL_MAX 1.9f
 #define SERVE_DELAY 90   /* frames between a point and the next serve */
+#define WALL_GAP 4.0f    /* the closest a fighter gets to the net */
+#define BALL_FRAME_H 30.0f   /* how much of the court the camera keeps around the ball */
+#define BALL_FRAME_UP 40.0f
+#define BALL_FRAME_DOWN 10.0f
 
 enum { SIDE_LEFT = 0, SIDE_RIGHT = 1 };
 
@@ -132,6 +143,10 @@ static void ball_place(void)
     ip->xDC8_word.flags.x1C = 0;   /* cannot be nudged */
     ip->xB8_itemLogicTable = &vb.logic;
     HSD_JObjSetTranslate(GET_JOBJ(vb.ball), &pos);
+    if (ip->xDCD_flag.b01 != 0 && ip->x520_cameraBox != NULL) {
+        ip->x520_cameraBox->pos = pos;
+        ip->x520_cameraBox->bone_pos = pos;
+    }
 }
 
 static void ball_remove(void)
@@ -183,6 +198,16 @@ static void ball_spawn(void)
     vb.logic.absorbed = ball_keep;
     ip->scl = BALL_SCALE;
     HSD_JObjSetScale(GET_JOBJ(vb.ball), &scale);
+    /* The camera frames it, as it does the items that have a camera subject (it/item.c foobar3);
+     * the item frees it when the ball goes (Item_80267454). The egg has none, and its field is
+     * only meaningful once xDCD_flag.b01 says so. */
+    if (ip->xDCD_flag.b01 == 0 && (ip->x520_cameraBox = Camera_80029044(0)) != NULL) {
+        ip->xDCD_flag.b01 = 1;
+        ip->x520_cameraBox->target_ext.h.x = -BALL_FRAME_H;
+        ip->x520_cameraBox->target_ext.h.y = BALL_FRAME_H;
+        ip->x520_cameraBox->target_ext.v.x = BALL_FRAME_UP;
+        ip->x520_cameraBox->target_ext.v.y = -BALL_FRAME_DOWN;
+    }
     ball_place();
 }
 
@@ -406,6 +431,31 @@ static void volley_fighter_input(Fighter* fp)
     }
 }
 
+/* Before collision: the net is a wall nobody gets through or over, from the floor up. */
+static void volley_fighter_map(Fighter* fp)
+{
+    int slot = fp->player_idx;
+    if (slot < 0 || slot >= PARTY_PLAYERS) {
+        return;
+    }
+    if (vb.side[slot] == SIDE_LEFT ? fp->cur_pos.x > NET_X - WALL_GAP
+                                   : fp->cur_pos.x < NET_X + WALL_GAP) {
+        float edge = vb.side[slot] == SIDE_LEFT ? NET_X - WALL_GAP : NET_X + WALL_GAP;
+        fp->cur_pos.x = edge;
+        /* No speed on through it either. */
+        if ((fp->self_vel.x > 0.0f) == (vb.side[slot] == SIDE_LEFT)) {
+            fp->self_vel.x = 0.0f;
+        }
+        if ((fp->x8c_kb_vel.x > 0.0f) == (vb.side[slot] == SIDE_LEFT)) {
+            fp->x8c_kb_vel.x = 0.0f;
+        }
+        if ((fp->gr_vel > 0.0f) == (vb.side[slot] == SIDE_LEFT) &&
+            fp->ground_or_air == GA_Ground) {
+            fp->gr_vel = 0.0f;
+        }
+    }
+}
+
 static void volley_result(s8 place[PARTY_PLAYERS])
 {
     int i;
@@ -420,5 +470,5 @@ static void volley_result(s8 place[PARTY_PLAYERS])
 
 const PartyMinigame mg_volleyball = {
     "Volleyball", "volley", volley_setup, volley_fighter_input, volley_result, 0, NULL,
-    St_Kind_Last, -1,
+    St_Kind_Last, -1, volley_fighter_map,
 };

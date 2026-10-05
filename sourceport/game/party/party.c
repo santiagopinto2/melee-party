@@ -242,6 +242,21 @@ void party_start(const VsModeData* vs, u32 seed)
 /* ---- states ---- */
 
 static int test_minigame = -1;   /* MELEE_PARTY_MINIGAME: play only this one, over and over */
+/* Party Minigames (party_menu.c): the one picked in the menu, played after the CSS and then back
+ * to it. */
+static int menu_minigame = -1;
+static int from_menu;
+
+void party_menu_pick(int index)
+{
+    menu_minigame = index;
+}
+
+/* The menu's Vs. entries are the party's. */
+int mu_party_menu_on(void)
+{
+    return installed && party_enabled();
+}
 
 static void css_prep(GameModeState* state)
 {
@@ -257,6 +272,12 @@ static void css_decide(GameModeState* state)
     }
     gmVsMelee_ExitCss(state, &party_vs);
     party_start(&party_vs, 0);
+    if (from_menu) {
+        party.minigame = test_minigame;
+        party_preload_phase(PARTY_STATE_MINIGAME);
+        gm_SetNextGameModeStateId(PARTY_STATE_MINIGAME);
+        return;
+    }
     gm_SetNextGameModeStateId(PARTY_STATE_BOARD);
 }
 
@@ -280,7 +301,7 @@ int party_advance(int phase)
         }
         minigame_finish();
         if (test_minigame >= 0) {
-            return PARTY_STATE_MINIGAME;
+            return from_menu ? PARTY_STATE_CSS : PARTY_STATE_MINIGAME;
         }
         return party.turn >= party.max_turns ? PARTY_STATE_RESULTS : PARTY_STATE_BOARD;
     default:
@@ -373,12 +394,17 @@ static void party_on_load(void)
     }
     party_vs.start.rules.is_teams = false;
     test_minigame = mg != NULL ? minigame_find(mg) : -1;
+    from_menu = test_minigame < 0 && menu_minigame >= 0;
+    if (from_menu) {
+        test_minigame = menu_minigame;
+    }
 
-    if (party_env_int("MELEE_PARTY_SKIP_CSS", 0) || test_minigame >= 0) {
+    if (!from_menu && (party_env_int("MELEE_PARTY_SKIP_CSS", 0) || test_minigame >= 0)) {
         party_start(NULL, 0);
         gm_SetGameModeStateId(test_minigame >= 0 ? PARTY_STATE_MINIGAME : PARTY_STATE_BOARD);
     }
-    party_log("mode loaded%s", test_minigame >= 0 ? " (single minigame test)" : "");
+    party_log("mode loaded%s", from_menu ? " (Party Minigames)"
+                               : test_minigame >= 0 ? " (single minigame test)" : "");
 }
 
 static void party_on_unload(void)
@@ -432,7 +458,11 @@ unsigned char mu_party_boot_mode(unsigned char mode)
 /* mn/mnmain.c: the Vs. menu's Tournament Melee entry opens the party. */
 int mu_party_vs_menu_mode(int retail_mode)
 {
-    return installed && party_enabled() ? PARTY_MODE : retail_mode;
+    if (!installed || !party_enabled()) {
+        return retail_mode;
+    }
+    menu_minigame = -1;   /* the party itself, not a minigame */
+    return PARTY_MODE;
 }
 
 /* gm/gmmenumode.c: back from the party, the cursor is on its entry again. */
@@ -441,8 +471,13 @@ int mu_party_menu_enter(int previous_mode, unsigned char* menu_kind, unsigned ch
     if (!installed || !party_enabled() || previous_mode != PARTY_MODE) {
         return 0;
     }
-    *menu_kind = MENU_KIND_VS;
-    *hovered = SEL_VS_TOURNAMENT;
+    if (menu_minigame >= 0) {
+        *menu_kind = MENU_KIND_SPECIAL;   /* Party Minigames, on the one just played */
+        *hovered = (unsigned char) menu_minigame;
+    } else {
+        *menu_kind = MENU_KIND_VS;
+        *hovered = SEL_VS_TOURNAMENT;
+    }
     return 1;
 }
 
@@ -474,5 +509,58 @@ void mu_party_fighter_input(struct Fighter* fp)
         break;
     default:
         break;
+    }
+}
+
+/* ft/fighter.c Fighter_procMap, before the fighter's collision. */
+void mu_party_fighter_map(struct Fighter* fp)
+{
+    if (!mu_party_active()) {
+        return;
+    }
+    if (party.phase == PARTY_STATE_BOARD) {
+        board_fighter_map(fp);
+    } else if (party.phase == PARTY_STATE_MINIGAME && party.minigame >= 0 &&
+               minigame_get(party.minigame)->fighter_map != NULL) {
+        minigame_get(party.minigame)->fighter_map(fp);
+    }
+}
+
+/* shim/mu_gecko.c (UCF): 1 while the party drops every pad input of this fighter, so nothing
+ * reads the pad again after it. */
+int mu_party_owns_input(struct Fighter* fp)
+{
+    (void) fp;
+    if (!mu_party_active()) {
+        return 0;
+    }
+    switch (party.phase) {
+    case PARTY_STATE_BOARD:
+    case PARTY_STATE_RESULTS:
+        return 1;
+    case PARTY_STATE_MINIGAME:
+        return party.minigame >= 0 && minigame_get(party.minigame)->owns_input;
+    default:
+        return 0;
+    }
+}
+
+/* ft/kinds/ftCommon/ftCo_Damage.c ftCo_Damage_CalcKnockback: the knockback of a hit. */
+float mu_party_knockback(struct Fighter* fp, float kb)
+{
+    if (mu_party_active() && party.phase == PARTY_STATE_MINIGAME && party.minigame >= 0 &&
+        minigame_get(party.minigame)->knockback != NULL) {
+        return minigame_get(party.minigame)->knockback(fp, kb);
+    }
+    return kb;
+}
+
+/* ft/fighter.c, once the fighter's model is placed at cur_pos (Fighter_procMap's end and
+ * Fighter_procAccessory). */
+void mu_party_fighter_drawn(struct Fighter* fp)
+{
+    if (mu_party_active() && party.phase == PARTY_STATE_MINIGAME && party.minigame >= 0 &&
+        minigame_get(party.minigame)->fighter_drawn != NULL) {
+        minigame_get(party.minigame)->fighter_drawn(fp);
     }
 }

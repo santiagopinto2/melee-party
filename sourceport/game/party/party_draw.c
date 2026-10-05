@@ -26,6 +26,7 @@ static void world_begin(void)
     HSD_CObjGetViewingMtx(HSD_CObjGetCurrent(), view);
     GXSetCurrentMtx(0);
     GXLoadPosMtxImm(view, 0);
+    GXSetCullMode(GX_CULL_NONE);   /* floor shapes are seen from above, upright ones from the front */
 }
 
 static void render(HSD_GObj* gobj, intptr_t pass)
@@ -63,17 +64,56 @@ void party_draw_quad(GXColor color, float x0, float y0, float x1, float y1, floa
     GXEnd();
 }
 
-/* A flat disc lying on the floor (a board space), seen from the match camera's slight tilt. */
-void party_draw_disc(GXColor color, float x, float y, float rx, float rz)
+/* A flat disc lying on the floor (a board space). */
+void party_draw_disc(GXColor color, float x, float y, float z, float rx, float rz)
 {
-    enum { N = 20 };
+    enum { N = 24 };
     int i;
     mpLib_SetupDraw(color);
     GXBegin(GX_TRIANGLEFAN, GX_VTXFMT0, N + 2);
-    GXPosition3f32(x, y, 0.0f);
+    GXPosition3f32(x, y, z);
     for (i = 0; i <= N; i++) {
         float a = (float) i * (2.0f * (float) M_PI / N);
-        GXPosition3f32(x + cosf(a) * rx, y, sinf(a) * rz);
+        GXPosition3f32(x + cosf(a) * rx, y, z + sinf(a) * rz);
+    }
+    GXEnd();
+}
+
+void party_draw_disc_n(GXColor color, float x, float y, float z, float r, int segments)
+{
+    int i;
+    mpLib_SetupDraw(color);
+    GXBegin(GX_TRIANGLEFAN, GX_VTXFMT0, (u16) (segments + 2));
+    GXPosition3f32(x, y, z);
+    for (i = 0; i <= segments; i++) {
+        float a = (float) i * (2.0f * (float) M_PI / (float) segments);
+        GXPosition3f32(x + cosf(a) * r, y, z + sinf(a) * r);
+    }
+    GXEnd();
+}
+
+void party_draw_star(GXColor color, float x, float y, float z, float r)
+{
+    int i;
+    mpLib_SetupDraw(color);
+    GXBegin(GX_TRIANGLEFAN, GX_VTXFMT0, 12);
+    GXPosition3f32(x, y, z);
+    for (i = 0; i <= 10; i++) {
+        /* Points and notches in turn, the first point straight up. */
+        float a = (float) M_PI_2 + (float) i * ((float) M_PI / 5.0f);
+        float d = (i & 1) ? r * 0.42f : r;
+        GXPosition3f32(x + cosf(a) * d, y + sinf(a) * d, z);
+    }
+    GXEnd();
+}
+
+void party_draw_floor_quad(GXColor color, float y, const float corners[8])
+{
+    int i;
+    mpLib_SetupDraw(color);
+    GXBegin(GX_QUADS, GX_VTXFMT0, 4);
+    for (i = 0; i < 4; i++) {
+        GXPosition3f32(corners[2 * i], y, corners[2 * i + 1]);
     }
     GXEnd();
 }

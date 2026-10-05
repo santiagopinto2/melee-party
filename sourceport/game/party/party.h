@@ -60,6 +60,8 @@ int party_advance(int phase);                  /* the phase after a match, or PA
 void party_setup_phase(int phase, StartMeleeData* start);
 void party_preload_phase(int phase);
 int party_test_minigame(void);
+void party_menu_pick(int index);               /* Party Minigames: the next party plays this one */
+int mu_party_menu_on(void);                    /* the menu's Vs. entries are the party's */
 
 /* party_online.c: the party over Slippi Direct (the online major's VS state). */
 int party_online_running(void);
@@ -75,6 +77,7 @@ void party_log(const char* fmt, ...);
 void board_reset(void);
 void board_setup(StartMeleeData* start);
 void board_fighter_input(struct Fighter* fp);
+void board_fighter_map(struct Fighter* fp);     /* its place on the board, off the 2D line */
 int board_turn_done(void);                     /* 1 once every player moved this turn */
 
 /* minigames.c */
@@ -91,6 +94,14 @@ typedef struct PartyMinigame {
      * before it ends (party_preload_next), as Home-Run Contest's CSS preloads the Sandbag. */
     u16 stkind;
     s8 extra_ckind;                            /* a fifth fighter (slot 4), or -1 */
+    /* optional: Fighter_procMap, before collision (where it stands, off the 2D line) */
+    void (*fighter_map)(struct Fighter* fp);
+    /* optional: after collision, where its model is drawn (its collision stays where it is) */
+    void (*fighter_drawn)(struct Fighter* fp);
+    /* optional: the knockback a hit gives the fighter, from what Melee worked out */
+    float (*knockback)(struct Fighter* fp, float kb);
+    /* fighter_input drops every pad input (the minigame plays the fighters itself) */
+    u8 owns_input;
 } PartyMinigame;
 
 int minigame_count(void);

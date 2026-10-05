@@ -71,9 +71,25 @@ int party_hud_line(HSD_Text* t, float x, float y, float scale, GXColor color)
     return idx;
 }
 
+/* The Shift-JIS pair of a symbol the text encoder has no ASCII case for, or 0. The encoder reads
+ * any other byte as the first half of a Shift-JIS pair: a lone "!" swallowed the end of the
+ * string and the encoder went on into whatever followed it. */
+static unsigned sjis_symbol(char c)
+{
+    switch (c) {
+    case '!': return 0x8149; case '?': return 0x8148; case '/': return 0x815E;
+    case '+': return 0x817B; case '=': return 0x8181; case '%': return 0x8193;
+    case '#': return 0x8194; case '&': return 0x8195; case '*': return 0x8196;
+    case '(': return 0x8169; case ')': return 0x816A; case '<': return 0x8183;
+    case '>': return 0x8184;
+    }
+    return 0;
+}
+
 void party_hud_set(HSD_Text* t, int idx, const char* fmt, ...)
 {
-    char buf[128];
+    char buf[128], out[128];
+    int i, n = 0;
     va_list ap;
     if (t == NULL || idx < 0) {
         return;
@@ -81,7 +97,21 @@ void party_hud_set(HSD_Text* t, int idx, const char* fmt, ...)
     va_start(ap, fmt);
     vsnprintf(buf, sizeof buf, fmt, ap);
     va_end(ap);
-    HSD_SisLib_803A70A0(t, idx, (char*) "%s", buf);
+    for (i = 0; buf[i] != '\0' && n + 2 < (int) sizeof out; i++) {
+        char c = buf[i];
+        unsigned sym = sjis_symbol(c);
+        if (sym != 0) {
+            out[n++] = (char) (sym >> 8);
+            out[n++] = (char) sym;
+        } else if (c == ' ' || c == '"' || c == '\'' || c == ',' || c == '-' || c == '.' ||
+                   c == ':' || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') ||
+                   (c >= 'a' && c <= 'z')) {
+            out[n++] = c;
+        }
+        /* anything else has no glyph: left out */
+    }
+    out[n] = '\0';
+    HSD_SisLib_803A70A0(t, idx, (char*) "%s", out);
 }
 
 void party_hud_color(HSD_Text* t, int idx, GXColor color)

@@ -83,6 +83,13 @@ unsigned char mu_party_boot_mode(unsigned char mode);      /* gmboot.c bootOnLea
 int mu_party_vs_menu_mode(int retail_mode);                /* mnmain.c Tournament Melee */
 int mu_party_menu_enter(int previous_mode, unsigned char* menu_kind, unsigned char* hovered);
 void mu_party_fighter_input(struct Fighter* fp);           /* ft/fighter.c Fighter_procInput */
+void mu_party_fighter_map(struct Fighter* fp);             /* ft/fighter.c Fighter_procMap */
+void mu_party_fighter_drawn(struct Fighter* fp);           /* procMap's end, procAccessory */
+float mu_party_knockback(struct Fighter* fp, float kb);     /* ftCo_Damage_CalcKnockback */
+int mu_party_owns_input(struct Fighter* fp);               /* the party drops all its pad input */
+void mu_party_menu_loaded(void);                           /* mnmain.c: MnMaAll loaded */
+struct HSD_Text* mu_party_menu_description(int menu_kind, int selection);   /* mn_80229A7C */
+int mu_party_special_menu_mode(int selection);             /* Special Melee submenu: a row */
 void mu_party_item_eaten(int slot, int item_kind);         /* ftpickupitem.c: food eaten */
 /* Melee Party online (party/party_online.c): Slippi Direct between two Melee Party builds. */
 #define MU_OPTION_PARTY_ONLINE 0x40000000u
