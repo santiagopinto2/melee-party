@@ -142,6 +142,29 @@ static struct {
     int nstar;
 } g;
 
+/* The boards the Melee Party menu lists, in its order. Only one so far: board.c plays it. */
+static const struct {
+    const char* name;
+    const char* description;   /* two lines under the menu */
+} boards[] = {
+    { "Goomba's Greedy Gala", "From Mario Party 4. A wheel\nin the middle picks your way." },
+};
+
+int board_count(void)
+{
+    return (int) (sizeof boards / sizeof boards[0]);
+}
+
+const char* board_name(int index)
+{
+    return boards[index >= 0 && index < board_count() ? index : 0].name;
+}
+
+const char* board_description(int index)
+{
+    return boards[index >= 0 && index < board_count() ? index : 0].description;
+}
+
 static const GXColor wheel_color[4] = {
     { 230, 60, 60, 255 }, { 60, 110, 255, 255 }, { 250, 210, 40, 255 }, { 170, 80, 230, 255 },
 };
@@ -882,7 +905,8 @@ void board_setup(StartMeleeData* start)
     start->rules.on_match_start = board_start;
     start->rules.on_frame_start = board_frame;
     party_fill_players(start);
-    party_log("turn %d/%d: board, star on space %d", party.turn, party.max_turns, party.star_space);
+    party_log("turn %d/%d: board %s, star on space %d", party.turn, party.max_turns,
+              board_name(party.board), party.star_space);
 }
 
 /* ---- the fighters ---- */

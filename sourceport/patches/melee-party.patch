@@ -145,7 +145,7 @@ index 4cc751176..c8b7dd391 100644
      /* Slippi online menus: back from the online major, and the first menu after boot, open the
       * online submenu (OnReturnFromOnline, boot.asm OnFirstMenuLoad). */
 diff --git a/src/melee/mn/mnmain.c b/src/melee/mn/mnmain.c
-index 870aa23cc..b7a031950 100644
+index 870aa23cc..eaf7987d1 100644
 --- a/src/melee/mn/mnmain.c
 +++ b/src/melee/mn/mnmain.c
 @@ -781,6 +781,12 @@ static void mn_80229A7C(MainMenuData* data, MenuKind menu_kind, int selection)
@@ -178,7 +178,30 @@ index 870aa23cc..b7a031950 100644
          switch (mn_804A04F0.hovered_selection) {
          case SEL_SPECIAL_VS_CAMERA:
              sfxForward();
-@@ -2504,7 +2520,8 @@ void mn_8022D594(HSD_GObj* gp)
+@@ -1995,7 +2011,12 @@ void mn_8022C4F4(HSD_GObj* gp)
+         mn_804D6BC8.cooldown = 5;
+         mn_804A04F0.prev_menu = mn_804A04F0.cur_menu;
+         mn_804A04F0.cur_menu = MENU_KIND_VS;
++#ifdef MU_NATIVE
++        /* Melee Party: back onto the entry that opened the submenu. */
++        mn_804A04F0.hovered_selection = mu_party_special_back(SEL_VS_SPECIAL);
++#else
+         mn_804A04F0.hovered_selection = SEL_VS_SPECIAL;
++#endif
+         HSD_GObj_80390CD4(mn_8022B3A0(3));
+         HSD_GObjFree(HSD_GObj_CurrentInvokedProcGObj);
+         if ((temp_r28 = mn_803EB6B0[MENU_KIND_VS].think)) {
+@@ -2500,17 +2521,29 @@ void mn_8022D594(HSD_GObj* gp)
+             gm_801A4B60();
+             break;
+         case SEL_VS_TOURNAMENT:
++#ifdef MU_NATIVE
++            /* Melee Party: the entry opens its list of boards, in Special Melee's submenu. */
++            if (mu_party_vs_submenu(SEL_VS_TOURNAMENT)) {
++                goto open_special;
++            }
++#endif
+             sfxForward();
              data = gm_GetCurrentSceneExitData();
  #ifdef MU_NATIVE
              /* General Codes, "Debug Menu": the Tournament entry opens the debug menu. */
@@ -188,7 +211,31 @@ index 870aa23cc..b7a031950 100644
  #else
              data->pending_mode = GM_TOURNAMENT;
  #endif
-@@ -2964,6 +2981,8 @@ void mnMain_Scene_OnEnter(void* user_data)
+             gm_801A4B60();
+             break;
+         case SEL_VS_SPECIAL:
++#ifdef MU_NATIVE
++            /* Party Minigames: the submenu lists the minigames. */
++            mu_party_vs_submenu(SEL_VS_SPECIAL);
++        open_special:
++#endif
+             sfxForward();
+             mn_804D6BC8.cooldown = 5;
+             mn_804A04F0.prev_menu = mn_804A04F0.cur_menu;
+@@ -2526,6 +2559,12 @@ void mn_8022D594(HSD_GObj* gp)
+             }
+             break;
+         case SEL_VS_RULES:
++#ifdef MU_NATIVE
++            /* Melee Party: Debug Boards, the boards with no minigames, in place of Custom Rules. */
++            if (mu_party_vs_submenu(SEL_VS_RULES)) {
++                goto open_special;
++            }
++#endif
+             sfxForward();
+             mn_80231714();
+             HSD_GObjFree(gp);
+@@ -2964,6 +3003,8 @@ void mnMain_Scene_OnEnter(void* user_data)
          if (mu_tmce_active()) {
              mu_tmce_ess_remove_event_texture(mn_804D6BB8);
          }

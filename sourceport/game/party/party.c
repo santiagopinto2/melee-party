@@ -26,6 +26,8 @@ PartyState party;
 static VsModeData party_vs;   /* the CSS's choice */
 static int party_vs_ready;
 static int installed;
+static int menu_board;   /* Melee Party: the board picked in its submenu (party_board_pick) */
+static int menu_debug;   /* picked from Debug Boards: no minigames */
 static int flag = -1;
 
 /* ---- gate ---- */
@@ -195,6 +197,8 @@ void party_start(const VsModeData* vs, u32 seed)
     party.rng = forced ? (u32) forced : (seed ? seed : 1);
     party.max_turns = party_env_int("MELEE_PARTY_TURNS", 10);
     party.minigame = -1;
+    party.board = menu_board;
+    party.no_minigames = menu_debug || party_env_int("MELEE_PARTY_DEBUG_BOARDS", 0);
 
     for (i = 0; i < PARTY_PLAYERS; i++) {
         const PlayerInitData* src = vs != NULL ? &vs->start.players[i] : NULL;
@@ -252,6 +256,18 @@ void party_menu_pick(int index)
     menu_minigame = index;
 }
 
+void party_board_pick(int index, int debug)
+{
+    menu_board = index >= 0 && index < board_count() ? index : 0;
+    menu_debug = debug != 0;
+    menu_minigame = -1;   /* the party itself, not a minigame */
+}
+
+int party_menu_board(void)
+{
+    return menu_board;
+}
+
 /* The menu's Vs. entries are the party's. */
 int mu_party_menu_on(void)
 {
@@ -292,6 +308,10 @@ int party_advance(int phase)
 {
     switch (phase) {
     case PARTY_STATE_BOARD:
+        if (party.no_minigames) {
+            party_log("turn %d: board done (Debug Boards: no minigame)", party.turn);
+            return party.turn >= party.max_turns ? PARTY_STATE_RESULTS : PARTY_STATE_BOARD;
+        }
         party.minigame = minigame_pick();
         party_log("turn %d: board done, minigame %s", party.turn, minigame_get(party.minigame)->name);
         return PARTY_STATE_MINIGAME;
@@ -471,12 +491,14 @@ int mu_party_menu_enter(int previous_mode, unsigned char* menu_kind, unsigned ch
     if (!installed || !party_enabled() || previous_mode != PARTY_MODE) {
         return 0;
     }
+    /* Back in the submenu the party came from, on the minigame or the board just played. */
+    *menu_kind = MENU_KIND_SPECIAL;
     if (menu_minigame >= 0) {
-        *menu_kind = MENU_KIND_SPECIAL;   /* Party Minigames, on the one just played */
+        party_menu_show(PARTY_MENU_MINIGAMES);
         *hovered = (unsigned char) menu_minigame;
     } else {
-        *menu_kind = MENU_KIND_VS;
-        *hovered = SEL_VS_TOURNAMENT;
+        party_menu_show(menu_debug ? PARTY_MENU_DEBUG_BOARDS : PARTY_MENU_BOARDS);
+        *hovered = (unsigned char) menu_board;
     }
     return 1;
 }

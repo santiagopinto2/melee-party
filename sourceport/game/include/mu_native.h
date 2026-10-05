@@ -90,6 +90,8 @@ int mu_party_owns_input(struct Fighter* fp);               /* the party drops al
 void mu_party_menu_loaded(void);                           /* mnmain.c: MnMaAll loaded */
 struct HSD_Text* mu_party_menu_description(int menu_kind, int selection);   /* mn_80229A7C */
 int mu_party_special_menu_mode(int selection);             /* Special Melee submenu: a row */
+int mu_party_vs_submenu(int selection);                    /* Vs. menu: boards or minigames */
+int mu_party_special_back(int retail_selection);           /* Special Melee submenu: B */
 void mu_party_item_eaten(int slot, int item_kind);         /* ftpickupitem.c: food eaten */
 /* Melee Party online (party/party_online.c): Slippi Direct between two Melee Party builds. */
 #define MU_OPTION_PARTY_ONLINE 0x40000000u

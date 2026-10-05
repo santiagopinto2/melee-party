@@ -6,9 +6,12 @@ and play physics minigames between turns. It needs only a vanilla NTSC 1.02 ISO.
 ## Playing
 
 Start the Source Port (`melee_source.exe`). Party is on by default; `--party off` turns it off.
-Then go to **VS. Mode → Melee Party** (the retail Tournament Melee entry). To play one
-minigame on its own, go to **VS. Mode → Party Minigames** (the retail Special Melee entry) and
-pick it: after the CSS it plays, then comes back to the CSS.
+Then go to **VS. Mode → Melee Party** (the retail Tournament Melee entry) and pick a board
+(only Goomba's Greedy Gala so far). To play one minigame on its own, go to **VS. Mode → Party
+Minigames** (the retail Special Melee entry) and pick it: after the CSS it plays, then comes
+back to the CSS. **VS. Mode → Debug Boards** (the retail Custom Rules entry) lists the same
+boards, but a party started there plays board turn after board turn with no minigames, for
+testing a board. After a party the menu opens on the list it was started from.
 
 1. **Pick characters.** Choose your characters as in a VS match; any empty slots become CPUs
    with random characters. The VS character select only starts a match with at least two
@@ -108,8 +111,11 @@ decomp. Each hook is a few lines under `#ifdef MU_NATIVE`.
   the build, so `party/party_menu.c` makes the new names when the menu loads: each letter is cut
   out of a label that has it (along the slant for the italic ones), the letters are laid out
   and squeezed to fit as the game's long labels are, and the outlined labels get their outline
-  drawn again. F is E without its bottom bar and z is drawn; a minigame name with a letter that
-  no label has logs `menu: no letter`. The letter positions were measured from the NTSC 1.02
+  drawn again. F is E without its bottom bar, the slanted headers' B is P's bowl over D's lower
+  half, and z and the apostrophe are drawn; a name with a letter that no label has logs
+  `menu: no letter`. Melee Party, Party Minigames and Debug Boards all open Special Melee's
+  submenu, whose header and rows are written again with the boards' or the minigames' names
+  each time one of them opens it. The letter positions were measured from the NTSC 1.02
   disc. The Special Melee submenu shows one row per minigame, and the descriptions of the changed
   entries are the party's own text.
 - **Mode.** The party takes the unused `GM_HANYU_SSS` mode slot, the same way the Slippi online
@@ -175,6 +181,7 @@ Set these as environment variables for `melee_source.exe`.
 | `MELEE_PARTY_SEED=n` | A fixed seed for the party's own random numbers. |
 | `MELEE_PARTY_AUTO_ROLL=1` | Idle humans roll after half a second instead of 10 seconds. |
 | `MELEE_PARTY_ONLINE_TEST=1` | Online party in any online mode, for the local test pair. |
+| `MELEE_PARTY_DEBUG_BOARDS=1` | No minigames between board turns, as when started from Debug Boards. |
 
 For example, to watch a whole three-turn party with CPUs:
 
@@ -183,7 +190,8 @@ For example, to watch a whole three-turn party with CPUs:
 
 ## Known limits
 
-- The Party Minigames rows keep the Special Melee modes' preview pictures.
+- The Party Minigames and board rows keep the Special Melee modes' preview pictures.
+- Debug Boards replaces Custom Rules while the party is on; `--party off` brings it back.
 - Items, shops, the Boo house, the lottery, pipes and the Gamble Goombas are not implemented.
   Happening, Battle, Fortune and Warp spaces have no events (they are plain green spaces).
 - The roulette has no Goomba bribe and no free-choice pockets: it picks one of its four ways at

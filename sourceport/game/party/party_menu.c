@@ -7,8 +7,12 @@
  * names already there: each letter is cut out of a label that has it (along the italic's slant
  * for the slanted styles), the letters are laid out, squeezed sideways when too wide as the
  * game's own long labels are, and written over the old label. The outlined labels get their black
- * outline drawn again around the new letters. Two letters are in no label: F is E without its
- * bottom bar, and z is drawn.
+ * outline drawn again around the new letters. Three letters are in no label: F is E without its
+ * bottom bar, and z and the apostrophe are drawn.
+ *
+ * Tournament Melee becomes Melee Party, whose submenu lists the boards. Both submenus are Special
+ * Melee's: its rows are written again with the boards' or the minigames' names each time one of
+ * the two entries opens it (party_menu_show).
  *
  * Patched, each time the menu loads its archive (mu_party_menu_loaded):
  * - the outlined labels (MenMainCursor, IA4 176x30) of Tournament Melee, Special Melee and the
@@ -54,6 +58,7 @@ static const Glyph cursor_glyphs[] = {
     { 'D', TEX_CURSOR, 4, 0, 30, 24, 56, 75, 100, 0, 0 },
     { 'E', TEX_CURSOR, 6, 0, 30, 24, 6, 21, 100, 0, 0 },
     { 'F', TEX_CURSOR, 6, 0, 30, 24, 6, 21, 100, 3, 13 },
+    { 'G', TEX_CURSOR, 15, 0, 30, 24, 39, 58, 100, 0, 0 },
     { 'L', TEX_CURSOR, 16, 0, 30, 23, 38, 53, 100, 0, 0 },
     { 'M', TEX_CURSOR, 10, 0, 30, 24, 48, 70, 100, 0, 0 },
     { 'P', TEX_CURSOR, 0, 0, 30, 24, 55, 74, 100, 0, 0 },
@@ -316,24 +321,38 @@ static int draw_z(const Style* st, int x)
     return w;
 }
 
-/* A letter into the strip at x; returns its width, -1 if the style has no such letter. */
-static int draw_glyph(const Style* st, char ch, int x)
+/* ': a short stroke at the top of the capitals, narrowing at its foot. */
+static int draw_apostrophe(const Style* st, int x)
 {
-    const Glyph* g;
+    int cap = round_i((float) st->xh * 1.3f), len = round_i((float) st->xh * 0.45f);
+    int w = 3, dy, u;
+    len = len < 5 ? 5 : len;   /* small labels: big enough to survive clean() */
+    for (dy = -cap; dy < -cap + len; dy++) {
+        int ww = dy < -cap + len * 2 / 3 || st->xh < 12 ? w : w - 1;
+        for (u = 0; u < ww && x + u < STRIP_W; u++) {
+            if (dy >= DY_MIN) {
+                strip[dy - DY_MIN][x + u] = 255;
+            }
+        }
+    }
+    return w;
+}
+
+/* Rows dy_lo..dy_hi (from the baseline) of a letter into the strip at x; returns its width, -1 if
+ * its label is not there. */
+static int draw_rows(const Style* st, const Glyph* g, int x, int dy_lo, int dy_hi)
+{
     Tex src;
     float scale;
     int w, y, u;
-    if (ch == 'z') {
-        return draw_z(st, x);
-    }
-    if ((g = find(st, ch)) == NULL || !tex_get(g->tex, g->k, &src)) {
+    if (!tex_get(g->tex, g->k, &src)) {
         return -1;
     }
     scale = (float) g->scale / 100.0f;
     w = round_i((float) (g->u1 - g->u0) * scale);
     for (y = g->y0; y < g->y1; y++) {
         int dy = y - g->yb;
-        if (dy < DY_MIN || dy >= DY_MIN + DY_ROWS) {
+        if (dy < DY_MIN || dy >= DY_MIN + DY_ROWS || dy < dy_lo || dy > dy_hi) {
             continue;
         }
         for (u = 0; u < w && x + u < STRIP_W; u++) {
@@ -349,6 +368,29 @@ static int draw_glyph(const Style* st, char ch, int x)
         }
     }
     return w;
+}
+
+/* A letter into the strip at x; returns its width, -1 if the style has no such letter. */
+static int draw_glyph(const Style* st, char ch, int x)
+{
+    const Glyph *g, *top, *bottom;
+    if (ch == 'z') {
+        return draw_z(st, x);
+    }
+    if (ch == '\'') {
+        return draw_apostrophe(st, x);
+    }
+    if ((g = find(st, ch)) != NULL) {
+        return draw_rows(st, g, x, DY_MIN, DY_MIN + DY_ROWS);
+    }
+    /* B, where no label has one: P's bowl over D's lower half. */
+    if (ch == 'B' && (top = find(st, 'P')) != NULL && (bottom = find(st, 'D')) != NULL) {
+        int half = -round_i((float) st->xh * 0.7f), w0, w1;
+        w0 = draw_rows(st, top, x, DY_MIN, half);
+        w1 = draw_rows(st, bottom, x, half + 1, DY_MIN + DY_ROWS);
+        return w0 > w1 ? w0 : w1;
+    }
+    return -1;
 }
 
 /* Drops specks: 8-connected pieces of fewer than 6 pixels, then the faintest pixels. */
@@ -500,19 +542,77 @@ static void draw_line(const Style* st, int table, int k, const char* text, int y
 
 #define CURSOR_TOURNAMENT 11
 #define CURSOR_SPECIAL 12
+#define CURSOR_RULES 13
 #define CURSOR_SPECIAL_ROW0 41   /* Camera Mode, then the other Special Melee rows */
 #define PANEL_TOURNAMENT 6
 #define PANEL_SPECIAL 7
+#define PANEL_RULES 8
 #define LIST_VS 1                /* Melee, Tournament Melee, Special Melee, Custom Rules, Name Entry */
 #define LIST_SPECIAL 7
+#define LIST_RULES 8
 
 static const char* const NAME_PARTY = "Melee Party";
 static const char* const NAME_MINIGAMES = "Party Minigames";
+static const char* const NAME_DEBUG = "Debug Boards";   /* in place of Custom Rules */
+
+static int showing = PARTY_MENU_MINIGAMES;   /* what the Special Melee submenu lists */
 
 static int special_rows(void)
 {
-    int n = minigame_count();
+    int n = showing != PARTY_MENU_MINIGAMES ? board_count() : minigame_count();
     return n > 10 ? 10 : n;
+}
+
+static const char* row_name(int i)
+{
+    return showing != PARTY_MENU_MINIGAMES ? board_name(i) : minigame_get(i)->name;
+}
+
+/* The submenu's header, rows and number of rows, for the list it shows. */
+static void label_rows(void)
+{
+    int i;
+    draw_line(&panel_style, TEX_PANEL2, PANEL_SPECIAL,
+              showing == PARTY_MENU_BOARDS ? NAME_PARTY
+              : showing == PARTY_MENU_DEBUG_BOARDS ? NAME_DEBUG : NAME_MINIGAMES,
+              23, 0, 28, 166, 1);
+    mn_803EB6B0[MENU_KIND_SPECIAL].selection_count = (u8) special_rows();
+    for (i = 0; i < special_rows(); i++) {
+        draw_line(&cursor_style, TEX_CURSOR, CURSOR_SPECIAL_ROW0 + i, row_name(i), 24, 0, 30, 172, 1);
+    }
+}
+
+void party_menu_show(int list)
+{
+    showing = list;
+}
+
+/* mn/mnmain.c, the Vs. menu: Melee Party, Party Minigames and Debug Boards all open the Special
+ * Melee submenu, with the boards or the minigames. 1: open it (the menu's own way for Special
+ * Melee). */
+int mu_party_vs_submenu(int selection)
+{
+    if (!mu_party_menu_on()) {
+        return 0;
+    }
+    switch (selection) {
+    case SEL_VS_TOURNAMENT: party_menu_show(PARTY_MENU_BOARDS); break;
+    case SEL_VS_SPECIAL: party_menu_show(PARTY_MENU_MINIGAMES); break;
+    case SEL_VS_RULES: party_menu_show(PARTY_MENU_DEBUG_BOARDS); break;
+    default: return 0;
+    }
+    label_rows();
+    return 1;
+}
+
+/* mn/mnmain.c, back out of the submenu: onto the Vs. entry that opened it. */
+int mu_party_special_back(int retail_selection)
+{
+    if (!mu_party_menu_on()) {
+        return retail_selection;
+    }
+    return showing == PARTY_MENU_BOARDS ? SEL_VS_TOURNAMENT
+         : showing == PARTY_MENU_DEBUG_BOARDS ? SEL_VS_RULES : SEL_VS_SPECIAL;
 }
 
 /* mn/mnmain.c mnMain_Scene_OnEnter, once MnMaAll's symbols are loaded. */
@@ -524,30 +624,35 @@ void mu_party_menu_loaded(void)
     if (!mu_party_menu_on()) {
         return;
     }
-    mn_803EB6B0[MENU_KIND_SPECIAL].selection_count = (u8) special_rows();
-
     draw_line(&cursor_style, TEX_CURSOR, CURSOR_TOURNAMENT, NAME_PARTY, 24, 0, 30, 172, 1);
     draw_line(&cursor_style, TEX_CURSOR, CURSOR_SPECIAL, NAME_MINIGAMES, 24, 0, 30, 172, 1);
-    for (i = 0; i < special_rows(); i++) {
-        draw_line(&cursor_style, TEX_CURSOR, CURSOR_SPECIAL_ROW0 + i, minigame_get(i)->name, 24, 0,
-                  30, 172, 1);
-    }
+    label_rows();
     draw_line(&panel_style, TEX_PANEL2, PANEL_TOURNAMENT, NAME_PARTY, 23, 0, 28, 166, 1);
-    draw_line(&panel_style, TEX_PANEL2, PANEL_SPECIAL, NAME_MINIGAMES, 23, 0, 28, 166, 1);
     draw_line(&list_style, TEX_LIST, LIST_VS, NAME_PARTY, 35, 21, 38, 124, 0);
     draw_line(&list_style, TEX_LIST, LIST_VS, NAME_MINIGAMES, 57, 43, 63, 124, 0);
+    draw_line(&cursor_style, TEX_CURSOR, CURSOR_RULES, NAME_DEBUG, 24, 0, 30, 172, 1);
+    draw_line(&panel_style, TEX_PANEL2, PANEL_RULES, NAME_DEBUG, 23, 0, 28, 166, 1);
+    draw_line(&list_style, TEX_LIST, LIST_VS, NAME_DEBUG, 79, 64, 86, 124, 0);
     {
         /* The Special Melee list: cleared, then the minigames on the 1-P list's lines. */
         Tex t;
         if (tex_get(TEX_LIST, LIST_SPECIAL, &t)) {
             memset(t.data, 0, (size_t) (t.w * t.h / 2));
         }
-        for (i = 0; i < special_rows() && i < 4; i++) {
+        for (i = 0; i < minigame_count() && i < 4; i++) {
             draw_line(&list_style, TEX_LIST, LIST_SPECIAL, minigame_get(i)->name, four_lines[i][0],
                       four_lines[i][1], four_lines[i][2], 124, 0);
         }
+        /* The Custom Rules list (now Debug Boards'): the boards, the same way. */
+        if (tex_get(TEX_LIST, LIST_RULES, &t)) {
+            memset(t.data, 0, (size_t) (t.w * t.h / 2));
+        }
+        for (i = 0; i < board_count() && i < 4; i++) {
+            draw_line(&list_style, TEX_LIST, LIST_RULES, board_name(i), four_lines[i][0],
+                      four_lines[i][1], four_lines[i][2], 124, 0);
+        }
     }
-    party_log("menu: Vs. entries renamed, %d minigames", special_rows());
+    party_log("menu: Vs. entries renamed, %d minigames, %d boards", minigame_count(), board_count());
 }
 
 /* The descriptions under the menu, by minigame id. */
@@ -569,6 +674,13 @@ static const char* description_of(int menu_kind, int selection)
     }
     if (menu_kind == MENU_KIND_VS && selection == SEL_VS_SPECIAL) {
         return "Play any of the party's\nminigames.";
+    }
+    if (menu_kind == MENU_KIND_VS && selection == SEL_VS_RULES) {
+        return "Play the boards with no\nminigames, for testing.";
+    }
+    if (menu_kind == MENU_KIND_SPECIAL && showing != PARTY_MENU_MINIGAMES &&
+        selection < special_rows()) {
+        return board_description(selection);
     }
     if (menu_kind == MENU_KIND_SPECIAL && selection < special_rows()) {
         for (i = 0; i < (int) (sizeof descriptions / sizeof descriptions[0]); i++) {
@@ -627,12 +739,17 @@ HSD_Text* mu_party_menu_description(int menu_kind, int selection)
     return text;
 }
 
-/* mn/mnmain.c, the Special Melee submenu's think: a row picks its minigame. -1: the menu's own. */
+/* mn/mnmain.c, the Special Melee submenu's think: a row picks its board or minigame. -1: the
+ * menu's own. */
 int mu_party_special_menu_mode(int selection)
 {
     if (!mu_party_menu_on() || selection >= special_rows()) {
         return -1;
     }
-    party_menu_pick(selection);
+    if (showing != PARTY_MENU_MINIGAMES) {
+        party_board_pick(selection, showing == PARTY_MENU_DEBUG_BOARDS);
+    } else {
+        party_menu_pick(selection);
+    }
     return PARTY_MODE;
 }

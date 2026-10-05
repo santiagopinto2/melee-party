@@ -44,6 +44,8 @@ typedef struct PartyState {
     int turn;        /* 1-based */
     int max_turns;
     int mover;       /* whose board turn it is, 0..3 */
+    int board;       /* index into the board table */
+    int no_minigames; /* Debug Boards: board turn after board turn */
     int star_space;
     int minigame;    /* index into the minigame table of the one being played */
     u32 mg_played;   /* bit per minigame already played this cycle */
@@ -61,6 +63,8 @@ void party_setup_phase(int phase, StartMeleeData* start);
 void party_preload_phase(int phase);
 int party_test_minigame(void);
 void party_menu_pick(int index);               /* Party Minigames: the next party plays this one */
+void party_board_pick(int index, int debug);   /* the next party is on this board; debug: no minigames */
+int party_menu_board(void);                    /* the board last picked in the menu */
 int mu_party_menu_on(void);                    /* the menu's Vs. entries are the party's */
 
 /* party_online.c: the party over Slippi Direct (the online major's VS state). */
@@ -79,6 +83,13 @@ void board_setup(StartMeleeData* start);
 void board_fighter_input(struct Fighter* fp);
 void board_fighter_map(struct Fighter* fp);     /* its place on the board, off the 2D line */
 int board_turn_done(void);                     /* 1 once every player moved this turn */
+int board_count(void);                         /* the boards the Melee Party menu lists */
+const char* board_name(int index);
+const char* board_description(int index);      /* two lines, for the menu */
+
+/* party_menu.c */
+enum { PARTY_MENU_MINIGAMES, PARTY_MENU_BOARDS, PARTY_MENU_DEBUG_BOARDS };
+void party_menu_show(int list);                /* what the submenu lists: a PARTY_MENU_* */
 
 /* minigames.c */
 typedef struct PartyMinigame {
