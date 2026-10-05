@@ -554,9 +554,9 @@ bool read_cosmetic(uint32_t offset, void* dst, uint32_t size, bool* ok) {
 bool g_slippi_menus_requested = true;   // --slippi-menus on|off
 bool g_slippi_menus = false;            // requested and the layer loaded
 bool g_party = true;                    // --party on|off: Melee Party (sourceport/game/party)
-// Melee Party's online identity: sha256("melee-party online protocol 5"). Change the string when
+// Melee Party's online identity: sha256("melee-party online protocol 6"). Change the string when
 // a change to the party would make two builds play different matches.
-const char* const kPartyFingerprint = "2c00dc8e4e2c3f0ad46592237e15b5c9575273a85021a7b360fbed14aae3e132";
+const char* const kPartyFingerprint = "5279f70a6f47eeb8cd2d05d951df93a2b54e1753a78c8442d394d0464da56465";
 // Online party: with --party on and no other mod content (whose own build Direct must advertise).
 bool party_online() { return g_party && g_view_alias.empty(); }
 struct SystemFile { std::string path; uint32_t start; std::vector<uint8_t> data; };
