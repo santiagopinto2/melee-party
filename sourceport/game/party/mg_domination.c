@@ -77,12 +77,12 @@
 #define LEAP_GONE 300.0f     /* out of sight above the lanes */
 #define BIG_RISE 30          /* frames for the winners' Snorlax to come out of the ground */
 #define BIG_GAP 15.0f        /* between the last one of the lane, leaning back, and it */
-#define PARASOL_SCALE 1.25f
+#define PARASOL_SCALE 0.83f
 #define PARASOL_HANDLE 5.5f  /* the parasol's model: its handle's end below its origin */
 #define PARASOL_ANIM 2       /* open: the last frame of its animation 2 (it/kinds/itparasol.c) */
 #define PARASOL_FRAME 44.0f
 #define PARASOL_HAND_X 0.37f /* the winner's Snorlax's hand, in its heights from its middle and feet */
-#define PARASOL_HAND_Y 0.53f
+#define PARASOL_HAND_Y 0.67f
 #define PARASOL_HAND_Z (-0.186f) /* the hand's depth: its last arm joint (-5.74 at 30.9 tall) */
 #define PARASOL_TILT (-0.26f) /* about 15 degrees, the top away from the Snorlax (toward +x) */
 #define FLY_UP_FRAMES 30     /* the winners' jump off the top of the screen */
