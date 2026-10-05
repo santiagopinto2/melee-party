@@ -165,6 +165,7 @@ static struct {
     HSD_JObj* snorlax;
     HSD_JObj* wobbu[PARTY_PLAYERS];
     HSD_JObj* parasol;
+    int paused;          /* the match was paused last frame */
     float snorlax_h;             /* a standing Snorlax's height, at SNORLAX_SCALE */
     Leaper lineup[PARTY_PLAYERS][MAX_SNORLAX];
     int lineup_left;             /* still in sight */
@@ -640,9 +641,23 @@ static void dom_frame(void)
     static const GXColor white = { 255, 255, 255, 255 };
     static const GXColor gold = { 255, 210, 60, 255 };
     Shot shot;
-    int i, n;
+    int i, n, paused = party_paused();
 
+    if (paused != dm.paused) {
+        if (!paused) {
+            ifAll_802F3394();   /* unpausing brings back the damage percents and stocks */
+        }
+        dm.paused = paused;
+    }
+    if (paused) {
+        return;   /* everything holds still, as the match does; the camera stays where it is */
+    }
     dm.frame++;
+    if (dm.frame == 1) {
+        /* Start pauses only once the match's HUD is on, which "GO!" does; Domination hides that
+         * HUD before it, so it turns pausing on itself. */
+        gmVs_GetSceneController()->state.hud_enabled = 1;
+    }
     dm.timer++;
     for (i = 0; i < PARTY_PLAYERS; i++) {
         Fighter* fp = fighter(i);
@@ -913,7 +928,7 @@ static void dom_setup(StartMeleeData* start)
     int i;
     memset(&dm, 0, sizeof dm);
     party_rules_base(&start->rules, St_Kind_Last);
-    start->rules.disable_pausing = true;
+    start->rules.x4_0 = false;   /* no pause camera: Domination keeps its own */
     start->rules.x1_2 = true;  /* no "Ready... GO!": the minigame shows its own start */
     start->rules.x30 = 0.0f;   /* nobody is hurt by a stray hammer */
     start->rules.on_match_start = dom_start;

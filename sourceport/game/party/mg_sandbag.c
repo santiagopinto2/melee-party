@@ -233,6 +233,9 @@ static void bag_frame(int b)
 static void bash_frame(void)
 {
     int b;
+    if (party_paused()) {
+        return;   /* everything holds still while the match is paused */
+    }
     bb.frame++;
     if (bb.frame == bb.msg_until) {
         party_hud_set(bb.text, bb.line_msg, "");

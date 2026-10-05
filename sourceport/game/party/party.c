@@ -7,6 +7,7 @@
 #include <melee/gm/gm_1601.h>
 #include <melee/gm/gm_1A3F.h>
 #include <melee/gm/gmscdata.h>
+#include <melee/gm/gmscene.h>
 #include <melee/gm/gmvsmelee.h>
 #include <melee/lb/lbaudio_ax.h>
 #include <melee/lb/lbdvd.h>
@@ -58,6 +59,13 @@ void party_log(const char* fmt, ...)
     vsnprintf(line, sizeof line, fmt, ap);
     va_end(ap);
     OSReport("[party] %s\n", line);
+}
+
+/* Whether a player paused the match (Start). Melee calls the matches' frame callbacks while it
+ * is paused too, so the party's own logic checks this and holds still. */
+int party_paused(void)
+{
+    return gm_GetDbPauseFlag(1) ? 1 : 0;
 }
 
 int party_env_int(const char* name, int fallback)

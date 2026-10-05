@@ -298,6 +298,9 @@ static void volley_start(void)
 static void volley_frame_end(void)
 {
     int lost;
+    if (party_paused()) {
+        return;   /* everything holds still while the match is paused */
+    }
     vb.frame++;
     if (vb.over) {
         return;

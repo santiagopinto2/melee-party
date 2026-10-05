@@ -75,6 +75,7 @@ void party_preload(StartMeleeData* start);     /* fighters, stage and sound bank
 void party_preload_next(int stkind, int extra_ckind);   /* the next scene's, from a decide */
 void party_rules_base(StartMeleeRules* rules, int stkind);
 int party_env_int(const char* name, int fallback);
+int party_paused(void);                        /* the match is paused (Start) */
 void party_log(const char* fmt, ...);
 
 /* board.c: one board turn is one VS match. */

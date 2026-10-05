@@ -19,7 +19,9 @@ testing a board. After a party the menu opens on the list it was started from.
 2. **Play the turns.** Each turn every player rolls a die, which runs 1 to 10. Press A to stop
    it; you get the number shown. Your fighter then walks that many spaces along the board by
    itself; the space it walks to next blinks gold. Players cannot move, jump or attack on the
-   board: the only inputs are A on the die and choosing a path where it splits.
+   board: the only inputs are A on the die and choosing a path where it splits. Start pauses
+   the board and every minigame as in a normal match; on the board the pause screen shows the
+   turn number.
    - The board is Mario Party 4's Goomba's Greedy Gala. Where the path splits, point the stick
      at the way you want (the gold arrow) and press A.
    - The path into the middle ends on the Goomba's wheel, which spins and sends you out one of

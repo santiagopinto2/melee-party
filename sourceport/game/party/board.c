@@ -129,6 +129,7 @@ static struct {
     Walker w[PARTY_PLAYERS];
     Vec3f eye, look; /* the camera */
     int camera_set;
+    int paused;      /* the match was paused last frame */
 } bd;
 
 /* The board, worked out once from board_ggg.h. */
@@ -685,7 +686,8 @@ static void board_start(void)
     ifAll_802F3394();   /* no damage percents or stocks on the board */
     party_hud_init();
     bd.text = party_hud_text();
-    bd.line_turn = party_hud_line(bd.text, 0.0f, -200.0f, 0.7f, PARTY_WHITE);
+    /* The turn, shown while paused: in the middle, clear of the pause screen's banner. */
+    bd.line_turn = party_hud_line(bd.text, 0.0f, 20.0f, 1.1f, PARTY_GOLD);
     bd.line_msg = party_hud_line(bd.text, 0.0f, -150.0f, 0.75f, PARTY_GOLD);
     bd.line_big = party_hud_line(bd.text, 0.0f, -95.0f, 1.6f, PARTY_WHITE);
     for (i = 0; i < PARTY_PLAYERS; i++) {
@@ -697,8 +699,7 @@ static void board_start(void)
         bd.line_s[i] = party_hud_line(bd.text, x, 210.0f, 0.36f, PARTY_WHITE);
         party_hud_set(bd.text, bd.line_p[i], "P%d", i + 1);
     }
-    party_hud_set(bd.text, bd.line_turn, "TURN %d OF %d", party.turn, party.max_turns);
-    show_players();
+    show_players();   /* the turn shows only while paused (board_frame) */
     party_draw_init(draw_board);
 }
 
@@ -817,8 +818,27 @@ static void spin_frame(void)
 
 static void board_frame(void)
 {
+    int paused = party_paused();
+    if (paused != bd.paused && bd.text != NULL) {
+        /* Paused: the turn shows. Unpausing brings back the damage percents and stocks the board
+         * hides, so they go again. */
+        party_hud_set(bd.text, bd.line_turn, paused ? "TURN %d OF %d" : "", party.turn,
+                      party.max_turns);
+        if (!paused) {
+            ifAll_802F3394();
+        }
+        bd.paused = paused;
+    }
+    board_camera();   /* the board's own view, paused or not */
+    if (paused) {
+        return;   /* everything holds still, as the match does */
+    }
     bd.frame++;
-    board_camera();
+    if (bd.frame == 1) {
+        /* Start pauses only once the match's HUD is on, which "GO!" does; the board hides that
+         * HUD before it, so the board turns pausing on itself. */
+        gmVs_GetSceneController()->state.hud_enabled = 1;
+    }
     switch (bd.phase) {
     case PH_GATHER:
         if (bd.frame > 90 && (everyone_home() || bd.frame > 90 + STALL_FRAMES)) {
@@ -900,7 +920,7 @@ void board_setup(StartMeleeData* start)
     memset(&bd, 0, sizeof bd);
     bd.phase = PH_GATHER;
     party_rules_base(&start->rules, St_Kind_Last);
-    start->rules.disable_pausing = true;
+    start->rules.x4_0 = false;   /* no pause camera: the board keeps its own */
     start->rules.x30 = 0.0f;   /* no damage, should anyone be hit */
     start->rules.on_match_start = board_start;
     start->rules.on_frame_start = board_frame;

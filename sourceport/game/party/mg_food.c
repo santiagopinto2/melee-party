@@ -83,6 +83,9 @@ static void food_start(void)
 
 static void food_frame(void)
 {
+    if (party_paused()) {
+        return;   /* no food falls while the match is paused */
+    }
     fd.frame++;
     if (fd.frame == 150) {
         party_hud_set(fd.text, fd.line_msg, "");
