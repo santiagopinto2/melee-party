@@ -1214,6 +1214,31 @@ void h_resim_phase(int32_t entering) {
 // matchmaking starts (local test peering, from --local-peer); the game then waits for the match.
 int32_t h_online_test_match(MuOnlineMatch* out) {
   const auto& lobby = slippi::online::config();
+  const auto& group = slippi::Matchmaking::local_peer;
+  // A launcher group (--peer-group): Direct for two players, Teams for three or four. The game
+  // boots into the online major and waits there for the group (mu_slippi_menu.c).
+  if (group.group) {
+    const int mode = group.remotes.size() == 1 ? 2 : 3;
+    if (!g_online_test_started) {
+      g_online_test_started = true;
+      apply_content_mode(mode);
+      std::string error;
+      if (slippi::online::native_start_match(mode, group.codes.empty() ? "PEER#001" : group.codes[0],
+                                             (uint8_t)group.character, 0, &error))
+        host::log("online launch: group of %zu, searching (mode %d, character %d)",
+                  group.remotes.size() + 1, mode, group.character);
+      else {
+        host::log("online launch: the group's matchmaking did not start: %s", error.c_str());
+        host::request_exit(2);
+      }
+    }
+    if (out) {
+      std::memset(out, 0, sizeof *out);
+      out->mode = (uint8_t)mode;
+      out->reserved = (uint8_t)group.character;
+    }
+    return 3;   // ABI: 3 = a launcher group, into the online major (not a single match)
+  }
   const bool from_lobby = !lobby.lobby_code.empty();
   if (g_online_test_mode < 0 && !from_lobby) return 0;
   const int mode = from_lobby ? 2 : g_online_test_mode;

@@ -1375,6 +1375,12 @@ static int melee_main(int argc, char** argv) {
       ok = ok && lp.local_port > 0 && !lp.remotes.empty() && lp.remotes.size() <= 3 && lp.local_index >= 0 && lp.local_index <= (int)lp.remotes.size();
       if (!ok) { std::fprintf(stderr, "--local-peer idx:port:ip:port[,ip:port[,ip:port]] (2-4 players, idx < players)\n"); return 2; }
       lp.enabled = true; }
+    else if (a == "--peer-group") {
+      // A launcher lobby group: 2-4 players connected directly to each other (no matchmaking
+      // server), straight into the Melee Party online party.
+      std::string error;
+      if (!slippi::Matchmaking::load_peer_group(next(), &error)) { std::fprintf(stderr, "--peer-group: %s\n", error.c_str()); return 2; }
+    }
     else if (a == "--test-stage") {
       auto& lp = slippi::Matchmaking::local_peer;
       const int stage = std::atoi(next());

@@ -249,7 +249,15 @@ class Matchmaking {
     uint16_t local_port = 0;
     std::vector<std::string> remotes;
     int test_stage = -1;  // deterministic stage selection for local regression runs only
+    // A launcher group (--peer-group): real players over the internet rather than a local test.
+    // Every player's name and connect code, in player-index order, and a long connect window
+    // (each game finishes booting at its own time).
+    bool group = false;
+    std::vector<std::string> names, codes;
+    int character = 2;    // the local player's character (the launcher profile's first main)
   };
+  // --peer-group: a launcher group, from the JSON file the launcher writes (load_peer_group).
+  static bool load_peer_group(const std::string& path, std::string* error);
 
   explicit Matchmaking(User* user);
   ~Matchmaking();

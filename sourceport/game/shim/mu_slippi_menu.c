@@ -38,6 +38,7 @@
 int mu_online_abi_command(unsigned int command, const unsigned char* payload, unsigned int size,
                           unsigned char* response, unsigned int capacity, unsigned int* response_size);
 void mu_online_abi_log(const char* text);
+int mu_online_abi_group(int* mode, int* character);
 void mu_replay_apply_game_info(StartMeleeData* data, const unsigned char* info);
 extern MenuKindData mn_803EB6B0[];
 
@@ -342,8 +343,15 @@ int mu_slippi_first_unlocked(void)
  * loader and have no native counterpart (disc reads are synchronous). */
 unsigned char mu_slippi_boot_mode(unsigned char mode)
 {
+    int group_mode, character;
     if (!mu_slippi_menus_enabled()) {
         return mode;
+    }
+    /* A launcher group (--peer-group): straight into the online major, in the group's mode; it
+     * connects there (online_on_load). */
+    if (mu_online_abi_group(&group_mode, &character)) {
+        slp.mode = (u8) group_mode;
+        return GM_HANYU_CSS;
     }
     boot_oneshot = 1;
     return GM_MENU;
@@ -511,12 +519,54 @@ void mu_slippi_splash_init(void)
     mu_replay_apply_game_info(&gmVsMelee_GetVsData()->start, last_match.game_info);
 }
 
+#define GROUP_WAIT_FRAMES (60 * 150)   /* the connect window is 120 s (slippi_net.cpp) */
+
+/* A launcher group: the host started the search when the game booted (h_online_test_match). Wait
+ * here, as the character select would, until everyone has connected and locked in, then skip the
+ * character select: everyone plays the character from their launcher profile. Returns 1 when the
+ * group is ready. */
+static int wait_for_group(int mode, int character)
+{
+    MuMatchState ms;
+    int i;
+    mu_online_abi_log("online: launcher group: waiting for everyone");
+    for (i = 0; i < GROUP_WAIT_FRAMES; i++) {
+        if (mu_slippi_load_match_state(&ms) != 0 || ms.connection_state == MU_SLP_MM_ERROR) {
+            break;
+        }
+        if (ms.connection_state == MU_SLP_MM_CONNECTION_SUCCESS && ms.local_ready && ms.remote_ready) {
+            /* What the host sent for this player (native_start_match): the party sends it again
+             * between its games. */
+            memset(&last_selections, 0, sizeof last_selections);
+            last_selections.char_id = (unsigned char) character;
+            last_selections.char_opt = 1;
+            last_selections.stage_opt = MU_SLP_STAGE_RANDOM;
+            last_selections.online_mode = (unsigned char) mode;
+            last_match = ms;
+            mu_online_abi_log("online: launcher group: everyone is here");
+            return 1;
+        }
+        mu_poll();
+    }
+    mu_online_abi_log("online: launcher group: could not connect to everyone");
+    return 0;
+}
+
 /* MajorSceneLoad. */
 static void online_on_load(void)
 {
+    static int group_done;
+    int group_mode, character;
     gmMainLib_804D3EE0->vs.unk_530.x6 = gm_801677F0();   /* the 1P port for the event CSS slot */
     zelda_sheik = 1;                                       /* the Zelda icon picks Sheik */
     online_loads++;
+    if (!group_done && mu_online_abi_group(&group_mode, &character)) {
+        group_done = 1;
+        if (wait_for_group(group_mode, character)) {
+            mu_slippi_splash_init();
+            gm_SetGameModeStateId(MU_SLP_STATE_SPLASH);
+        }
+    }
 }
 
 /* MajorSceneUnload. */

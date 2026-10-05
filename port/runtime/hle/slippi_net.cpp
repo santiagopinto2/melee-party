@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <random>
 #include <sstream>
@@ -475,7 +476,11 @@ void NetplayClient::SendAsync(std::unique_ptr<Packet> packet) {
 
 void NetplayClient::ThreadFunc() {
   uint64_t start_time = time_ms();
-  const uint64_t timeout = 8000;
+  // A launcher group's games finish booting at their own times: a long window, and a player whose
+  // connect attempt timed out (ENet's own limit) is tried again until it answers.
+  const bool group = Matchmaking::local_peer.group;
+  const uint64_t timeout = group ? 120000 : 8000;
+  uint64_t next_retry = time_ms() + 3000;
   std::vector<bool> connections(remote_player_count_, false);
   std::vector<ENetAddress> remote_addrs;
   for (int i = 0; i < remote_player_count_; ++i) remote_addrs.push_back(server_[i]->address);
@@ -524,6 +529,14 @@ void NetplayClient::ThreadFunc() {
           break;
         }
         default: break;
+      }
+    }
+    if (group && time_ms() >= next_retry) {
+      next_retry = time_ms() + 3000;
+      for (int i = 0; i < remote_player_count_; ++i) {
+        if (connections[i] || (server_[i] && server_[i]->state != ENET_PEER_STATE_DISCONNECTED)) continue;
+        ENetPeer* again = enet_host_connect(client_, &remote_addrs[i], 3, 0);
+        if (again) { server_[i] = again; host::log("slippi: group: trying %x:%u again", remote_addrs[i].host, remote_addrs[i].port); }
       }
     }
     bool all = true;
@@ -881,6 +894,45 @@ struct Matchmaking::Ticket { const json& resp; };
 // Players are listed by port (1-based), the local one flagged isLocalPlayer; everyone is on
 // 127.0.0.1 so ipAddress and ipAddressLan are the same. Player 1 (index 0) is the decider. A
 // two-player match keeps the six-stage list the local harness always used; with more players
+// --peer-group <file>: the launcher's group, as JSON:
+//   {"index": 1, "port": 51234, "character": 2,
+//    "players": [{"name": "...", "code": "ABC#123", "address": "ip:port"}, ...]}
+// Every player in player-index order (2-4), this one included (its address is not used). It sets
+// up the same direct peering as --local-peer, with the players' real names and a long connect
+// window.
+bool Matchmaking::load_peer_group(const std::string& path, std::string* error) {
+  auto fail = [&](const char* why) { if (error) *error = why; return false; };
+  std::ifstream in(std::filesystem::u8path(path));
+  if (!in) return fail("cannot read the group file");
+  json g = json::parse(in, nullptr, false);
+  if (g.is_discarded() || !g.is_object() || !g["players"].is_array()) return fail("the group file is not valid");
+  const json& players = g["players"];
+  const int n = (int)players.size();
+  const int index = g.value("index", -1), port = g.value("port", 0), character = g.value("character", 2);
+  if (n < 2 || n > 4 || index < 0 || index >= n || port <= 0 || port > 65535 || character < 0 || character > 255)
+    return fail("the group file has a bad player count, index, port or character");
+  LocalPeer lp;
+  lp.enabled = true;
+  lp.group = true;
+  lp.local_index = index;
+  lp.local_port = (uint16_t)port;
+  lp.character = character;
+  for (int i = 0; i < n; ++i) {
+    const json& p = players[i];
+    if (!p.is_object()) return fail("the group file has a bad player");
+    lp.names.push_back(p.value("name", std::string("Player ") + std::to_string(i + 1)).substr(0, 30));
+    lp.codes.push_back(p.value("code", std::string()).substr(0, 18));
+    if (i == index) continue;
+    const std::string addr = p.value("address", std::string());
+    const size_t c = addr.rfind(':');
+    if (c == std::string::npos || c == 0 || std::atoi(addr.c_str() + c + 1) <= 0) return fail("the group file has a bad address");
+    lp.remotes.push_back(addr);
+  }
+  local_peer = lp;
+  host::log("slippi: peer group: player %d of %d, port %d", index + 1, n, port);
+  return true;
+}
+
 // "stages" is left out, so the parser's default for more than two players applies (no Fountain
 // of Dreams).
 static json local_peer_ticket(const UserInfo& me, Matchmaking::OnlinePlayMode mode) {
@@ -894,6 +946,9 @@ static json local_peer_ticket(const UserInfo& me, Matchmaking::OnlinePlayMode mo
     std::string addr = local ? "127.0.0.1:" + std::to_string(local_peer.local_port) : local_peer.remotes[r++];
     if (local) {
       p["uid"] = me.uid; p["displayName"] = me.display_name; p["connectCode"] = me.connect_code;
+    } else if (local_peer.group && i < (int)local_peer.names.size()) {
+      p["uid"] = "peer-group-" + std::to_string(i + 1); p["displayName"] = local_peer.names[i];
+      p["connectCode"] = local_peer.codes[i];
     } else if (n == 2) {
       p["uid"] = "local-peer"; p["displayName"] = "Peer"; p["connectCode"] = "PEER#001";
     } else {

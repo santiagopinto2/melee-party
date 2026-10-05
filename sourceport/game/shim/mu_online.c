@@ -1155,7 +1155,8 @@ static int fetch_match_state(unsigned int* size)
 int mu_online_is_test_run(void)
 {
     int mode, input_port;
-    return mu_online_abi_test_match(&mode, &input_port);
+    int kind = mu_online_abi_test_match(&mode, &input_port);
+    return kind == 1 || kind == 2;   /* 3, a launcher group, goes through the online major */
 }
 
 /* The test harness boots straight into the match scene; this waits there until both games have
@@ -1166,7 +1167,7 @@ int mu_online_test_wait(void)
     int launch_kind;
     unsigned int last = 0xFFFFFFFFu, size = 0;
     launch_kind = mu_online_abi_test_match(&mode, &input_port);
-    if (!launch_kind) {
+    if (launch_kind != 1 && launch_kind != 2) {
         return 0;
     }
     memset(&mu_online, 0, sizeof mu_online);

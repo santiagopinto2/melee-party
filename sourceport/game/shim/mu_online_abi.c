@@ -52,6 +52,20 @@ int mu_online_abi_test_match(int* mode, int* input_port)
     return kind;
 }
 
+/* 1 when this run is a launcher group (--peer-group): its online mode and the local player's
+ * character. The game boots into the online major and waits there for the group. */
+int mu_online_abi_group(int* mode, int* character)
+{
+    MuOnlineMatch match;
+    if (mu_host->version < 13 || mu_host->online_test_match == NULL ||
+        mu_host->online_test_match(&match) != 3) {
+        return 0;
+    }
+    *mode = match.mode;
+    *character = match.reserved;
+    return 1;
+}
+
 void* mu_online_state_address(void);
 unsigned int mu_online_state_size(void);
 

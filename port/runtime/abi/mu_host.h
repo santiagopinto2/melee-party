@@ -136,7 +136,7 @@ typedef struct MuOnlineMatch {
     uint8_t local_port;         /* 0-3: the controller port the local player's pad is read from */
     uint8_t delay_frames;       /* local input delay */
     uint8_t mode;               /* Slippi mode id: 0 Ranked, 1 Unranked, 2 Direct, 3 Teams, 4 Party */
-    uint8_t reserved;
+    uint8_t reserved;           /* a launcher group (kind 3): the local player's character */
 } MuOnlineMatch;
 
 /* Native-only HSD_PObj scope event used by the optional render-stream audit. */
