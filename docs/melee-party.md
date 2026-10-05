@@ -116,8 +116,8 @@ decomp. Each hook is a few lines under `#ifdef MU_NATIVE`.
   menus take `GM_HANYU_CSS`. The mode has four states: the CSS, a board turn, a minigame and the
   results. Each of the last three is an ordinary VS match driven by callbacks.
 - **Board.** The board is a VS match on Final Destination, seen from above: Goomba's Greedy Gala
-  from Mario Party 4, turned a quarter so its short side spans the stage and its long side runs
-  into the screen, on a floor the board draws itself (Final Destination is far wider than it is
+  from Mario Party 4, seen from the same side as MP4's board camera and scaled so its wide side
+  fits between the stage's edges, on a floor the board draws itself (Final Destination is far wider than it is
   deep, and fighters can stand anywhere in depth). Its 135 spaces and path nodes, with their MP4
   types, flags and links, are in `board_ggg.h`, which `tools/extract_mp4_board.py` writes from a
   Mario Party 4 (USA) disc (`data/w02.bin`; format from partyboard's `src/game/board/space.c`).

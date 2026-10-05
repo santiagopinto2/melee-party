@@ -2,10 +2,10 @@
  * player moves once, in order.
  *
  * The board is Mario Party 4's Goomba's Greedy Gala: its spaces, paths and branches as the game
- * lays them out (board_ggg.h, from the game's own data), turned a quarter so its long side runs
- * into the screen, drawn as discs on a floor of its own (party_draw.c; Final Destination is far
- * wider than it is deep, and the fighters can stand anywhere in depth) and seen from above by a
- * camera that looks down on it. The fighters are real but Melee only moves them along its 2D
+ * lays them out (board_ggg.h, from the game's own data), seen the way MP4's board camera sees
+ * it, drawn as discs on a floor of its own (party_draw.c; Final Destination is far wider than it
+ * is deep, and the fighters can stand anywhere in depth) and seen from above by a camera that
+ * looks down on it. The fighters are real but Melee only moves them along its 2D
  * line, so the board keeps each one's place on the floor (x and depth z) itself:
  * - mu_party_fighter_input writes their inputs: holding the stick toward their facing side makes
  *   them walk or run with their own animations and speed, and nobody can attack.
@@ -44,19 +44,19 @@
 #include "party_hud.h"
 #include "board_ggg.h"
 
-/* MP4 units to the board's: x on the board is MP4's z, depth is MP4's x, both about the board's
- * middle. The board's short side (4200 MP4 units) fits between Final Destination's edges
- * (x +-85.6); its long side runs into the screen, where nothing limits it. */
+/* MP4 units to the board's, about the board's middle. MP4's board camera looks from +z like
+ * Melee's, so x and z carry over as they are. The board's wide side (5700 MP4 units between its
+ * outermost spaces) fits between Final Destination's edges (x +-85.6). */
 #define MP4_MID_X 1.0f
 #define MP4_MID_Z 451.0f
-#define MP4_SCALE 0.0362f
+#define MP4_SCALE 0.02737f
 #define FLOOR_X 82.0f    /* the board's own floor */
-#define FLOOR_Z 112.0f
+#define FLOOR_Z 88.0f    /* deeper than the spaces: it covers the stage */
 #define BOUND_X 80.0f    /* where a walking player can go */
-#define BOUND_Z 118.0f
+#define BOUND_Z 70.0f
 #define STAR_Y 15.0f     /* the star over the star space */
-#define STAR_R 4.5f
-#define SPACE_R 3.6f
+#define STAR_R 4.0f
+#define SPACE_R 2.9f
 #define FLOOR_Y 0.0f
 #define STAR_COST 20
 #define DIE_MAX 10
@@ -219,8 +219,8 @@ static void board_init(void)
     g.start = g.roulette_in = g.platform = g.middle = -1;
     for (i = 0; i < GGG_NODES; i++) {
         const GggNode* n = &ggg_nodes[i];
-        g.x[i] = -((float) n->z - MP4_MID_Z) * MP4_SCALE;
-        g.z[i] = ((float) n->x - MP4_MID_X) * MP4_SCALE;
+        g.x[i] = ((float) n->x - MP4_MID_X) * MP4_SCALE;
+        g.z[i] = ((float) n->z - MP4_MID_Z) * MP4_SCALE;
         if (n->flag & F_START) {
             g.start = i;
         }
@@ -264,8 +264,8 @@ static void board_init(void)
 /* Players sharing a space stand a little apart. */
 static void stand_at(int slot, int space, float* x, float* z)
 {
-    *x = g.x[space] + ((float) slot - 1.5f) * 2.0f;
-    *z = g.z[space] + ((slot & 1) ? 1.0f : -1.0f);
+    *x = g.x[space] + ((float) slot - 1.5f) * 1.5f;
+    *z = g.z[space] + ((slot & 1) ? 0.8f : -0.8f);
 }
 
 static Fighter* fighter(int slot)
@@ -337,7 +337,7 @@ static void draw_paths(void)
             if (ggg_nodes[to].flag & (F_OFF_PATH | F_STAR_HOST)) {
                 continue;
             }
-            draw_link(g.on_path[i] && g.on_path[to] ? path : pipe_path, i, to, 0.8f);
+            draw_link(g.on_path[i] && g.on_path[to] ? path : pipe_path, i, to, 0.6f);
         }
     }
 }
@@ -353,10 +353,10 @@ static void draw_roulette(void)
     for (i = 0; i < 4; i++) {
         a[i] = angle_to(g.middle, g.exit[i]);
     }
-    party_draw_disc(grey, g.x[g.platform], FLOOR_Y + 0.2f, g.z[g.platform], SPACE_R + 0.7f,
-                    SPACE_R + 0.7f);
+    party_draw_disc(grey, g.x[g.platform], FLOOR_Y + 0.2f, g.z[g.platform], SPACE_R + 0.5f,
+                    SPACE_R + 0.5f);
     party_draw_disc(dark, g.x[g.platform], FLOOR_Y + 0.3f, g.z[g.platform], SPACE_R, SPACE_R);
-    party_draw_disc_n(rim, mx, FLOOR_Y + 0.2f, mz, 9.0f, 48);
+    party_draw_disc_n(rim, mx, FLOOR_Y + 0.2f, mz, 7.0f, 48);
     for (i = 0; i < 4; i++) {
         /* Each colour faces its way out, reaching halfway to the colours beside it. */
         float lo = 0.0f, hi = 0.0f;
@@ -377,9 +377,9 @@ static void draw_roulette(void)
         }
         lo = a[i] - best_lo * 0.5f;
         hi = a[i] + best_hi * 0.5f;
-        party_draw_floor_sector(wheel_color[i], mx, FLOOR_Y + 0.3f, mz, 8.2f, lo, hi);
+        party_draw_floor_sector(wheel_color[i], mx, FLOOR_Y + 0.3f, mz, 6.3f, lo, hi);
         /* The way out the colour leads to. */
-        party_draw_disc(wheel_color[i], g.x[g.exit[i]], FLOOR_Y + 0.3f, g.z[g.exit[i]], 2.0f, 2.0f);
+        party_draw_disc(wheel_color[i], g.x[g.exit[i]], FLOOR_Y + 0.3f, g.z[g.exit[i]], 1.6f, 1.6f);
     }
     if (bd.phase == PH_SPIN) {
         /* Fast at first, slowing onto the result. */
@@ -389,8 +389,8 @@ static void draw_roulette(void)
     } else {
         pointer = -(float) M_PI_2 + 0.4f * sinf((float) bd.frame * 0.03f);
     }
-    party_draw_disc(dark, mx, FLOOR_Y + 0.4f, mz, 1.6f, 1.6f);
-    party_draw_floor_arrow(rim, FLOOR_Y + 0.5f, mx, mz, cosf(pointer), sinf(pointer), 7.5f, 1.2f);
+    party_draw_disc(dark, mx, FLOOR_Y + 0.4f, mz, 1.3f, 1.3f);
+    party_draw_floor_arrow(rim, FLOOR_Y + 0.5f, mx, mz, cosf(pointer), sinf(pointer), 5.8f, 1.0f);
 }
 
 /* Shops, the Boo house and the lottery: an arrow from the path toward where they would stand. */
@@ -408,9 +408,9 @@ static void draw_markers(void)
         const GXColor* c = (n->flag & F_SHOP) ? &shop : (n->flag & F_BOO) ? &boo
                          : (n->flag & F_LOTTERY) ? &lottery : NULL;
         if (n->flag & F_PIPE) {
-            party_draw_disc(pipe_rim, g.x[i], FLOOR_Y + 0.2f, g.z[i], 4.4f, 4.4f);
-            party_draw_disc(pipe_in, g.x[i], FLOOR_Y + 0.3f, g.z[i], 3.4f, 3.4f);
-            party_draw_disc(pipe_hole, g.x[i], FLOOR_Y + 0.4f, g.z[i], 2.4f, 2.4f);
+            party_draw_disc(pipe_rim, g.x[i], FLOOR_Y + 0.2f, g.z[i], 3.5f, 3.5f);
+            party_draw_disc(pipe_in, g.x[i], FLOOR_Y + 0.3f, g.z[i], 2.7f, 2.7f);
+            party_draw_disc(pipe_hole, g.x[i], FLOOR_Y + 0.4f, g.z[i], 1.9f, 1.9f);
             continue;
         }
         if (c == NULL || n->type != MP4_NODE) {
@@ -420,8 +420,8 @@ static void draw_markers(void)
             int to = n->link[j];
             if (ggg_nodes[to].flag & F_OFF_PATH) {
                 float a = angle_to(i, to);
-                party_draw_floor_arrow(*c, FLOOR_Y + 0.25f, g.x[i] + cosf(a) * 1.5f,
-                                       g.z[i] + sinf(a) * 1.5f, cosf(a), sinf(a), 7.0f, 1.6f);
+                party_draw_floor_arrow(*c, FLOOR_Y + 0.25f, g.x[i] + cosf(a) * 1.2f,
+                                       g.z[i] + sinf(a) * 1.2f, cosf(a), sinf(a), 5.4f, 1.2f);
             }
         }
     }
@@ -460,13 +460,13 @@ static void draw_board(void)
         }
         /* The space the mover walks to blinks gold. */
         next = bd.phase == PH_WALK && i == bd.target && (bd.frame / 8) % 2 == 0;
-        party_draw_disc(next ? gold : rim, x, FLOOR_Y + 0.2f, z, SPACE_R + 0.7f, SPACE_R + 0.7f);
+        party_draw_disc(next ? gold : rim, x, FLOOR_Y + 0.2f, z, SPACE_R + 0.5f, SPACE_R + 0.5f);
         party_draw_disc(k == SPACE_RED ? red : k == SPACE_GREEN ? green : blue, x, FLOOR_Y + 0.3f, z,
                         SPACE_R, SPACE_R);
         if (i == party.star_space) {
             /* A star floating over it, bobbing. */
             float bob = 1.2f * sinf((float) bd.frame * 0.06f);
-            party_draw_disc(gold, x, FLOOR_Y + 0.4f, z, 2.2f, 2.2f);
+            party_draw_disc(gold, x, FLOOR_Y + 0.4f, z, 1.8f, 1.8f);
             party_draw_star(gold, x, FLOOR_Y + STAR_Y + bob, z, STAR_R);
         }
     }
@@ -474,8 +474,8 @@ static void draw_board(void)
         int at = party.p[party.mover].space;
         for (i = 0; i < bd.nchoice; i++) {
             float a = angle_to(at, bd.choice[i]);
-            party_draw_floor_arrow(i == bd.pick ? gold : rim, FLOOR_Y + 0.5f, g.x[at] + cosf(a) * 4.0f,
-                                   g.z[at] + sinf(a) * 4.0f, cosf(a), sinf(a), 6.0f, 1.8f);
+            party_draw_floor_arrow(i == bd.pick ? gold : rim, FLOOR_Y + 0.5f, g.x[at] + cosf(a) * 3.2f,
+                                   g.z[at] + sinf(a) * 3.2f, cosf(a), sinf(a), 4.8f, 1.4f);
         }
     }
 }
@@ -688,14 +688,14 @@ static void board_camera(void)
 {
     int focus = bd.phase >= PH_INTRO && bd.phase <= PH_LAND ? party.mover : -1;
     Vec3f look = { 0.0f, 0.0f, 0.0f };
-    float distance = 470.0f, pitch = 0.80f;   /* the whole board */
+    float distance = 380.0f, pitch = 0.80f;   /* the whole board */
     float k = bd.camera_set ? 0.06f : 1.0f;
     Vec3f eye;
     HSD_CObj* cobj;
 
     if (bd.phase == PH_SPIN) {
         look.x = (g.x[g.middle] + g.x[g.platform]) * 0.5f;
-        look.z = g.z[g.middle];
+        look.z = (g.z[g.middle] + g.z[g.platform]) * 0.5f;
         look.y = 4.0f;
         distance = 150.0f;
         pitch = 0.95f;
