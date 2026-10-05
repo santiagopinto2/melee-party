@@ -107,7 +107,7 @@ void* window_create(int w, int h, const wchar_t* title, bool visible) {
   WNDCLASSEXW wc{};
   wc.cbSize = sizeof wc;
   wc.hInstance = inst; wc.lpfnWndProc = wnd_proc; wc.lpszClassName = L"MeleePortWindow"; wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-  // Resource id 1 is the application icon compiled in from app/melee_unlocked.rc. hIcon is the large
+  // Resource id 1 is the application icon compiled in from app/melee_party.rc. hIcon is the large
   // one (Alt-Tab, the window menu) and hIconSm the 16px one in the title bar; without these the
   // window shows Windows' default application icon even though Explorer shows ours.
   wc.hIcon = (HICON)LoadImageW(inst, MAKEINTRESOURCEW(1), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);

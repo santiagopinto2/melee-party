@@ -10,9 +10,9 @@
 
 namespace crash_report {
 
-// The relay (tools/crash_relay, deployed 2026-09-30): zip only, 8 MB, one report per IP per 10 minutes,
-// 50 a day. Empty = GitHub fallback only.
-constexpr const wchar_t* kCrashRelayUrl = L"https://melee-crash-relay.firescribe-share-worker.workers.dev/report";
+// The relay (tools/crash_relay): zip only, 8 MB, one report per IP per 10 minutes, 50 a day.
+// Empty = GitHub fallback only. Melee Party has no relay deployed yet.
+constexpr const wchar_t* kCrashRelayUrl = L"";
 
 FILETIME g_launch_time{};
 void note_launch() { GetSystemTimeAsFileTime(&g_launch_time); }
@@ -36,7 +36,7 @@ bool post(const std::vector<uint8_t>& zip, const std::string& engine, const std:
   wchar_t host[256]{}, path[512]{};
   parts.lpszHostName = host; parts.dwHostNameLength = 256; parts.lpszUrlPath = path; parts.dwUrlPathLength = 512;
   if (!WinHttpCrackUrl(kCrashRelayUrl, 0, 0, &parts)) return false;
-  HINTERNET session = WinHttpOpen(L"MeleeUnlocked-CrashReport", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, nullptr, nullptr, 0);
+  HINTERNET session = WinHttpOpen(L"MeleeParty-CrashReport", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, nullptr, nullptr, 0);
   if (!session) return false;
   bool ok = false;
   if (HINTERNET connect = WinHttpConnect(session, host, parts.nPort, 0)) {
@@ -92,7 +92,7 @@ bool offer(HWND owner, const std::string& dir, const std::string& engine) {
   ShellExecuteW(nullptr, L"open", L"explorer.exe", select.c_str(), nullptr, SW_SHOWNORMAL);
   const std::string body = "Version: " + std::string(MELEE_PORT_VERSION) + "\nGame Build: " + engine + "\nError: " + where +
                            "\n\nPlease attach melee_crash_report.zip (the folder just opened).";
-  const std::string issue = "https://github.com/Hero88go/melee-unlocked/issues/new?title=" + url_encode("Crash: " + where.substr(0, 80)) +
+  const std::string issue = "https://github.com/santiagopinto2/melee-party/issues/new?title=" + url_encode("Crash: " + where.substr(0, 80)) +
                             "&body=" + url_encode(body);
   ShellExecuteW(nullptr, L"open", widen(issue).c_str(), nullptr, nullptr, SW_SHOWNORMAL);
   MessageBoxW(owner, L"The report could not be sent automatically. A GitHub issue page and the folder with melee_crash_report.zip are open: attach the zip to the issue.",

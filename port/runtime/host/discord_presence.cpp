@@ -132,12 +132,12 @@ json activity_json(const Presence& p) {
   // The picture beside the presence. Discord looks the name up in the application's Rich Presence
   // art assets, so it stays blank until an asset called this is uploaded there; sending it costs
   // nothing meanwhile.
-  activity["assets"] = {{"large_image", "melee_unlocked"}, {"large_text", "Melee Unlocked"}};
+  activity["assets"] = {{"large_image", "melee_party"}, {"large_text", "Melee Party"}};
   const bool has_party = p.party_size > 0 && p.party_max >= p.party_size;
   if (has_party) {
     // The party id only has to be stable and unique to this player; their own connect code is both,
     // and shows nothing the presence does not already show.
-    activity["party"] = {{"id", "melee-unlocked-" + (p.join_code.empty() ? std::string("solo") : p.join_code)},
+    activity["party"] = {{"id", "melee-party-" + (p.join_code.empty() ? std::string("solo") : p.join_code)},
                          {"size", json::array({p.party_size, p.party_max})}};
   }
   // A Join button is only useful while there is room, and the secret is only ever a connect code:
@@ -288,7 +288,7 @@ void worker() {
           last_activity.clear();
           last_update_ms = 0;
           host::log("discord: connected to the Discord client");
-          set_status("Connected. Friends can see Melee Unlocked and press Join.");
+          set_status("Connected. Friends can see Melee Party and press Join.");
         } else if (should_quit()) {
           // stopping; leave the status alone
         } else if (!result.refusal.empty()) {
@@ -350,7 +350,7 @@ void register_launch(const std::string& application_id) {
   std::wstring exe = self;
   const size_t slash = exe.find_last_of(L"\\/");
   if (slash != std::wstring::npos) {
-    const std::wstring launcher = exe.substr(0, slash + 1) + L"melee_unlocked.exe";
+    const std::wstring launcher = exe.substr(0, slash + 1) + L"melee_party.exe";
     if (GetFileAttributesW(launcher.c_str()) != INVALID_FILE_ATTRIBUTES) exe = launcher;
   }
   std::wstring id(application_id.begin(), application_id.end());

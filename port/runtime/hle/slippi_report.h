@@ -1,6 +1,6 @@
 // Slippi game reporting (port of SlippiRustExtensions' game-reporter): after each online game the
 // result is POSTed to Slippi's GraphQL API and, when the server asks for it, the replay is
-// uploaded. Melee Unlocked has no Ranked play, so there are no match status reports or rank lookups.
+// uploaded. Melee Party has no Ranked play, so there are no match status reports or rank lookups.
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include <cstdint>

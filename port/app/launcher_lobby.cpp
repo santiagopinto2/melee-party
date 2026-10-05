@@ -219,7 +219,7 @@ Endpoint endpoint(const std::string& url) {
 }
 Json api(const Json& cfg,const std::string& action,const Json& data) {
   auto e=endpoint(cfg.value("url",std::string()));
-  Internet session{WinHttpOpen(L"MeleeUnlockedLobby/1",WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,nullptr,nullptr,0)};
+  Internet session{WinHttpOpen(L"MeleePartyLobby/1",WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,nullptr,nullptr,0)};
   if(!session.h) throw std::runtime_error("Cannot open network session");
   WinHttpSetTimeouts(session,2500,2500,2500,2500);
   Internet connection{WinHttpConnect(session,e.host.c_str(),e.port,0)};
@@ -639,13 +639,13 @@ LRESULT CALLBACK banner_proc(HWND w,UINT msg,WPARAM wp,LPARAM lp) {
 }
 void banner_create() {
   if(banner_window || !owner) return;
-  WNDCLASSW wc{}; wc.lpfnWndProc=banner_proc; wc.hInstance=GetModuleHandleW(nullptr); wc.lpszClassName=L"MeleeUnlockedBanner";
+  WNDCLASSW wc{}; wc.lpfnWndProc=banner_proc; wc.hInstance=GetModuleHandleW(nullptr); wc.lpszClassName=L"MeleePartyBanner";
   wc.hCursor=LoadCursorW(nullptr,IDC_ARROW); RegisterClassW(&wc);
   NONCLIENTMETRICSW metrics{sizeof metrics}; SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,sizeof metrics,&metrics,0);
   LOGFONTW font=metrics.lfMessageFont; font.lfQuality=CLEARTYPE_QUALITY;
   font.lfHeight=-BU(15); font.lfWeight=FW_SEMIBOLD; banner_title_font=CreateFontIndirectW(&font);
   font.lfHeight=-BU(12); font.lfWeight=FW_NORMAL; banner_text_font=CreateFontIndirectW(&font);
-  banner_window=CreateWindowExW(0,L"MeleeUnlockedBanner",L"",WS_CHILD|WS_CLIPSIBLINGS,0,0,0,0,owner,nullptr,GetModuleHandleW(nullptr),nullptr);
+  banner_window=CreateWindowExW(0,L"MeleePartyBanner",L"",WS_CHILD|WS_CLIPSIBLINGS,0,0,0,0,owner,nullptr,GetModuleHandleW(nullptr),nullptr);
 }
 void process_invites(const Json& state,const std::map<std::string,int>& ping,const std::string& me,bool playing) {
   if(playing || !owner) return;
@@ -1249,7 +1249,7 @@ void init(HWND parent,const std::string& dir) {
   } catch(...) {}
   // The saved mains, also before the Lobby page is opened (a re-announce sends them).
   if(config.count("mains") && config["mains"].is_array() && !config["mains"].empty()) selected_mains=config["mains"].get<std::vector<int>>();
-  WNDCLASSW wc{}; wc.lpfnWndProc=proc; wc.hInstance=GetModuleHandleW(nullptr); wc.lpszClassName=L"MeleeUnlockedLobby";
+  WNDCLASSW wc{}; wc.lpfnWndProc=proc; wc.hInstance=GetModuleHandleW(nullptr); wc.lpszClassName=L"MeleePartyLobby";
   wc.hCursor=LoadCursor(nullptr,IDC_ARROW); wc.hbrBackground=nullptr; RegisterClassW(&wc);
   config["code"]=account_code;
   if(config.value("name",std::string()).empty()) config["name"]=account_name;
@@ -1259,7 +1259,7 @@ void open(const std::string& version,bool ready) {
   build=version; can_play=ready;
   const int dpi=owner?GetDpiForWindow(owner):96;
   RECT client{}; if(owner) GetClientRect(owner,&client);
-  if(!window) window=CreateWindowExW(0,L"MeleeUnlockedLobby",L"",WS_CHILD|WS_CLIPCHILDREN,
+  if(!window) window=CreateWindowExW(0,L"MeleePartyLobby",L"",WS_CHILD|WS_CLIPCHILDREN,
                                      MulDiv(190,dpi,96),0,client.right-MulDiv(190,dpi,96),client.bottom,
                                      owner,nullptr,GetModuleHandleW(nullptr),nullptr);
   layout();

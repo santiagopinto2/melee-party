@@ -1,4 +1,4 @@
-# Melee Unlocked launcher: 한국어
+# Melee Party launcher: 한국어
 mode.vanilla = 바닐라
 mode.custom = 커스텀 ISO
 lobby.build_unknown = 알 수 없는 버전
@@ -225,7 +225,7 @@ crash.offer = 게임이 비정상적으로 종료되었습니다. 문제를 고�
 @Send crash report = 오류 보고서 보내기
 @Crash report sent. Thank you! = 오류 보고서를 보냈습니다. 감사합니다!
 @The report could not be sent automatically. A GitHub issue page and the folder with melee_crash_report.zip are open: attach the zip to the issue. = 보고서를 자동으로 보내지 못했습니다. GitHub 페이지와 melee_crash_report.zip이 있는 폴더를 열었습니다. zip 파일을 첨부해 주세요.
-@Melee Unlocked Launcher = Melee Unlocked 런처
+@Melee Party Launcher = Melee Party 런처
 @Mods = 모드
 @Installed = 설치됨
 @Not installed = 설치 안 됨
@@ -423,12 +423,12 @@ crash.offer = 게임이 비정상적으로 종료되었습니다. 문제를 고�
 @Starting... = 시작 중...
 @Static Recomp = Static Recomp
 @Stops at startup on the Static Recomp. Not supported yet. = Static Recomp에서 시작 시 멈춥니다. 아직 지원되지 않습니다.
-@The 7-Zip tool is missing from the launcher's tools folder (tools\7zr.exe). Reinstall Melee Unlocked to get it. = 런처의 tools 폴더에 7-Zip 도구(tools\7zr.exe)가 없습니다. Melee Unlocked를 다시 설치하세요.
+@The 7-Zip tool is missing from the launcher's tools folder (tools\7zr.exe). Reinstall Melee Party to get it. = 런처의 tools 폴더에 7-Zip 도구(tools\7zr.exe)가 없습니다. Melee Party를 다시 설치하세요.
 @The archive could not be unpacked. Nothing was installed. = 압축 파일을 풀지 못했습니다. 아무것도 설치되지 않았습니다.
 @The download failed. Nothing was installed. = 다운로드하지 못했습니다. 아무것도 설치되지 않았습니다.
-@The mod tools are missing (tools\xdelta3.exe, tools\7zr.exe). Reinstall Melee Unlocked to use Get. = 모드 도구(tools\xdelta3.exe, tools\7zr.exe)가 없습니다. 받기을 사용하려면 Melee Unlocked를 다시 설치하세요.
+@The mod tools are missing (tools\xdelta3.exe, tools\7zr.exe). Reinstall Melee Party to use Get. = 모드 도구(tools\xdelta3.exe, tools\7zr.exe)가 없습니다. 받기을 사용하려면 Melee Party를 다시 설치하세요.
 @The verified patch was not found. Nothing was installed. = 검증된 패치를 찾지 못했습니다. 아무것도 설치되지 않았습니다.
-@The xdelta3 tool is missing from the launcher's tools folder (tools\xdelta3.exe). Reinstall Melee Unlocked to get it. = 런처의 tools 폴더에 xdelta3 도구(tools\xdelta3.exe)가 없습니다. Melee Unlocked를 다시 설치하세요.
+@The xdelta3 tool is missing from the launcher's tools folder (tools\xdelta3.exe). Reinstall Melee Party to get it. = 런처의 tools 폴더에 xdelta3 도구(tools\xdelta3.exe)가 없습니다. Melee Party를 다시 설치하세요.
 @Untested on the Static Recomp. = Static Recomp에서 테스트되지 않았습니다.
 @This version is not supported yet. = 이 버전은 아직 지원되지 않습니다.
 

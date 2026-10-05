@@ -1,4 +1,4 @@
-"""Melee Unlocked lobby rendezvous. No Slippi credentials or gameplay traffic.
+"""Melee Party lobby rendezvous. No Slippi credentials or gameplay traffic.
 
 Run behind HTTPS for Internet use; HTTP is for loopback development only.
 UDP on the same port registers observed peer endpoints for direct RTT probes.

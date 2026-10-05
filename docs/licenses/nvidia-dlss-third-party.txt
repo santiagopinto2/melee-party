@@ -1,5 +1,5 @@
 Third-party notices for the NVIDIA DLSS runtime (nvngx_dlss.dll and the other DLSS DLLs shipped
-with Melee Unlocked). NVIDIA's DLSS Programming Guide (31 March 2026), section 4.2.3, asks that
+with Melee Party). NVIDIA's DLSS Programming Guide (31 March 2026), section 4.2.3, asks that
 the product's public documentation include these copyright and license texts. Extracted from
 section 9.6 of https://github.com/NVIDIA/DLSS/blob/main/doc/DLSS_Programming_Guide_Release.pdf
 (text extraction; typographic quotes and dashes converted to ASCII).

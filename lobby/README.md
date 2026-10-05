@@ -1,7 +1,7 @@
-# Melee Unlocked lobby and friends
+# Melee Party lobby and friends
 
 The launcher has a **Multiplayer Lobby** tab. It uses the peer-to-peer network
-(no Melee Unlocked service); the connection mode and bootstrap address are not shown
+(no Melee Party service); the connection mode and bootstrap address are not shown
 in the normal UI. Public lobby membership is opt-in: **Go Online** starts unchecked. Checking
 it shows your name in reachable players' rosters and lets them send match requests
 while the launcher is open. Unchecking it removes you from the public roster.
@@ -54,7 +54,7 @@ region and Slippi code remain self-reported. While a friend has the launcher
 open but has left the public lobby, both launchers announce a pairwise DHT
 topic so their status can still reconnect without a shared server.
 
-The public DHT is existing third-party infrastructure, not a Melee Unlocked
+The public DHT is existing third-party infrastructure, not a Melee Party
 service. There is currently **no relay**, so restrictive NATs/firewalls can
 prevent discovery or direct messages, and the roster/chat cannot guarantee
 completeness or offline delivery. A manually entered peer address only works
@@ -151,7 +151,7 @@ one while the game runs, including rematches in a single static recomp session.
 
 ```powershell
 py -m unittest discover -s lobby -v
-cmake --build build-sourceport-slippi --config Release --target melee_unlocked port_launcher_lobby_client_test
+cmake --build build-sourceport-slippi --config Release --target melee_party port_launcher_lobby_client_test
 $env:MELEE_LOBBY_CLIENT_TEST_EXE = (Resolve-Path build-sourceport-slippi/port/Release/port_launcher_lobby_client_test.exe).Path
 py -m unittest discover -s lobby -v
 ```

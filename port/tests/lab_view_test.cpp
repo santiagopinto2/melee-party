@@ -144,7 +144,7 @@ int stage_line_count(ImU32 color, float y_screen, float x0, float x1, float w, f
 
 int unit_test() {
   namespace fs = std::filesystem;
-  const fs::path dir = fs::temp_directory_path() / "melee_unlocked_lab_test";
+  const fs::path dir = fs::temp_directory_path() / "melee_party_lab_test";
   std::error_code ec;
   fs::remove_all(dir, ec);
   fs::create_directories(dir, ec);

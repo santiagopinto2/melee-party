@@ -2369,7 +2369,7 @@ bool reserve_memory() {
   if (mem1 != (void*)MEM1_BASE || lc != (void*)LOCKED_CACHE_BASE) {
     char msg[200];
     std::snprintf(msg, sizeof msg, "Could not reserve the game's memory at 0x80000000 (%p) or 0xE0000000 (%p).", mem1, lc);
-    MessageBoxA(nullptr, msg, "Melee Unlocked", MB_ICONERROR | MB_OK);
+    MessageBoxA(nullptr, msg, "Melee Party", MB_ICONERROR | MB_OK);
     return false;
   }
   host::ram = (uint8_t*)MEM1_BASE;

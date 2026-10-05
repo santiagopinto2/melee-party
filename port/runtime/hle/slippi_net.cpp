@@ -386,8 +386,8 @@ void NetplayClient::OnData(Packet& packet, ENetPeer* peer) {
       break;
     }
     case NP_MSG_SLIPPI_CONN_SELECTED: break;
-    case NP_MSG_SLIPPI_COMPLETE_STEP: break;   // Ranked game preparation: no Ranked in Melee Unlocked
-    case NP_MSG_SLIPPI_SYNCED_STATE: break;    // Ranked tiebreak recovery: no Ranked in Melee Unlocked
+    case NP_MSG_SLIPPI_COMPLETE_STEP: break;   // Ranked game preparation: no Ranked in Melee Party
+    case NP_MSG_SLIPPI_SYNCED_STATE: break;    // Ranked tiebreak recovery: no Ranked in Melee Party
     default: host::log("slippi: unknown netplay message %u", mid); break;
   }
 }

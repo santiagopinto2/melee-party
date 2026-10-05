@@ -2231,7 +2231,7 @@ static void settings_clean_chrome(const char* heading, float slide_offset) {
   front->AddLine(ImVec2(hx+4,hy+94),ImVec2(hx+hw-78,hy+94),
                  settings_palette_tint(0,IM_COL32(255,134,197,240)),2.0f);
   front->AddText(ImGui::GetFont(),12.0f,ImVec2(hx+24,hy+12),
-                 IM_COL32(255,235,248,255),"MELEE UNLOCKED");
+                 IM_COL32(255,235,248,255),"MELEE PARTY");
   const float heading_size=std::strlen(heading)>9?34.0f:42.0f;
   settings_slanted_text(front,settings_heading_font(),heading_size,
       ImVec2(hx+23,hy+46),IM_COL32_WHITE,heading,.08f);
@@ -3594,7 +3594,7 @@ bool settings_frame(SettingsState& state, RenderOptions& options) {
                           window_pos.y + window_size.y * 0.51f);
       const float radius = std::min(224.0f, std::min(window_size.x, window_size.y) * 0.315f);
       draw->AddText(ImVec2(window_pos.x + 24.0f, window_pos.y + 18.0f),
-                    IM_COL32(240, 248, 255, 255), "MELEE UNLOCKED  /  SETTINGS");
+                    IM_COL32(240, 248, 255, 255), "MELEE PARTY  /  SETTINGS");
       const ImVec2 hint_min(window_pos.x + window_size.x - 238.0f,
                             window_pos.y + 46.0f);
       const ImVec2 hint_max(window_pos.x + window_size.x - 18.0f,
@@ -4334,7 +4334,7 @@ bool settings_frame(SettingsState& state, RenderOptions& options) {
                           "(model, weight hint, skin structure, scaling filters) are under Advanced.\n%s",
                           kExperimentalNote);
       if (!dlss5::model_found())
-        settings_hint("DLSS 5 model file not found. It is not included with Melee Unlocked: put your own "
+        settings_hint("DLSS 5 model file not found. It is not included with Melee Party: put your own "
                       "nvngx_dlssnr.dll beside melee_source.exe, then restart.");
       if (options.dlss5) {
         // Sliders apply when released: every change rebuilds the model's feature, and doing that on
@@ -6601,7 +6601,7 @@ bool settings_frame(SettingsState& state, RenderOptions& options) {
     draw->AddRectFilled(p, ImVec2(p.x + width, p.y + height), IM_COL32(8, 10, 20, 226), 8.0f);
     draw->AddRectFilled(p, ImVec2(p.x + width, p.y + 4), accent);
     draw->AddText(ImVec2(p.x + 20, p.y + 17), IM_COL32(250, 244, 248, 255),
-                  state.menu_quit ? "QUIT MELEE UNLOCKED?" : "MELEE UNLOCKED");
+                  state.menu_quit ? "QUIT MELEE PARTY?" : "MELEE PARTY");
     if (state.menu_quit)
       draw->AddText(ImVec2(p.x + 20, p.y + 41), IM_COL32(183, 174, 190, 255), "The current match will end.");
     const float gap = 10.0f;
@@ -6639,7 +6639,7 @@ bool settings_frame(SettingsState& state, RenderOptions& options) {
       if (action("##confirm_quit", "QUIT", 0) || enter) { state.menu_open = false; host::request_exit(0); }
       if (action("##cancel_quit", "CANCEL", 1)) { state.menu_open = false; state.menu_quit = false; }
       draw->AddText(ImVec2(p.x + 20, p.y + 144), IM_COL32(167, 162, 178, 255),
-                    "QUIT MELEE UNLOCKED?     ENTER  QUIT     ESC  CANCEL");
+                    "QUIT MELEE PARTY?     ENTER  QUIT     ESC  CANCEL");
     }
     ImGui::End();
   }

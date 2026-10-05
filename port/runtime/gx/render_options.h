@@ -109,11 +109,11 @@ struct RenderOptions {
   bool low_spec = false;
   LowSpecPrevious low_spec_previous;
   // Discord Rich Presence, off by default: it tells the player's Discord friends what they are
-  // playing. The application id is Melee Unlocked's own, registered once for the whole game rather
-  // than per player, and it is not a secret (Rich Presence needs no token). A player can override it
-  // in the settings to point the presence at an application of their own.
+  // playing. The application id would be Melee Party's own, registered once for the whole game rather
+  // than per player, and it is not a secret (Rich Presence needs no token). None is registered yet;
+  // a player can set one in the settings to point the presence at an application of their own.
   bool discord_presence = false;
-  std::string discord_app_id = "1549608280949792790";
+  std::string discord_app_id;
   // Source Port mod profile (Mods/Profiles/<name>.ini) loaded at start; empty = the retail game.
   // Command-line --mod-* flags take precedence. The static recomp ignores it.
   std::string mod_profile;

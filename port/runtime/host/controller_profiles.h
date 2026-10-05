@@ -4,7 +4,7 @@
 //
 // A profile is a small text file in a ControllerProfiles folder beside port-settings.ini:
 //
-//   # Melee Unlocked controller profile
+//   # Melee Party controller profile
 //   device hid
 //   A 1
 //   B 2

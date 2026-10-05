@@ -34,7 +34,7 @@ void window_set_title(const wchar_t* title);
 // Start of every window title: the game, its version and the engine running it ("Source Port" or
 // "Static Recomp"), so the title bar and any screenshot of it say which build is playing. main()
 // sets it once before the window opens; every title the runtime writes begins with it.
-inline std::wstring& window_title_base() { static std::wstring base = L"Melee Unlocked"; return base; }
+inline std::wstring& window_title_base() { static std::wstring base = L"Melee Party"; return base; }
 // A small progress panel over the game window for startup work that holds the first frame back
 // (compiling the pipeline cache on the first launch of a new version). Call from the thread that
 // owns the game window; nothing is shown for a hidden window.

@@ -124,7 +124,7 @@ void open_theme_picker() {
   static bool registered=false;
   if(!registered) {
     WNDCLASSW wc{}; wc.hInstance=GetModuleHandleW(nullptr);wc.lpfnWndProc=theme_picker_proc;
-    wc.lpszClassName=L"MeleeUnlockedThemePicker";wc.hCursor=LoadCursorW(nullptr,IDC_ARROW);
+    wc.lpszClassName=L"MeleePartyThemePicker";wc.hCursor=LoadCursorW(nullptr,IDC_ARROW);
     registered=RegisterClassW(&wc)!=0 || GetLastError()==ERROR_CLASS_ALREADY_EXISTS;
   }
   g_theme_before=g_theme_preview=launcher::theme::accent;
@@ -133,7 +133,7 @@ void open_theme_picker() {
   RECT work{};SystemParametersInfoW(SPI_GETWORKAREA,0,&work,0);
   int px=std::clamp(int(anchor.right-S(THEME_W)),int(work.left),int(work.right-S(THEME_W)));
   int py=std::clamp(int(anchor.top-S(THEME_H)-S(8)),int(work.top),int(work.bottom-S(THEME_H)));
-  g_theme_picker=CreateWindowExW(WS_EX_TOOLWINDOW|WS_EX_TOPMOST,L"MeleeUnlockedThemePicker",L"Theme",
+  g_theme_picker=CreateWindowExW(WS_EX_TOOLWINDOW|WS_EX_TOPMOST,L"MeleePartyThemePicker",L"Theme",
     WS_POPUP,px,py,S(THEME_W),S(THEME_H),g_main,nullptr,GetModuleHandleW(nullptr),nullptr);
   if(g_theme_picker) { ShowWindow(g_theme_picker,SW_SHOWNORMAL);UpdateWindow(g_theme_picker);SetFocus(g_theme_hex); }
 }

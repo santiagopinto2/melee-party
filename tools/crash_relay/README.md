@@ -12,7 +12,3 @@ Deploy (once):
    URL into `kCrashRelayUrl` in `port/app/launcher_crash.inl`.
 
 Limits: zip only, 8 MB, one report per IP per 10 minutes, 50 per day.
-
-Deployed 2026-09-30 as `melee-crash-relay` (KV namespace RATE 36cc7f4af26b4a8abd15d99aa824aae9, preview URLs off):
-https://melee-crash-relay.firescribe-share-worker.workers.dev/report. Checked: GET 405, wrong type 415,
-a marked test report 200, an immediate second report 429.

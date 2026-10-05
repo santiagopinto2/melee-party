@@ -11,14 +11,14 @@ int g_failures = 0;
 
 launcher::EngineInputs release(const std::set<std::string>& files) {
   launcher::EngineInputs in;
-  in.dir = "C:\\Games\\MeleeUnlocked";
+  in.dir = "C:\\Games\\MeleeParty";
   in.exists = [files](const std::string& p) { return files.count(p) != 0; };
   return in;
 }
 }  // namespace
 
 int main() {
-  const std::string d = "C:\\Games\\MeleeUnlocked\\";
+  const std::string d = "C:\\Games\\MeleeParty\\";
   const std::set<std::string> full = {d + "melee_port.exe", d + "melee_port_compat.exe",
                                       d + "melee_source.exe", d + "melee_game.dll"};
 
@@ -29,7 +29,7 @@ int main() {
   // Choosing Source is read from the ini, and is offered when both of its files are there.
   engine = launcher::parse_engine_line("engine=1", engine);
   CHECK(engine == launcher::ENGINE_SOURCE);
-  CHECK(launcher::source_exe_dir(release(full)) == "C:\\Games\\MeleeUnlocked");
+  CHECK(launcher::source_exe_dir(release(full)) == "C:\\Games\\MeleeParty");
 
   // Out-of-range values keep the current choice.
   CHECK(launcher::parse_engine_line("engine=7", launcher::ENGINE_LEGACY) == launcher::ENGINE_LEGACY);

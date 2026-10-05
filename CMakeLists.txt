@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(MeleeUnlocked LANGUAGES CXX)
+project(MeleeParty LANGUAGES CXX)
 enable_testing()
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 

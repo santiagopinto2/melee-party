@@ -1,18 +1,21 @@
-Melee Unlocked
+Melee Party
+Copyright (C) 2026 Santiago Pinto
 Copyright (C) 2026 Hero88go and the Melee Unlocked contributors
 
-Melee Unlocked is free software: you can redistribute it and/or modify it under the terms of
+Melee Party is a modified version of Melee Unlocked (https://github.com/Hero88go/melee-unlocked).
+
+Melee Party is free software: you can redistribute it and/or modify it under the terms of
 the GNU General Public License as published by the Free Software Foundation, either version 3
 of the License, or (at your option) any later version.
 
-Melee Unlocked is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+Melee Party is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See
 the GNU General Public License for more details. You should have received a copy of the GNU
 General Public License along with this program (LICENSE in the source, licenses\COPYING.txt in
 a release). If not, see <https://www.gnu.org/licenses/>.
 
-Releases up to and including 0.8.1 were published under GPL-2.0-or-later. Starting with 0.8.5
-the project is published under GPL-3.0-or-later. Source files whose header names another
+Melee Unlocked releases up to and including 0.8.1 were published under GPL-2.0-or-later.
+Starting with 0.8.5 the project is published under GPL-3.0-or-later. Source files whose header names another
 project keep that project's notice (for example GPL-2.0-or-later for code ported from Dolphin
 and Slippi Ishiiruka); those terms are compatible with version 3 of the GPL.
 
@@ -26,7 +29,7 @@ SDKs License, the License Agreement for NVIDIA Software Development Kits or the 
 Simplified Software License, the licensors of this Program grant you additional permission to
 convey the resulting work.
 
-This permission is granted by the copyright holders of Melee Unlocked's own code and applies to
+This permission is granted by the copyright holders of Melee Party's own code and applies to
 every file of the Program whose copyright they hold. Code that this project takes from other
 projects is covered by its own license only.
 
@@ -87,6 +90,6 @@ Shipped beside the program under their own terms, not covered by the GPL:
 - Intel XeSS (libxess.dll, Intel Simplified Software License): port/third_party/xess/LICENSE.txt
 - Microsoft Visual C++ runtime DLLs (Microsoft Visual Studio distributable code)
 
-Super Smash Bros. Melee is the property of Nintendo and HAL Laboratory. Melee Unlocked is not
+Super Smash Bros. Melee is the property of Nintendo and HAL Laboratory. Melee Party is not
 affiliated with or endorsed by Nintendo, HAL Laboratory, NVIDIA, Intel or the projects above.
 You supply your own disc image.

@@ -40,7 +40,7 @@ def collect(hwnd, _):
     user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
     name = ctypes.create_unicode_buffer(128)
     user32.GetClassNameW(hwnd, name, len(name))
-    if pid.value == args.pid and name.value == "MeleeUnlockedLauncher":
+    if pid.value == args.pid and name.value == "MeleePartyLauncher":
         found.append(hwnd)
     return True
 
@@ -58,7 +58,7 @@ if args.tab is not None:
     user32.SendMessageW(window, WM_LBUTTONUP, 0, point)
     time.sleep(1.5)
 if args.lobby_view or args.emoji:
-    lobby = user32.FindWindowExW(window, None, "MeleeUnlockedLobby", None)
+    lobby = user32.FindWindowExW(window, None, "MeleePartyLobby", None)
     if not lobby:
         raise RuntimeError("Lobby window not found")
     if args.lobby_view:

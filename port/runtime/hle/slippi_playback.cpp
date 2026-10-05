@@ -84,7 +84,7 @@ std::unordered_map<uint32_t, bool> build_denylist_in(const std::string& sys_dir)
   }
   deny[0x8038add0] = true;   // Online/Core/PreventFileAlarms/PreventMusicAlarm.asm (rollback display off)
   deny[0x80023FFC] = true;   // Online/Core/PreventFileAlarms/MuteMusic.asm
-  // Older Melee Unlocked recordings exposed these PC-only, host-gated hooks in their Gecko list.
+  // Older Melee Party recordings exposed these PC-only, host-gated hooks in their Gecko list.
   // The playback executable already has its own gated translations; accepting the recorded C2s as
   // ordinary replay codes would make them unconditional. New recordings terminate before them.
   deny[0x802F9A3C] = true;   // Port: PAL Stock Icons

@@ -8,7 +8,7 @@ Accepted matches currently use Slippi Direct.
 
 ## Decision
 
-The lobby can avoid a server **operated by Melee Unlocked**, but an Internet-wide
+The lobby can avoid a server **operated by Melee Party**, but an Internet-wide
 public roster, chat and invitations cannot be made reliably with only two
 arbitrary Windows clients. Peers need a way to discover each other, and some
 networks cannot receive unsolicited UDP. Any Internet-wide design relies on

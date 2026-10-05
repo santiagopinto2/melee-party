@@ -32,7 +32,7 @@ extern const char* const SLIPPI_SEMVER;   // netplay version this port speaks
 enum NetMsg : uint8_t {
   NP_MSG_SLIPPI_PAD = 0x80, NP_MSG_SLIPPI_PAD_ACK = 0x81, NP_MSG_SLIPPI_MATCH_SELECTIONS = 0x82, NP_MSG_SLIPPI_CONN_SELECTED = 0x83,
   NP_MSG_SLIPPI_CHAT_MESSAGE = 0x84, NP_MSG_SLIPPI_COMPLETE_STEP = 0x85, NP_MSG_SLIPPI_SYNCED_STATE = 0x86,
-  // Melee Unlocked only: the sender's build (retail or a mod's identity). Slippi Dolphin logs an
+  // Melee Party only: the sender's build (retail or a mod's identity). Slippi Dolphin logs an
   // unknown id and ignores it, so it is safe to send to anyone.
   NP_MSG_MU_BUILD = 0xE0,
 };
@@ -235,7 +235,7 @@ class NetplayClient {
 
 class Matchmaking {
  public:
-  // Slippi's mode ids. RANKED stays defined only as protocol id 0: Melee Unlocked never searches it.
+  // Slippi's mode ids. RANKED stays defined only as protocol id 0: Melee Party never searches it.
   enum OnlinePlayMode { RANKED = 0, UNRANKED = 1, DIRECT = 2, TEAMS = 3, PARTY = 4 };
   enum ProcessState { IDLE, INITIALIZING, MATCHMAKING, OPPONENT_CONNECTING, CONNECTION_SUCCESS, ERROR_ENCOUNTERED };
   struct MatchSearchSettings { OnlinePlayMode mode = UNRANKED; std::string connect_code; };

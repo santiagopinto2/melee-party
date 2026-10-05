@@ -536,7 +536,7 @@ void create_replay_controls() {
   g_replays[5]=make(L"BUTTON",L"\x2039",BS_OWNERDRAW,800,68,30,26,ID_REPLAY_PREV);
   g_replays[6]=make(L"BUTTON",L"\x203A",BS_OWNERDRAW,928,68,30,26,ID_REPLAY_NEXT);
   WNDCLASSEXW wc{sizeof wc}; wc.lpfnWndProc=stats_proc; wc.hInstance=GetModuleHandleW(nullptr);
-  wc.hCursor=LoadCursorW(nullptr,IDC_ARROW); wc.lpszClassName=L"MeleeUnlockedReplayStats";
+  wc.hCursor=LoadCursorW(nullptr,IDC_ARROW); wc.lpszClassName=L"MeleePartyReplayStats";
   RegisterClassExW(&wc);
   g_replay_stats=CreateWindowExW(0,wc.lpszClassName,L"",WS_CHILD|WS_VSCROLL,S(212),S(112),S(756),S(REPLAY_H-112),g_main,nullptr,wc.hInstance,nullptr);
   SetWindowTheme(g_replay_stats,L"DarkMode_Explorer",nullptr);

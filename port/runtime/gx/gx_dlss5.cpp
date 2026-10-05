@@ -86,7 +86,7 @@ bool profile_save(const std::string& name, const Tuning& t) {
   if (!f) return false;
   const Tuning saved = bounded_tuning(t);
   f << std::setprecision(std::numeric_limits<float>::max_digits10);
-  f << "# Melee Unlocked DLSS 5 profile\n"
+  f << "# Melee Party DLSS 5 profile\n"
        "intensity " << saved.intensity << "\ndetail " << saved.detail << "\ntone " << saved.tone << "\nskin " << saved.skin
     << "\nstyle " << saved.style << "\npreset " << saved.preset << "\nautomask " << (saved.auto_mask ? 1 : 0) << "\n";
   f << "resolution " << saved.resolution_scale << "\ndownsample " << saved.downsample_filter

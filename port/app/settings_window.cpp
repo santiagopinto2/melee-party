@@ -54,9 +54,9 @@ static std::function<void()> g_standby_reload;
 static bool standby_wait(void* hwnd) {
   if (!g_standby_parent) return true;
   wchar_t name[96];
-  swprintf_s(name, L"Local\\MeleeUnlockedSettingsShow-%lu", g_standby_parent);
+  swprintf_s(name, L"Local\\MeleePartySettingsShow-%lu", g_standby_parent);
   HANDLE show = CreateEventW(nullptr, FALSE, FALSE, name);
-  swprintf_s(name, L"Local\\MeleeUnlockedSettingsQuit-%lu", g_standby_parent);
+  swprintf_s(name, L"Local\\MeleePartySettingsQuit-%lu", g_standby_parent);
   HANDLE quit = CreateEventW(nullptr, FALSE, FALSE, name);
   HANDLE parent = OpenProcess(SYNCHRONIZE, FALSE, g_standby_parent);
   bool shown = false;
@@ -84,7 +84,7 @@ int run_settings_window(gx::RenderOptions& options, unsigned long standby_parent
   g_standby_parent = standby_parent;
   g_standby_reload = std::move(reload);
   gx::settings_fill_window(true);   // the panel IS this window, not a box floating inside it
-  void* hwnd = host::window_create(620, 700, L"Melee Unlocked settings", standby_parent == 0);
+  void* hwnd = host::window_create(620, 700, L"Melee Party settings", standby_parent == 0);
   if (!hwnd) { host::log("settings: cannot create a window"); return 1; }
   // The backend the game is set to, so the panel runs on the renderer this machine will use. If it
   // cannot be created the other one still opens the settings rather than leaving no way in.

@@ -1,6 +1,6 @@
 """Assembles the Windows release archive with both game builds and optional DLSS 5 support.
 
-Contents: MeleeUnlockedLauncher.exe (optional client), the normal/compatibility legacy
+Contents: MeleePartyLauncher.exe (optional client), the normal/compatibility legacy
 executables, optional Source Port files, the Streamline/DLSS runtime DLLs, the Slippi Sys files
 the legacy EXI device serves (code tables, game file diffs), a launcher batch file, README and
 licenses. No game data:
@@ -21,7 +21,7 @@ from verify_generated_gct import verify_generated_gct
 
 ROOT = Path(__file__).resolve().parents[1]
 
-README = """Melee Unlocked {version}
+README = """Melee Party {version}
 ========================
 
 A native Windows build of Super Smash Bros. Melee NTSC 1.02 with Slippi: the game logic runs
@@ -32,7 +32,7 @@ online play.
 You need your own Melee NTSC 1.02 ISO. Nothing from the game is included.
 
 Not affiliated with, endorsed by, or supported by the Slippi team, Nintendo or HAL Laboratory.
-Bugs and questions about this build go to https://github.com/hero88go/melee-unlocked/issues,
+Bugs and questions about this build go to https://github.com/santiagopinto2/melee-party/issues,
 not to the Slippi team.
 
 Install: two ways, pick one
@@ -40,14 +40,14 @@ Install: two ways, pick one
 The launcher is OPTIONAL. Nothing in the game depends on it.
 
 A. Manual (no launcher)
-   1. Drag your Melee NTSC 1.02 ISO onto MeleeUnlocked.bat, or put the ISO next to it named
-      melee.iso and double-click MeleeUnlocked.bat.
+   1. Drag your Melee NTSC 1.02 ISO onto MeleeParty.bat, or put the ISO next to it named
+      melee.iso and double-click MeleeParty.bat.
    2. That is it. The first launch precompiles the graphics pipelines (15 to 30 seconds,
       progress in the title bar). To update, extract a newer zip over this folder; your
       settings, saves and replays are kept.
 
-B. Melee Unlocked Launcher (optional convenience)
-   1. Run MeleeUnlockedLauncher.exe and drop the ISO onto its window (Build tab). It checks
+B. Melee Party Launcher (optional convenience)
+   1. Run MeleePartyLauncher.exe and drop the ISO onto its window (Build tab). It checks
       the disc, precompiles the graphics pipelines and remembers the path.
    2. Press PLAY. The launcher checks for new releases on every start and "Update and
       restart" installs one in place. It also shows which Slippi account will be used.
@@ -85,7 +85,7 @@ installs the GameCube adapter driver). For offline play it is not required. Unra
 and Teams work against players on regular Slippi Dolphin.
 
 Crashes: after a crash the launcher offers to send the report (crash text, minidump and logs) with
-one click. Other bugs: https://github.com/hero88go/melee-unlocked/issues with melee_port.log,
+one click. Other bugs: https://github.com/santiagopinto2/melee-party/issues with melee_port.log,
 port-settings.ini and the steps to reproduce.
 
 Watching replays: drop a .slp file onto WatchReplay.bat. That runs melee_port_playback.exe, a
@@ -115,9 +115,9 @@ Known gaps in this version: ranked play reports results but has not been tested 
 
 License and source code
 -----------------------
-Melee Unlocked is free software under the GNU General Public License, version 3 or (at your
+Melee Party is free software under the GNU General Public License, version 3 or (at your
 option) any later version: licenses\\COPYING.txt, with the notices in licenses\\NOTICE.txt.
-Source code for this version: https://github.com/hero88go/melee-unlocked/tree/v{version}
+Source code for this version: https://github.com/santiagopinto2/melee-party/tree/v{version}
 The NVIDIA (DLSS, Streamline, Reflex) and Intel (XeSS) runtime files and the Microsoft Visual C++
 runtime files in this folder are not covered by the GPL; their own terms are in licenses\\.
 ASIO is a registered trademark of Steinberg Media Technologies GmbH. The SDK and host-helper
@@ -238,7 +238,7 @@ def main():
                 verify_generated_gct(executable)
             except ValueError as error:
                 raise SystemExit(str(error)) from error
-    name = f"MeleeUnlocked-{args.version}"
+    name = f"MeleeParty-{args.version}"
     folder = args.out / name
     if folder.exists():
         shutil.rmtree(folder)
@@ -286,9 +286,9 @@ def main():
                 raise SystemExit(f"missing Source Port debug file: {args.source_dbg}")
             shutil.copy2(args.source_dbg, folder / "melee_game.dbg")
         print(f"source port: {args.source_exe} + {args.source_dll}")
-    launcher = args.exe.parent / "MeleeUnlockedLauncher.exe"
+    launcher = args.exe.parent / "MeleePartyLauncher.exe"
     if not launcher.is_file():
-        raise SystemExit(f"missing launcher: {launcher} (build target melee_unlocked)")
+        raise SystemExit(f"missing launcher: {launcher} (build target melee_party)")
     # The launcher is what shows the version and checks for updates, and it is a separate
     # executable with the version compiled into it just like the game. 0.2.0 shipped with a
     # launcher built before VERSION changed, so it called itself 0.1.14, saw 0.2.0 on GitHub and
@@ -296,8 +296,8 @@ def main():
     # cannot answer --version on a pipe, so look for the version string in the binary instead.
     if args.version.encode() not in launcher.read_bytes():
         raise SystemExit(f"{launcher.name} does not contain the string {args.version!r}, so it was built "
-                         f"before VERSION changed; build the melee_unlocked target and try again")
-    shutil.copy2(launcher, folder / "MeleeUnlockedLauncher.exe")
+                         f"before VERSION changed; build the melee_party target and try again")
+    shutil.copy2(launcher, folder / "MeleePartyLauncher.exe")
     # Launcher translations (plain UTF-8 text; English is built in).
     lang_src = ROOT / "lang"
     if lang_src.is_dir():
@@ -346,7 +346,7 @@ def main():
         print(f"pipeline recipes: {recipes} ({recipes.stat().st_size} bytes)")
     (folder / "User/Slippi").mkdir(parents=True)
     (folder / "Replays").mkdir()
-    (folder / "MeleeUnlocked.bat").write_bytes(BAT.replace("\n", "\r\n").encode("utf-8"))
+    (folder / "MeleeParty.bat").write_bytes(BAT.replace("\n", "\r\n").encode("utf-8"))
     if args.playback_exe:
         (folder / "WatchReplay.bat").write_bytes(PLAYBACK_BAT.replace("\n", "\r\n").encode("utf-8"))
     (folder / "README.txt").write_text(README.format(version=args.version), encoding="utf-8")

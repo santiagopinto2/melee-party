@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Groups Melee Unlocked crash reports by where they crashed.
+"""Groups Melee Party crash reports by where they crashed.
 
 A report is the zip the launcher builds (melee_port_crash.txt, melee_port_crash.dmp, melee_port.log,
 lobby.log) or a folder holding those files. The tool reads the crash line ("CRASH: exception
@@ -44,7 +44,7 @@ TEXT_MEMBERS = ("melee_port_crash.txt", "melee_port.log")
 GAME_DLL = "melee_game.dll"
 GAME_BASE = 0x82800000   # sourceport/game/CMakeLists.txt --image-base; read from the .dbg when it has one
 VERSIONED_EXES = ("melee_source.exe", "melee_port.exe", "melee_port_playback.exe", "melee_port_compat.exe",
-                  "MeleeUnlockedLauncher.exe")
+                  "MeleePartyLauncher.exe")
 MAX_MEMBERS = 16
 
 HEAD = re.compile(r"CRASH: exception ([0-9A-Fa-f]{8}) at ([0-9A-Fa-f]+) \((.*?)\+0x([0-9A-Fa-f]+)\), version (\S+)")
@@ -569,7 +569,7 @@ def symbolize(reports, dirs, options, limits, problems):
                 names, problem = map_names(folder / f"{stem}.map", offsets), None
         elif (folder / f"{stem}.map").is_file():
             names = map_names(folder / f"{stem}.map", offsets)
-        elif module.endswith(".exe") and module.startswith(("melee", "meleeunlocked")):
+        elif module.endswith(".exe") and module.startswith(("melee", "meleeparty")):
             problem = f"no {stem}.pdb or {stem}.map in {folder}"
         if problem:
             problems.append(problem)
@@ -739,7 +739,7 @@ def self_test():
         stored_zip(reports / "bomb.zip", {"melee_port_crash.txt": crash_txt("melee_game.dll", 0x10, "0.8.5"),
                                           "melee_port.log": bytes(2 << 20)}, zipfile.ZIP_DEFLATED)
         stored_zip(reports / "odd.zip", {"../escape.txt": "x", "settings/port-settings.ini": "x",
-                                         "MeleeUnlocked/melee_port_crash.txt": crash_txt("melee_game.dll", 0x20, "0.8.5")})
+                                         "MeleeParty/melee_port_crash.txt": crash_txt("melee_game.dll", 0x20, "0.8.5")})
         folder = reports / "extracted-report"
         folder.mkdir()
         (folder / "melee_port_crash.txt").write_text(crash_txt("ucrtbase.dll", 0x48AC3, "0.8.5"))

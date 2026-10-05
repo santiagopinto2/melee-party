@@ -1,4 +1,4 @@
-// Melee Unlocked crash report relay (Cloudflare Worker).
+// Melee Party crash report relay (Cloudflare Worker).
 // The launcher POSTs a zip (crash text, minidump, logs) to /report after the player clicks Send.
 // The Discord webhook lives only in the Worker secret DISCORD_WEBHOOK_URL; the client never has it.
 // Limits: zip only, 8 MB, one report per IP per 10 minutes (KV binding RATE), 50 per day in total.

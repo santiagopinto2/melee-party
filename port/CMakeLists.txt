@@ -290,7 +290,7 @@ target_link_libraries(runtime PUBLIC native_animation port_enet port_libusb bcry
 
 # WIN32: no console window when the game is double-clicked or started from the launcher. Command-line
 # use still works, because main() reattaches to a parent console when there is one (see app/main.cpp).
-add_executable(melee_port WIN32 app/main.cpp app/settings_window.cpp app/melee_unlocked.rc)
+add_executable(melee_port WIN32 app/main.cpp app/settings_window.cpp app/melee_party.rc)
 # The source port: the whole application (renderers, DLSS, sub-frame, input, panel) with the game
 # coming from melee_game.dll, built from the decompiled sources by sourceport/game with GCC.
 # melee_source_probe is the bare first stage (no window, no runtime), for chasing boot crashes.
@@ -302,7 +302,7 @@ add_custom_command(OUTPUT "${NATIVE_RECORDING_CODES}"
           "${CMAKE_CURRENT_SOURCE_DIR}/slippi_sys_general/GameSettings/GALE01r2.ini"
           "${CMAKE_CURRENT_SOURCE_DIR}/slippi_sys/GameSettings/GALE01r2.ini"
   VERBATIM)
-add_executable(melee_source WIN32 app/main.cpp app/settings_window.cpp app/source_host.cpp app/source_guest_boundary.cpp app/melee_unlocked.rc)
+add_executable(melee_source WIN32 app/main.cpp app/settings_window.cpp app/source_host.cpp app/source_guest_boundary.cpp app/melee_party.rc)
 target_sources(melee_source PRIVATE "${NATIVE_RECORDING_CODES}")
 target_include_directories(melee_source PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 target_include_directories(melee_source PRIVATE runtime/abi app)
@@ -366,22 +366,22 @@ if(MELEE_CPU_BASELINE STREQUAL "AVX2")
   target_compile_definitions(melee_port PRIVATE MELEE_NEEDS_AVX2)
 endif()
 
-# Melee Unlocked client: Win32 launcher (Play page, Build tab, self-update). No runtime dependency.
-add_executable(melee_unlocked WIN32 app/launcher_mod_catalog.cpp runtime/host/mod_scan.cpp runtime/host/mod_profile.cpp app/launcher.cpp app/launcher_replay_data.cpp app/launcher_lobby.cpp app/launcher_lobby_p2p.cpp
+# Melee Party client: Win32 launcher (Play page, Build tab, self-update). No runtime dependency.
+add_executable(melee_party WIN32 app/launcher_mod_catalog.cpp runtime/host/mod_scan.cpp runtime/host/mod_profile.cpp app/launcher.cpp app/launcher_replay_data.cpp app/launcher_lobby.cpp app/launcher_lobby_p2p.cpp
   third_party/dht/dht.c third_party/monocypher/monocypher.c third_party/monocypher/monocypher-ed25519.c
   runtime/host/updater.cpp app/launcher.rc)
-set_target_properties(melee_unlocked PROPERTIES OUTPUT_NAME MeleeUnlockedLauncher)
+set_target_properties(melee_party PROPERTIES OUTPUT_NAME MeleePartyLauncher)
 add_executable(port_launcher_replay_data_test tests/launcher_replay_data_test.cpp app/launcher_replay_data.cpp)
 target_include_directories(port_launcher_replay_data_test PRIVATE app third_party)
 target_compile_features(port_launcher_replay_data_test PRIVATE cxx_std_17)
 target_compile_options(port_launcher_replay_data_test PRIVATE /EHsc)
 add_test(NAME port_launcher_replay_data COMMAND port_launcher_replay_data_test)
-target_include_directories(melee_unlocked PRIVATE runtime/host runtime/ppc runtime/hle runtime/gx "${PORT_GEN}" third_party third_party/dht third_party/monocypher)
-target_compile_features(melee_unlocked PRIVATE cxx_std_17)
-target_compile_options(melee_unlocked PRIVATE /EHsc)
-target_compile_definitions(melee_unlocked PRIVATE NOMINMAX UNICODE _UNICODE _CRT_SECURE_NO_WARNINGS MELEE_PORT_VERSION="${MELEE_PORT_VERSION}"
+target_include_directories(melee_party PRIVATE runtime/host runtime/ppc runtime/hle runtime/gx "${PORT_GEN}" third_party third_party/dht third_party/monocypher)
+target_compile_features(melee_party PRIVATE cxx_std_17)
+target_compile_options(melee_party PRIVATE /EHsc)
+target_compile_definitions(melee_party PRIVATE NOMINMAX UNICODE _UNICODE _CRT_SECURE_NO_WARNINGS MELEE_PORT_VERSION="${MELEE_PORT_VERSION}"
   MELEE_VERSION_COMMAS=${MELEE_VERSION_COMMAS})
-target_link_libraries(melee_unlocked PRIVATE comctl32 winhttp ws2_32 bcrypt user32 gdi32 shell32 comdlg32 msimg32 uxtheme winmm)
+target_link_libraries(melee_party PRIVATE comctl32 winhttp ws2_32 bcrypt user32 gdi32 shell32 comdlg32 msimg32 uxtheme winmm)
 
 # Run via lobby/test_client.py, which owns a temporary HTTP/UDP service and database.
 add_executable(port_launcher_lobby_client_test tests/launcher_lobby_client_test.cpp app/launcher_lobby_p2p.cpp
@@ -451,7 +451,7 @@ if(EXISTS "${PORT_GEN_PLAYBACK}/guest_sources.cmake")
   # The .rc carries the icon and the version resource. This target never had it, so the playback
   # build shipped with a blank Explorer icon and no company or product name at all, which is the
   # profile an unsigned executable is judged on.
-  add_executable(melee_port_playback app/main.cpp app/settings_window.cpp app/melee_unlocked.rc)
+  add_executable(melee_port_playback app/main.cpp app/settings_window.cpp app/melee_party.rc)
   target_link_libraries(melee_port_playback PRIVATE runtime guest_playback dbghelp)
   target_compile_options(melee_port_playback PRIVATE /EHsc)
   # It ships in the release now, and the packager refuses an executable that does not report the
@@ -459,7 +459,7 @@ if(EXISTS "${PORT_GEN_PLAYBACK}/guest_sources.cmake")
   target_compile_definitions(melee_port_playback PRIVATE NOMINMAX _CRT_SECURE_NO_WARNINGS
     MELEE_PORT_VERSION="${MELEE_PORT_VERSION}"
     MELEE_VERSION_COMMAS=${MELEE_VERSION_COMMAS}
-    MELEE_RC_DESCRIPTION="Melee Unlocked Replay Playback"
+    MELEE_RC_DESCRIPTION="Melee Party Replay Playback"
     MELEE_RC_INTERNAL_NAME="melee_port_playback"
     MELEE_RC_ORIGINAL_FILENAME="melee_port_playback.exe")
 endif()

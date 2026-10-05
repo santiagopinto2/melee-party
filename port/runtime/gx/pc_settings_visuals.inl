@@ -346,7 +346,7 @@ static void settings_quit_button(SettingsState& state, ImVec2 at, ImVec2 size) {
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.66f, 0.16f, 0.18f, 1.0f));
   ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.82f, 0.22f, 0.22f, 1.0f));
   if (ImGui::Button("Quit game##footer_quit", size)) state.confirm = SettingsState::Confirm::Quit;
-  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Close Melee Unlocked (asks first)");
+  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Close Melee Party (asks first)");
   ImGui::PopStyleColor(3);
   ImGui::PopStyleVar();
 }

@@ -100,7 +100,7 @@ extern "C" int dht_random_bytes(void* output, size_t bytes) {
 int main(int argc, char** argv) {
   int port = 0, seconds = 25;
   bool announce = false, debug = false;
-  std::string bootstrap, topic = "melee-unlocked-lobby-probe-v1";
+  std::string bootstrap, topic = "melee-party-lobby-probe-v1";
   for (int i = 1; i < argc; ++i) {
     const std::string arg = argv[i];
     if (arg == "--port" && i + 1 < argc) port = std::atoi(argv[++i]);

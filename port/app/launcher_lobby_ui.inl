@@ -137,11 +137,11 @@ void show_emoji_picker() {
   static bool registered=false;
   if(!registered) {
     WNDCLASSW wc{};wc.hInstance=GetModuleHandleW(nullptr);wc.lpfnWndProc=emoji_popup_proc;
-    wc.lpszClassName=L"MeleeUnlockedEmojiPicker";wc.hCursor=LoadCursorW(nullptr,IDC_HAND);
+    wc.lpszClassName=L"MeleePartyEmojiPicker";wc.hCursor=LoadCursorW(nullptr,IDC_HAND);
     registered=RegisterClassW(&wc)!=0 || GetLastError()==ERROR_CLASS_ALREADY_EXISTS;
   }
   RECT anchor{};GetWindowRect(GetDlgItem(window,EMOJI),&anchor);
-  emoji_popup=CreateWindowExW(WS_EX_TOOLWINDOW|WS_EX_TOPMOST,L"MeleeUnlockedEmojiPicker",L"Emoji",
+  emoji_popup=CreateWindowExW(WS_EX_TOOLWINDOW|WS_EX_TOPMOST,L"MeleePartyEmojiPicker",L"Emoji",
     WS_POPUP,anchor.left-U(90),anchor.top-U(117),U(198),U(112),window,nullptr,GetModuleHandleW(nullptr),nullptr);
   if(emoji_popup) {ShowWindow(emoji_popup,SW_SHOWNORMAL);UpdateWindow(emoji_popup);}
 }

@@ -1,7 +1,7 @@
 """Finds the Melee NTSC 1.02 disc image without anyone's path being written into the repository.
 
 In order: the MELEE_ISO environment variable, the path the game recorded the last time it ran
-(%LOCALAPPDATA%\\MeleeUnlocked\\launcher.ini, written by melee_port and by the launcher), then
+(%LOCALAPPDATA%\\MeleeParty\\launcher.ini, written by melee_port and by the launcher), then
 melee.iso at the root of the checkout.
 """
 import os
@@ -14,7 +14,7 @@ def remembered_iso():
     local = os.environ.get("LOCALAPPDATA")
     if not local:
         return None
-    ini = Path(local) / "MeleeUnlocked" / "launcher.ini"
+    ini = Path(local) / "MeleeParty" / "launcher.ini"
     try:
         for line in ini.read_text(encoding="utf-8", errors="replace").splitlines():
             if line.startswith("iso="):

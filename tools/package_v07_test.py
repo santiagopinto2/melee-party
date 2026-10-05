@@ -32,13 +32,13 @@ if not exist "%ISO%" (
 if errorlevel 1 pause
 '''
 
-README = """Melee Unlocked v0.7 — private Windows x64 test build
+README = """Melee Party v0.7 — private Windows x64 test build
 
 Supply your own clean Melee NTSC 1.02 ISO. The ISO, mod archives, videos, and
 NVIDIA DLSS 5 model are not in this ZIP.
 
-Drag your ISO onto MeleeUnlocked-Test.bat, or place it beside the BAT as melee.iso.
-The optional MeleeUnlockedLauncher.exe can remember your ISO and start the same game.
+Drag your ISO onto MeleeParty-Test.bat, or place it beside the BAT as melee.iso.
+The optional MeleePartyLauncher.exe can remember your ISO and start the same game.
 F1 or Start + D-pad Down + Z opens PC settings. Tab opens native-practice matchmaking during offline play.
 The six pictured appearances include Clean side, Icon tiles, GD Melee, Radial, Wide tabs,
 and Simple. New installs start with the pink Clean side menu. Enable Legacy Menu in Customize
@@ -47,7 +47,7 @@ settings. Each modern appearance remembers one of four palettes.
 Controls has a Controller rumble switch that stops adapter and Xbox vibration immediately when
 turned off and saves the choice for later launches.
 This package contains one integrated game build. DLSS 5 is available on supported hardware;
-the existing rendering options remain in the same executable. Run MeleeUnlocked-Test.bat
+the existing rendering options remain in the same executable. Run MeleeParty-Test.bat
 and supply your ISO when prompted.
 
 The integrated executable has experimental DLSS 5 controls, including 0–1000%
@@ -69,7 +69,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", type=Path, default=ROOT / "build-integration/port/Release")
     parser.add_argument("--out", type=Path, default=None,
-                        help="package folder (default: build-integration/MeleeUnlocked-<version>-Windows-x64-test-<date>-<time>)")
+                        help="package folder (default: build-integration/MeleeParty-<version>-Windows-x64-test-<date>-<time>)")
     args = parser.parse_args()
     build = args.build.resolve()
     version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
@@ -77,12 +77,12 @@ def main():
         raise SystemExit(f"expected v0.7.x sources; VERSION is {version!r}")
     if args.out is None:
         stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M")
-        args.out = ROOT / "build-integration" / f"MeleeUnlocked-{version}-Windows-x64-test-{stamp}"
+        args.out = ROOT / "build-integration" / f"MeleeParty-{version}-Windows-x64-test-{stamp}"
     out = args.out.resolve()
     if out.exists():
         raise SystemExit(f"refusing to replace existing package: {out}")
     exe = build / "melee_port.exe"
-    launcher = build / "MeleeUnlockedLauncher.exe"
+    launcher = build / "MeleePartyLauncher.exe"
     if not launcher.is_file():
         raise SystemExit(f"missing optional launcher build: {launcher}")
     reported = subprocess.check_output([str(exe), "--version"], text=True, timeout=30).strip()
@@ -100,7 +100,7 @@ def main():
         raise SystemExit(f"missing runtime assets: {', '.join(missing_assets)}")
     out.mkdir(parents=True)
     shutil.copy2(exe, out / "melee_port.exe")
-    shutil.copy2(launcher, out / "MeleeUnlockedLauncher.exe")
+    shutil.copy2(launcher, out / "MeleePartyLauncher.exe")
     for name in RUNTIME_DLLS:
         shutil.copy2(build / name, out / name)
     for name in RUNTIME_ASSETS:
@@ -137,7 +137,7 @@ def main():
                          ("port/third_party/streamline/reflex.license.txt", "NVIDIA-Reflex-license.txt"),
                          ("port/third_party/xess/LICENSE.txt", "Intel-XeSS-license.txt")):
         shutil.copy2(ROOT / source, out / name)
-    (out / "MeleeUnlocked-Test.bat").write_bytes(BAT.replace("\n", "\r\n").encode("utf-8"))
+    (out / "MeleeParty-Test.bat").write_bytes(BAT.replace("\n", "\r\n").encode("utf-8"))
     (out / "README-test.txt").write_text(README, encoding="utf-8")
     archive = out.parent / f"{out.name}.zip"
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:

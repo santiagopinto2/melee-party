@@ -15,7 +15,7 @@ namespace {
 constexpr const char* kActions[kProfileActions] = {"A", "B", "X", "Y", "Z", "Start", "L", "R", "DUp", "DDown", "DLeft", "DRight",
                                                     "CUp", "CDown", "CLeft", "CRight"};
 constexpr const char* kDeviceKeys[(int)ProfileDevice::Count] = {"keyboard", "xinput", "playstation", "gcadapter", "switchpro", "hid"};
-constexpr const char* kHeader = "# Melee Unlocked controller profile";
+constexpr const char* kHeader = "# Melee Party controller profile";
 constexpr const char* kExtension = ".profile";
 
 std::filesystem::path g_folder = "ControllerProfiles";

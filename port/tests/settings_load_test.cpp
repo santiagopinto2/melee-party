@@ -109,7 +109,7 @@ int main() {
   aspect_options.true_widescreen = true;
   CHECK(gx::presented_aspect(aspect_options, 1920, 1080) == 16.0f / 9.0f);
 
-  const fs::path path = fs::temp_directory_path() / "melee_unlocked_settings_load_test.ini";
+  const fs::path path = fs::temp_directory_path() / "melee_party_settings_load_test.ini";
   {
     std::ofstream f(path);
     // The order the game writes: the preset line sits above the controls.
@@ -178,7 +178,7 @@ int main() {
     gx::dlss5::Tuning loaded;
     CHECK(gx::dlss5::profile_load("roundtrip", loaded));
     CHECK(!(loaded != options.dlss5_tuning));
-    { std::ofstream f(folder / "Dlss5Profiles" / "legacy.txt"); f << "# Melee Unlocked DLSS 5 profile\nintensity 0.75\nstyle 2\n"; }
+    { std::ofstream f(folder / "Dlss5Profiles" / "legacy.txt"); f << "# Melee Party DLSS 5 profile\nintensity 0.75\nstyle 2\n"; }
     CHECK(gx::dlss5::profile_load("legacy", loaded));
     CHECK(loaded.intensity == 0.75f && loaded.style == 2 && loaded.passes == 1 && loaded.resolution_scale == 100);
     { std::ofstream f(folder / "Dlss5Profiles" / "bounds.txt"); f << "resolution -20\npasses 999\ndownsample -1\nupsample 99\nreconstruction 99\n"; }
@@ -246,7 +246,7 @@ int main() {
   }
   // ... and across a restart: the kept values come back from the settings file.
   {
-    const fs::path low_path = fs::temp_directory_path() / "melee_unlocked_settings_lowspec_test.ini";
+    const fs::path low_path = fs::temp_directory_path() / "melee_party_settings_lowspec_test.ini";
     {
       std::ofstream f(low_path);
       f << "lowspec 1\nbackend d3d11\nfps 60\nscale 1\nssaa 1\nanisotropy 1\n"
@@ -271,7 +271,7 @@ int main() {
   // ours, all with the settings file's keys unchanged. A file in 0.8.1's format loads the same values,
   // saving writes every key it had, and the two new keys (the Advanced groups) default to closed.
   {
-    const fs::path old_path = fs::temp_directory_path() / "melee_unlocked_settings_081_test.ini";
+    const fs::path old_path = fs::temp_directory_path() / "melee_party_settings_081_test.ini";
     {
       std::ofstream f(old_path);
       f << "fps 144\nscale 3\nfullscreen 1\nexclusivefullscreen 0\nvsync 0\nwidescreen 0\n"
@@ -317,7 +317,7 @@ int main() {
   // One Display choice and one Widescreen choice: a file with both of a pair on (possible only by
   // hand) loads as the one the renderers already let win, exclusive and the Slippi code.
   {
-    const fs::path pair_path = fs::temp_directory_path() / "melee_unlocked_settings_pairs_test.ini";
+    const fs::path pair_path = fs::temp_directory_path() / "melee_party_settings_pairs_test.ini";
     { std::ofstream f(pair_path); f << "fullscreen 1\nexclusivefullscreen 1\nwidescreen 1\ntruewidescreen 1\n"; }
     gx::RenderOptions o;
     o.settings_path = pair_path.string();
@@ -331,7 +331,7 @@ int main() {
   }
   // The Advanced groups remember being opened, and a file without their keys reads as closed again.
   {
-    const fs::path adv_path = fs::temp_directory_path() / "melee_unlocked_settings_advanced_test.ini";
+    const fs::path adv_path = fs::temp_directory_path() / "melee_party_settings_advanced_test.ini";
     { std::ofstream f(adv_path); f << "advancedvideo 1\nadvancedoverlays 0\n"; }
     gx::RenderOptions o;
     o.settings_path = adv_path.string();
@@ -371,7 +371,7 @@ int main() {
   // Trigger values per family: saved only when changed, read back, clamped; a file without them
   // leaves every trigger at Full (255) and saving writes no trigger line.
   {
-    const fs::path trig_path = fs::temp_directory_path() / "melee_unlocked_settings_trigger_test.ini";
+    const fs::path trig_path = fs::temp_directory_path() / "melee_party_settings_trigger_test.ini";
     { std::ofstream f(trig_path); f << "trigger_switch_l 100\ntrigger_xbox_r 999\n"; }
     gx::RenderOptions o;
     o.settings_path = trig_path.string();
@@ -396,7 +396,7 @@ int main() {
   }
   // Audio mode 3 (ASIO) with its driver name (spaces) and buffer round-trips; out-of-range modes clamp.
   {
-    const fs::path asio_path = fs::temp_directory_path() / "melee_unlocked_settings_asio_test.ini";
+    const fs::path asio_path = fs::temp_directory_path() / "melee_party_settings_asio_test.ini";
     { std::ofstream f(asio_path); f << "audio_mode 3\naudio_asio_driver MOTU M Series\naudio_asio_buffer 64\n"; }
     gx::RenderOptions o;
     o.settings_path = asio_path.string();
@@ -463,7 +463,7 @@ int main() {
 
   // Old flash keys keep their behavior; the explicit chooser is independent of file key order.
   {
-    const fs::path flash_path = fs::temp_directory_path() / "melee_unlocked_lcancel_flash_test.ini";
+    const fs::path flash_path = fs::temp_directory_path() / "melee_party_lcancel_flash_test.ini";
     int vol = 0;
     for (int mode = 0; mode < 5; ++mode) for (int color = 0; color < 3; ++color) {
       for (int order = 0; order < 2; ++order) {

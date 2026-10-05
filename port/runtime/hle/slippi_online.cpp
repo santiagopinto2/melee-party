@@ -922,7 +922,7 @@ void prepare_online_match_state(std::vector<uint8_t>& q) {
   q.push_back(sent_chat_message_id);
   q.push_back(chat_message_id);
   q.push_back(chat_message_player_idx);
-  q.push_back(0);   // player 1 rank: no ranks in Melee Unlocked
+  q.push_back(0);   // player 1 rank: no ranks in Melee Party
   q.push_back(0);   // player 2 rank
   std::string ln = convert_string_for_game(local_name, 15);
   q.insert(q.end(), ln.begin(), ln.end());
@@ -1264,7 +1264,7 @@ bool handle_command(uint8_t cmd, const uint8_t* payload, uint32_t payload_len, s
       }
       return true;
     }
-    // Ranked game preparation and set reporting: Melee Unlocked has no Ranked play. The command
+    // Ranked game preparation and set reporting: Melee Party has no Ranked play. The command
     // numbers stay understood so any Slippi menu code that sends them gets a harmless answer.
     case CMD_GP_COMPLETE_STEP: case CMD_REPORT_SET_COMPLETE: case CMD_REPORT_MATCH_STATUS_UPDATE: return true;
     case CMD_GP_FETCH_STEP: q.assign(6, 0); return true;   // nothing ready

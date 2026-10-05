@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
     set_account("Alpha","TEST#101");
     { std::lock_guard<std::mutex> lock(mutex); config=a; go_online_requested=true; }
     init(nullptr, (std::filesystem::temp_directory_path() / ("mu-lobby-test-"+std::to_string(GetCurrentProcessId()))).u8string());
-    HWND ui=CreateWindowExW(0,L"MeleeUnlockedLobby",L"Lobby test",WS_OVERLAPPEDWINDOW,
+    HWND ui=CreateWindowExW(0,L"MeleePartyLobby",L"Lobby test",WS_OVERLAPPEDWINDOW,
                            0,0,790,725,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
     enqueue("presence");
     Match match; bool delivered=false;

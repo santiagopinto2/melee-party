@@ -40,11 +40,11 @@ def main():
         z.extractall(clean)
     root = clean / names[0].split('/')[0]
     files = {p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file()}
-    bat = (root / 'MeleeUnlocked.bat').read_text(encoding='utf-8', errors='replace')
+    bat = (root / 'MeleeParty.bat').read_text(encoding='utf-8', errors='replace')
     report['contents'] = dict(
         files=len(files), markdown=[f for f in files if f.lower().endswith('.md')],
         has=dict((n, n in files) for n in ('melee_port.exe', 'melee_port_compat.exe', 'melee_source.exe',
-                                          'melee_game.dll', 'melee_game.dbg', 'MeleeUnlockedLauncher.exe')),
+                                          'melee_game.dll', 'melee_game.dbg', 'MeleePartyLauncher.exe')),
         bat_default_engine='melee_port.exe' if re.search(r'(?m)^melee_port\.exe ', bat) else 'unexpected')
 
     boots = {}

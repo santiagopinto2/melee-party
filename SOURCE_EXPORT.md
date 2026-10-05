@@ -1,4 +1,4 @@
-# Source export for Melee Unlocked 0.8.5
+# Source export for Melee Party 0.8.5
 
 Native decomp base: `039c4bf4ca33338c35d21901ad19b7ede19d19ad` (doldecomp/melee). The archive already carries
 the actual adapted native `src`, `libs` and `config` inputs. No original disc data or

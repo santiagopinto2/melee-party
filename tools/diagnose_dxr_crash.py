@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def remembered_iso() -> Path:
-    profile = Path(os.environ["LOCALAPPDATA"]) / "MeleeUnlocked" / "launcher.ini"
+    profile = Path(os.environ["LOCALAPPDATA"]) / "MeleeParty" / "launcher.ini"
     for line in profile.read_text(encoding="utf-8", errors="replace").splitlines():
         if line.startswith("iso="):
             iso = Path(line[4:])

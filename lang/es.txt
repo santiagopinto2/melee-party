@@ -1,4 +1,4 @@
-# Melee Unlocked launcher: Español
+# Melee Party launcher: Español
 # Lines "@English text = translation" translate fixed launcher text; other lines are message keys.
 mode.vanilla = Vanilla
 mode.custom = ISO personalizada
@@ -226,7 +226,7 @@ crash.offer = El juego se cerró inesperadamente. ¿Enviar un informe de error p
 @Send crash report = Enviar informe de error
 @Crash report sent. Thank you! = Informe de error enviado. ¡Gracias!
 @The report could not be sent automatically. A GitHub issue page and the folder with melee_crash_report.zip are open: attach the zip to the issue. = El informe no se pudo enviar automáticamente. Se abrieron una página de GitHub y la carpeta con melee_crash_report.zip: adjunta el zip al reporte.
-@Melee Unlocked Launcher = Launcher de Melee Unlocked
+@Melee Party Launcher = Launcher de Melee Party
 @Mods = Mods
 @Installed = Instalado
 @Not installed = No instalado
@@ -424,12 +424,12 @@ crash.offer = El juego se cerró inesperadamente. ¿Enviar un informe de error p
 @Starting... = Iniciando...
 @Static Recomp = Static Recomp
 @Stops at startup on the Static Recomp. Not supported yet. = Se detiene al iniciar en Static Recomp. Aún no es compatible.
-@The 7-Zip tool is missing from the launcher's tools folder (tools\7zr.exe). Reinstall Melee Unlocked to get it. = Falta la herramienta 7-Zip en la carpeta tools del lanzador (tools\7zr.exe). Reinstala Melee Unlocked para obtenerla.
+@The 7-Zip tool is missing from the launcher's tools folder (tools\7zr.exe). Reinstall Melee Party to get it. = Falta la herramienta 7-Zip en la carpeta tools del lanzador (tools\7zr.exe). Reinstala Melee Party para obtenerla.
 @The archive could not be unpacked. Nothing was installed. = No se pudo extraer el archivo comprimido. No se instaló nada.
 @The download failed. Nothing was installed. = La descarga falló. No se instaló nada.
-@The mod tools are missing (tools\xdelta3.exe, tools\7zr.exe). Reinstall Melee Unlocked to use Get. = Faltan las herramientas de mods (tools\xdelta3.exe, tools\7zr.exe). Reinstala Melee Unlocked para usar Obtener.
+@The mod tools are missing (tools\xdelta3.exe, tools\7zr.exe). Reinstall Melee Party to use Get. = Faltan las herramientas de mods (tools\xdelta3.exe, tools\7zr.exe). Reinstala Melee Party para usar Obtener.
 @The verified patch was not found. Nothing was installed. = No se encontró el parche verificado. No se instaló nada.
-@The xdelta3 tool is missing from the launcher's tools folder (tools\xdelta3.exe). Reinstall Melee Unlocked to get it. = Falta la herramienta xdelta3 en la carpeta tools del lanzador (tools\xdelta3.exe). Reinstala Melee Unlocked para obtenerla.
+@The xdelta3 tool is missing from the launcher's tools folder (tools\xdelta3.exe). Reinstall Melee Party to get it. = Falta la herramienta xdelta3 en la carpeta tools del lanzador (tools\xdelta3.exe). Reinstala Melee Party para obtenerla.
 @Untested on the Static Recomp. = No se ha probado en Static Recomp.
 @This version is not supported yet. = Esta versión aún no es compatible.
 

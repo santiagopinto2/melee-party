@@ -303,7 +303,7 @@ unsigned char mu_slippi_team_costume(int team, int ckind)
     }
 }
 
-/* HandleOnlineLockedOptions (Melee Unlocked edit: Ranked hidden when logged in). Logged out (or an
+/* HandleOnlineLockedOptions (Melee Party edit: Ranked hidden when logged in). Logged out (or an
  * unknown state): only Log in. Logged in: Unranked, Direct, Teams, Party. Update required: only
  * Update. */
 int mu_slippi_option_unlocked(int sel)

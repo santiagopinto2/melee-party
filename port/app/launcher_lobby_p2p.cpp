@@ -584,21 +584,21 @@ struct PeerLobby::Impl {
     crypto_x25519_public_key(x_public.data(),x_secret.data());
     id=hex(ed_public.data(),ed_public.size());
   }
-  static std::string code_topic(const std::string& code) { return "melee-unlocked-lobby-v1-code:"+code; }
+  static std::string code_topic(const std::string& code) { return "melee-party-lobby-v1-code:"+code; }
   void refresh_topics() {
     std::map<std::string,Topic> old;
     for(const auto& t:topics) old.emplace(hex(t.hash.data(),t.hash.size()),t);
     topics.clear();
     std::vector<std::pair<std::string,bool>> names;   // topic, list ourselves under it
-    if(visible) names.push_back({"melee-unlocked-lobby-v1-public",true});
-    for(const auto& f:friends) names.push_back({"melee-unlocked-lobby-v1-friend:"+std::min(id,f.first)+":"+std::max(id,f.first),true});
+    if(visible) names.push_back({"melee-party-lobby-v1-public",true});
+    for(const auto& f:friends) names.push_back({"melee-party-lobby-v1-friend:"+std::min(id,f.first)+":"+std::max(id,f.first),true});
     // Our own Slippi code, public lobby or not, so a friend can find us by the code alone.
     const auto own=normalize_code(profile.value("code",std::string()));
     if(valid_code(own)) names.push_back({code_topic(own),true});
     for(const auto& lookup:code_lookups) if(lookup.first!=own) names.push_back({code_topic(lookup.first),false});
     std::set<std::string> added;
     for(const auto& name:names) {
-      Topic t; t.hash=topic_hash(name.first); t.public_topic=name.first=="melee-unlocked-lobby-v1-public"; t.announce=name.second;
+      Topic t; t.hash=topic_hash(name.first); t.public_topic=name.first=="melee-party-lobby-v1-public"; t.announce=name.second;
       const auto key=hex(t.hash.data(),t.hash.size());
       if(!added.insert(key).second) continue;
       auto it=old.find(key);
@@ -649,7 +649,7 @@ struct PeerLobby::Impl {
   Bytes32 key(const Peer& peer) const {
     Bytes32 secret{},derived{};
     crypto_x25519(secret.data(),x_secret.data(),peer.xkey.data());
-    std::string input="MeleeUnlockedPeerLobby1";
+    std::string input="MeleePartyPeerLobby1";
     input.append(reinterpret_cast<const char*>(secret.data()),secret.size());
     const auto& first=std::lexicographical_compare(x_public.begin(),x_public.end(),peer.xkey.begin(),peer.xkey.end())?x_public:peer.xkey;
     const auto& second=&first==&x_public?peer.xkey:x_public;

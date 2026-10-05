@@ -1,4 +1,4 @@
-// Melee Unlocked Launcher: an optional Win32 client with a Play page (ISO, Slippi account, version
+// Melee Party Launcher: an optional Win32 client with a Play page (ISO, Slippi account, version
 // and self-update) and a Build tab (drop the ISO: verify it, run the source build when this is a
 // checkout, precompile the pipeline library, remember the path). Starts melee_port.exe, or
 // melee_source.exe when the Source Port is picked, with the release settings. Plain Win32 so it has
@@ -90,7 +90,7 @@ const int MODS_W = 980, MODS_H = 860;
 const int RAIL_W = 190;                 // left rail: wordmark, page nav, Bailey
 const int CX = 212, CW = 486;           // content column
 // NAV_Y leaves room for the whole mark. At 104 the page nav started on top of it and cut the
-// MELEE UNLOCKED line off the bottom of the logo.
+// MELEE PARTY line off the bottom of the logo.
 const int NAV_Y = 152, NAV_H = 34, NAV_GAP = 38;
 
 // Palette. Navy and silver come from the project's own MU mark; the amber accent picks up Bailey.
@@ -195,7 +195,7 @@ std::string settings_ini_path();
 std::string shared_ini_path() {
   char* local = nullptr; size_t n = 0;
   if (_dupenv_s(&local, &n, "LOCALAPPDATA") != 0 || !local) return "";
-  std::string dir = std::string(local) + "\\MeleeUnlocked";
+  std::string dir = std::string(local) + "\\MeleeParty";
   free(local);
   CreateDirectoryW(widen(dir).c_str(), nullptr);
   return dir + "\\launcher.ini";
@@ -994,7 +994,7 @@ void report_launch_error(DWORD error, const std::string& exe, const std::string&
       L"\n\nPlease include this message when reporting the problem.";
   log_line("Launch failed: Windows error %lu; executable=%s; directory=%s",
            error, exe.c_str(), cwd.c_str());
-  MessageBoxW(g_main, message.c_str(), L"Melee Unlocked Launcher", MB_ICONERROR);
+  MessageBoxW(g_main, message.c_str(), L"Melee Party Launcher", MB_ICONERROR);
 }
 
 // The settings window waits hidden in the background, fully started, so the Settings button only
@@ -1015,8 +1015,8 @@ void settings_standby_start() {
   settings_standby_stop();
   if (!file_exists(exe)) return;
   const DWORD pid = GetCurrentProcessId();
-  if (!g_settings_show) g_settings_show = CreateEventW(nullptr, FALSE, FALSE, (L"Local\\MeleeUnlockedSettingsShow-" + std::to_wstring(pid)).c_str());
-  if (!g_settings_quit) g_settings_quit = CreateEventW(nullptr, FALSE, FALSE, (L"Local\\MeleeUnlockedSettingsQuit-" + std::to_wstring(pid)).c_str());
+  if (!g_settings_show) g_settings_show = CreateEventW(nullptr, FALSE, FALSE, (L"Local\\MeleePartySettingsShow-" + std::to_wstring(pid)).c_str());
+  if (!g_settings_quit) g_settings_quit = CreateEventW(nullptr, FALSE, FALSE, (L"Local\\MeleePartySettingsQuit-" + std::to_wstring(pid)).c_str());
   if (!g_settings_show || !g_settings_quit) return;
   ResetEvent(g_settings_show);
   const std::string cmd = "\"" + exe + "\" --settings-window --settings-standby " + std::to_string(pid) + " --settings-path \"" + settings_ini_path() + "\"";
@@ -1046,7 +1046,7 @@ void choose_rail_image() {
     std::transform(ext.begin(), ext.end(), ext.begin(), ::towlower);
     int w = 0, h = 0;
     HBITMAP test = load_art_file(file, 64, 64, w, h);
-    if (!test) { MessageBoxW(g_main, L"That picture could not be opened.", L"Melee Unlocked Launcher", MB_OK | MB_ICONWARNING); return; }
+    if (!test) { MessageBoxW(g_main, L"That picture could not be opened.", L"Melee Party Launcher", MB_OK | MB_ICONWARNING); return; }
     DeleteObject(test);
     // A copy beside the launcher, so the picture stays when the original is moved or deleted.
     for (const char* old : {".png", ".jpg", ".jpeg", ".bmp", ".gif"}) DeleteFileW(widen(g_dir + "\\rail-image" + old).c_str());
@@ -1231,8 +1231,8 @@ void refresh_updater() {
     st = host::updater::state();
   } else if (st == State::UpdateAvailable && !g_update_prompted) {
     g_update_prompted = true;
-    std::string text = "Melee Unlocked " + host::updater::latest_version() + " is available (you have " MELEE_PORT_VERSION ").\n\nUpdate now? The game folder is updated in place; settings, saves and replays are kept.\n\nNo keeps this version; the Update button stays on the Play page.";
-    if (MessageBoxW(g_main, widen(text).c_str(), L"Melee Unlocked Launcher", MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES) { settings_standby_stop(); host::updater::download_and_install(); }
+    std::string text = "Melee Party " + host::updater::latest_version() + " is available (you have " MELEE_PORT_VERSION ").\n\nUpdate now? The game folder is updated in place; settings, saves and replays are kept.\n\nNo keeps this version; the Update button stays on the Play page.";
+    if (MessageBoxW(g_main, widen(text).c_str(), L"Melee Party Launcher", MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES) { settings_standby_stop(); host::updater::download_and_install(); }
     st = host::updater::state();
   }
   std::string line = "Version " MELEE_PORT_VERSION ". " + host::updater::message();
@@ -1265,7 +1265,7 @@ void choose_version() {
         file_exists((it->path() / "Sys" / "codehandler.bin").string())) installed.push_back(id);
   }
   if (catalog.empty() && installed.empty()) {
-    MessageBoxW(g_main, L"Version history is still loading or could not be reached. Try again shortly.", L"Melee Unlocked Launcher", MB_OK | MB_ICONINFORMATION);
+    MessageBoxW(g_main, L"Version history is still loading or could not be reached. Try again shortly.", L"Melee Party Launcher", MB_OK | MB_ICONINFORMATION);
     return;
   }
   HMENU menu = CreatePopupMenu();
@@ -1303,7 +1303,7 @@ void choose_version() {
   }
   if (picked < 2000 || picked - 2000 >= catalog.size()) return;
   const std::string version = catalog[picked - 2000].version;
-  const std::string label = "Install and select Melee Unlocked " + version + "?\n\nIt will be kept in Versions beside the current build. Your ISO, settings, saves, and replays stay shared.";
+  const std::string label = "Install and select Melee Party " + version + "?\n\nIt will be kept in Versions beside the current build. Your ISO, settings, saves, and replays stay shared.";
   if (MessageBoxW(g_main, widen(label).c_str(), L"Choose game version", MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) != IDYES) return;
   if (host::updater::install_release(version, false, g_dir)) {
     g_rollback_consumed = false;
@@ -1634,13 +1634,13 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, PWSTR, int show) {
   g_font_mono = CreateFontW(-S(11), 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, FIXED_PITCH, L"Consolas");
   g_br_field = CreateSolidBrush(C_FIELD);
   g_br_log = CreateSolidBrush(C_LOG_BG);
-  WNDCLASSW wc{}; wc.lpfnWndProc = wnd_proc; wc.hInstance = inst; wc.lpszClassName = L"MeleeUnlockedLauncher";
+  WNDCLASSW wc{}; wc.lpfnWndProc = wnd_proc; wc.hInstance = inst; wc.lpszClassName = L"MeleePartyLauncher";
   wc.style = CS_HREDRAW | CS_VREDRAW;
   wc.hbrBackground = nullptr; wc.hCursor = LoadCursorW(nullptr, MAKEINTRESOURCEW(32512));
   wc.hIcon = LoadIconW(inst, MAKEINTRESOURCEW(IDI_LAUNCHER));
   RegisterClassW(&wc);
   RECT r{0, 0, S(WIN_W), S(WIN_H)}; AdjustWindowRect(&r, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
-  std::wstring title = widen(std::string("Melee Unlocked Launcher ") + MELEE_PORT_VERSION);
+  std::wstring title = widen(std::string("Melee Party Launcher ") + MELEE_PORT_VERSION);
   HWND hwnd = CreateWindowExW(0, wc.lpszClassName, title.c_str(), WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, nullptr, nullptr, inst, nullptr);
   launcher::lobby::init(hwnd, g_dir);
   launcher::lobby::set_prefs(g_lobby_prefs);

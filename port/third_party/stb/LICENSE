@@ -3,7 +3,7 @@ vendored unmodified. Used by the custom texture pack loader (port/runtime/gx/tex
 to decode replacement PNGs and to write dumped textures.
 
 The upstream files are dual licensed; the full text of both options is reproduced at the
-bottom of each header. Melee Unlocked uses them under the MIT option:
+bottom of each header. Melee Party uses them under the MIT option:
 
 ALTERNATIVE A - MIT License
 Copyright (c) 2017 Sean Barrett

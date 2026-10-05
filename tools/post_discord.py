@@ -30,10 +30,10 @@ ROOT = Path(__file__).resolve().parent.parent
 DISCORD_LIMIT = 2000   # characters per message; longer notes are split on blank lines
 INSTALL_BLOCK = """**Install**
 
-- Download `MeleeUnlocked-{version}-win64.zip` from the linked GitHub release. It contains Source Port and Static Recomp with optional experimental DLSS 5; that feature needs NVIDIA's separate model, which is not included.
-- Close Melee Unlocked, then extract the archive over the existing folder so settings, saves and replays carry over.
+- Download `MeleeParty-{version}-win64.zip` from the linked GitHub release. It contains Source Port and Static Recomp with optional experimental DLSS 5; that feature needs NVIDIA's separate model, which is not included.
+- Close Melee Party, then extract the archive over the existing folder so settings, saves and replays carry over.
 - Keep your own Melee NTSC 1.02 ISO beside the files as `melee.iso`, or select it with the included launcher.
-- Start `MeleeUnlockedLauncher.exe` after extraction."""
+- Start `MeleePartyLauncher.exe` after extraction."""
 
 
 def read_webhook(explicit=None):
@@ -63,7 +63,7 @@ def notes_for_version(version):
     return None
 
 
-def to_discord(text, version, repo="Hero88go/melee-unlocked", release_url=None):
+def to_discord(text, version, repo="santiagopinto2/melee-party", release_url=None):
     """Markdown that reads well in Discord.
 
     The notes are hard wrapped for reading as a file, but Discord treats every newline as a real
@@ -121,7 +121,7 @@ def to_discord(text, version, repo="Hero88go/melee-unlocked", release_url=None):
 
     body = re.sub(r"\n{3,}", "\n\n", "\n".join(blocks)).strip()
     # A notes title with more than the version ("0.6.0: DLSS5 update, ...") is the headline.
-    header = ("**%s**\n\n" % title) if ":" in title else "**Melee Unlocked %s is out**\n\n" % version
+    header = ("**%s**\n\n" % title) if ":" in title else "**Melee Party %s is out**\n\n" % version
     link = ("\n\n" + release_url) if release_url else ("\n\nhttps://github.com/%s/releases/tag/v%s" % (repo, version))
     return header + INSTALL_BLOCK.format(version=version) + "\n\n" + body + link
 
@@ -131,7 +131,7 @@ def latest_releases(repo, count):
     if count <= 0:
         raise SystemExit("--last must be greater than zero")
     url = "https://api.github.com/repos/%s/releases?per_page=%d" % (repo, max(count, 1))
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "melee-unlocked-release-notes"}
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "melee-party-release-notes"}
     token = os.environ.get("GITHUB_TOKEN")
     if token:
         headers["Authorization"] = "Bearer " + token
@@ -152,7 +152,7 @@ def latest_releases(repo, count):
     if count <= 0:
         raise SystemExit("--last must be greater than zero")
     url = "https://api.github.com/repos/%s/releases?per_page=%d" % (repo, max(count, 1))
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "melee-unlocked-release-notes"}
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "melee-party-release-notes"}
     token = os.environ.get("GITHUB_TOKEN")
     if token:
         headers["Authorization"] = "Bearer " + token
@@ -217,7 +217,7 @@ def post(webhook, content):
     data = json.dumps({"content": content, "allowed_mentions": {"parse": []}}).encode("utf-8")
     request = urllib.request.Request(url, data=data,
                                      headers={"Content-Type": "application/json",
-                                              "User-Agent": "melee-unlocked-release-notes"})
+                                              "User-Agent": "melee-party-release-notes"})
     with urllib.request.urlopen(request, timeout=30) as response:
         body = response.read()
         message_id = ""
@@ -230,7 +230,7 @@ def post(webhook, content):
 
 def delete(webhook, message_id):
     request = urllib.request.Request(webhook + "/messages/" + message_id, method="DELETE",
-                                     headers={"User-Agent": "melee-unlocked-release-notes"})
+                                     headers={"User-Agent": "melee-party-release-notes"})
     with urllib.request.urlopen(request, timeout=30) as response:
         return response.status
 
@@ -240,7 +240,7 @@ def main():
     ap.add_argument("--version", help="release version, e.g. 0.1.15 (reads release/RELEASE_NOTES_<v>.md)")
     ap.add_argument("--last", type=int, metavar="N", help="use the N latest published GitHub releases")
     ap.add_argument("--notes", type=Path, help="post this file instead of a version's notes")
-    ap.add_argument("--repo", default="Hero88go/melee-unlocked", help="GitHub repository for --last")
+    ap.add_argument("--repo", default="santiagopinto2/melee-party", help="GitHub repository for --last")
     ap.add_argument("--webhook", help="webhook URL (default: discord-webhook.txt or MELEE_DISCORD_WEBHOOK)")
     ap.add_argument("--send", action="store_true", help="actually post; without it the message is only printed")
     ap.add_argument("--delete", metavar="VERSION", help="delete the messages posted for VERSION and stop")

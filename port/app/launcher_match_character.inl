@@ -44,7 +44,7 @@ int choose_match_character(const launcher::lobby::Match& match) {
   static bool registered=false;
   if(!registered) {
     WNDCLASSW wc{}; wc.lpfnWndProc=match_picker_proc; wc.hInstance=GetModuleHandleW(nullptr);
-    wc.lpszClassName=L"MeleeUnlockedMatchPicker"; wc.hCursor=LoadCursorW(nullptr,IDC_HAND);
+    wc.lpszClassName=L"MeleePartyMatchPicker"; wc.hCursor=LoadCursorW(nullptr,IDC_HAND);
     registered=RegisterClassW(&wc)!=0 || GetLastError()==ERROR_CLASS_ALREADY_EXISTS;
   }
   if(!registered) return match.character;
@@ -52,7 +52,7 @@ int choose_match_character(const launcher::lobby::Match& match) {
   RECT parent{}; GetWindowRect(g_main,&parent);
   RECT frame{0,0,S(460),S(291)}; AdjustWindowRect(&frame,WS_POPUP|WS_CAPTION,FALSE);
   const int width=frame.right-frame.left,height=frame.bottom-frame.top;
-  HWND picker=CreateWindowExW(WS_EX_DLGMODALFRAME,L"MeleeUnlockedMatchPicker",launcher::lang::txw(L"Match accepted").c_str(),
+  HWND picker=CreateWindowExW(WS_EX_DLGMODALFRAME,L"MeleePartyMatchPicker",launcher::lang::txw(L"Match accepted").c_str(),
     WS_POPUP|WS_CAPTION,(parent.left+parent.right-width)/2,(parent.top+parent.bottom-height)/2,
     width,height,g_main,nullptr,GetModuleHandleW(nullptr),&selection);
   if(!picker) return match.character;

@@ -1,4 +1,4 @@
-# Melee Unlocked launcher: Русский
+# Melee Party launcher: Русский
 mode.vanilla = Ванилла
 mode.custom = Своя ISO
 lobby.build_unknown = неизвестная версия
@@ -225,7 +225,7 @@ crash.offer = Игра аварийно завершилась. Отправит
 @Send crash report = Отправить отчёт о сбое
 @Crash report sent. Thank you! = Отчёт о сбое отправлен. Спасибо!
 @The report could not be sent automatically. A GitHub issue page and the folder with melee_crash_report.zip are open: attach the zip to the issue. = Не удалось отправить отчёт автоматически. Открыты страница GitHub и папка с melee_crash_report.zip: прикрепите архив к сообщению.
-@Melee Unlocked Launcher = Лаунчер Melee Unlocked
+@Melee Party Launcher = Лаунчер Melee Party
 @Mods = Моды
 @Installed = Установлен
 @Not installed = Не установлен
@@ -423,12 +423,12 @@ crash.offer = Игра аварийно завершилась. Отправит
 @Starting... = Запуск...
 @Static Recomp = Static Recomp
 @Stops at startup on the Static Recomp. Not supported yet. = Останавливается при запуске в Static Recomp. Пока не поддерживается.
-@The 7-Zip tool is missing from the launcher's tools folder (tools\7zr.exe). Reinstall Melee Unlocked to get it. = В папке tools лаунчера отсутствует 7-Zip (tools\7zr.exe). Переустановите Melee Unlocked.
+@The 7-Zip tool is missing from the launcher's tools folder (tools\7zr.exe). Reinstall Melee Party to get it. = В папке tools лаунчера отсутствует 7-Zip (tools\7zr.exe). Переустановите Melee Party.
 @The archive could not be unpacked. Nothing was installed. = Не удалось распаковать архив. Ничего не установлено.
 @The download failed. Nothing was installed. = Скачивание не удалось. Ничего не установлено.
-@The mod tools are missing (tools\xdelta3.exe, tools\7zr.exe). Reinstall Melee Unlocked to use Get. = Отсутствуют инструменты модов (tools\xdelta3.exe, tools\7zr.exe). Переустановите Melee Unlocked, чтобы использовать Скачать.
+@The mod tools are missing (tools\xdelta3.exe, tools\7zr.exe). Reinstall Melee Party to use Get. = Отсутствуют инструменты модов (tools\xdelta3.exe, tools\7zr.exe). Переустановите Melee Party, чтобы использовать Скачать.
 @The verified patch was not found. Nothing was installed. = Проверенный патч не найден. Ничего не установлено.
-@The xdelta3 tool is missing from the launcher's tools folder (tools\xdelta3.exe). Reinstall Melee Unlocked to get it. = В папке tools лаунчера отсутствует xdelta3 (tools\xdelta3.exe). Переустановите Melee Unlocked.
+@The xdelta3 tool is missing from the launcher's tools folder (tools\xdelta3.exe). Reinstall Melee Party to get it. = В папке tools лаунчера отсутствует xdelta3 (tools\xdelta3.exe). Переустановите Melee Party.
 @Untested on the Static Recomp. = Не проверено в Static Recomp.
 @This version is not supported yet. = Эта версия пока не поддерживается.
 

@@ -137,7 +137,7 @@ std::vector<CatalogMod> default_catalog() {
   return mods;
 }
 constexpr const wchar_t* kCatalogHost = L"raw.githubusercontent.com";
-constexpr const wchar_t* kCatalogPath = L"/Hero88go/melee-unlocked/main/mods-catalog.json";
+constexpr const wchar_t* kCatalogPath = L"/santiagopinto2/melee-party/main/mods-catalog.json";
 constexpr const char* kVanillaMd5 = "0e63d4223b01d9aba596259dc155a174";
 // Tools shipped beside the launcher (tools\). xdelta3 3.0.11 (GPL) is byte-identical to the one the
 // mods ship; 7zr.exe is the official 7-Zip standalone (LGPL) for .7z downloads, which Windows' tar
@@ -247,7 +247,7 @@ bool enough_space(uint64_t need, std::string* why) {
 // HTTPS GET. `to_file` empty: returns the body in *body. Reports progress for downloads.
 bool https_get(const std::wstring& host, const std::wstring& path, std::string* body, const std::wstring& to_file,
                const std::string& id = "", uint64_t expected = 0, const std::atomic<bool>* cancel = nullptr) {
-  HINTERNET session = WinHttpOpen(L"MeleeUnlocked-Launcher", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, nullptr, nullptr, 0);
+  HINTERNET session = WinHttpOpen(L"MeleeParty-Launcher", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, nullptr, nullptr, 0);
   if (!session) return false;
   WinHttpSetTimeouts(session, 10000, 10000, 15000, 15000);
   bool ok = false;
@@ -258,7 +258,7 @@ bool https_get(const std::wstring& host, const std::wstring& path, std::string* 
     HINTERNET req = WinHttpOpenRequest(connect, L"GET", p.c_str(), nullptr, nullptr, nullptr, WINHTTP_FLAG_SECURE);
     DWORD no_redirect = WINHTTP_OPTION_REDIRECT_POLICY_NEVER;
     if (req) WinHttpSetOption(req, WINHTTP_OPTION_REDIRECT_POLICY, &no_redirect, sizeof no_redirect);
-    const wchar_t* headers = L"Accept: application/vnd.github+json\r\nUser-Agent: MeleeUnlocked-Launcher\r\n";
+    const wchar_t* headers = L"Accept: application/vnd.github+json\r\nUser-Agent: MeleeParty-Launcher\r\n";
     DWORD status = 0, len = sizeof status;
     if (req && WinHttpSendRequest(req, headers, (DWORD)-1, nullptr, 0, 0, 0) && WinHttpReceiveResponse(req, nullptr) &&
         WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, nullptr, &status, &len, nullptr)) {
@@ -462,7 +462,7 @@ void install_file_job(std::wstring file, std::string id, const std::string& iso,
     int code = -1;
     if (ends(L".7z")) {
       const fs::path seven = catalog_core::shipped_tool(launcher_dir(), kSevenZipTool, k7zrSha256);
-      if (seven.empty()) { set_status(key, "The 7-Zip tool is missing from the launcher's tools folder (tools\\7zr.exe). Reinstall Melee Unlocked to get it."); return; }
+      if (seven.empty()) { set_status(key, "The 7-Zip tool is missing from the launcher's tools folder (tools\\7zr.exe). Reinstall Melee Party to get it."); return; }
       code = run_hidden(seven.wstring(), L"x -y -bd \"-o" + work.wstring() + L"\" \"" + file + L"\"", work.wstring(), cancel);
     } else {
       wchar_t sys[MAX_PATH]; GetSystemDirectoryW(sys, MAX_PATH);
@@ -475,7 +475,7 @@ void install_file_job(std::wstring file, std::string id, const std::string& iso,
   // The shipped tool first; the one inside the download only when its bytes are the pinned ones.
   fs::path tool = catalog_core::shipped_tool(launcher_dir(), kXdeltaTool, mod.tool_sha256);
   if (tool.empty() && !bare_patch) tool = catalog_core::pinned_xdelta(work, mod.tool_sha256);
-  if (tool.empty()) { set_status(key, "The xdelta3 tool is missing from the launcher's tools folder (tools\\xdelta3.exe). Reinstall Melee Unlocked to get it."); return; }
+  if (tool.empty()) { set_status(key, "The xdelta3 tool is missing from the launcher's tools folder (tools\\xdelta3.exe). Reinstall Melee Party to get it."); return; }
   if (patch.empty()) { set_status(key, "The verified patch was not found. Nothing was installed."); return; }
   const fs::path staged = work / "result.iso";
   set_status(key, "Building the modded disc from your Melee disc...");
@@ -515,10 +515,10 @@ void download_and_install(CatalogMod mod, std::string iso) {
   const std::atomic<bool>* cancel = flag.get();
   if (!mod.one_click) { set_status(mod.id, "Use the official download page for this mod."); return; }
   if (!mod.patch_sha256.empty() && catalog_core::shipped_tool(launcher_dir(), kXdeltaTool, mod.tool_sha256).empty()) {
-    set_status(mod.id, "The xdelta3 tool is missing from the launcher's tools folder (tools\\xdelta3.exe). Reinstall Melee Unlocked to get it."); return;
+    set_status(mod.id, "The xdelta3 tool is missing from the launcher's tools folder (tools\\xdelta3.exe). Reinstall Melee Party to get it."); return;
   }
   if (mod.kind == "xdelta_7z" && catalog_core::shipped_tool(launcher_dir(), kSevenZipTool, k7zrSha256).empty()) {
-    set_status(mod.id, "The 7-Zip tool is missing from the launcher's tools folder (tools\\7zr.exe). Reinstall Melee Unlocked to get it."); return;
+    set_status(mod.id, "The 7-Zip tool is missing from the launcher's tools folder (tools\\7zr.exe). Reinstall Melee Party to get it."); return;
   }
   std::string error;
   if (!mod.patch_sha256.empty() && !vanilla_iso_ok(iso, &error)) { set_status(mod.id, error); return; }
@@ -752,7 +752,7 @@ void paint_page(HDC dc) {
   std::string note = tx("Drop a .zip, .7z, .xdelta, .iso or .gci anywhere on the launcher. Saves stay when you remove a pack.");
   COLORREF note_color = C_FAINT;
   if (status.count("drop")) { note = tx(status["drop"]); note_color = C_TEXT; }
-  else if (!g_tools_ok) { note = tx("The mod tools are missing (tools\\xdelta3.exe, tools\\7zr.exe). Reinstall Melee Unlocked to use Get."); note_color = C_WARN; }
+  else if (!g_tools_ok) { note = tx("The mod tools are missing (tools\\xdelta3.exe, tools\\7zr.exe). Reinstall Melee Party to use Get."); note_color = C_WARN; }
   draw_text(dc, widen(note), LR(kPad, height - kFooter + 10, width - 2 * kPad, 30), g_font_small, note_color, DT_LEFT | DT_WORDBREAK | DT_EDITCONTROL | DT_NOPREFIX);
 }
 void draw_item(DRAWITEMSTRUCT* di) {
@@ -885,9 +885,9 @@ LRESULT CALLBACK proc(HWND w, UINT msg, WPARAM wp, LPARAM lp) {
 void show_page(bool show) {
   if (!show) { if (g_window) { ShowWindow(g_window, SW_HIDE); KillTimer(g_window, 1); } return; }
   if (!g_window) {
-    WNDCLASSW wc{}; wc.lpfnWndProc = proc; wc.hInstance = GetModuleHandleW(nullptr); wc.lpszClassName = L"MeleeUnlockedMods"; wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    WNDCLASSW wc{}; wc.lpfnWndProc = proc; wc.hInstance = GetModuleHandleW(nullptr); wc.lpszClassName = L"MeleePartyMods"; wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
     RegisterClassW(&wc);
-    g_window = CreateWindowExW(WS_EX_ACCEPTFILES | WS_EX_CONTROLPARENT, L"MeleeUnlockedMods", L"", WS_CHILD | WS_VSCROLL | WS_CLIPCHILDREN,
+    g_window = CreateWindowExW(WS_EX_ACCEPTFILES | WS_EX_CONTROLPARENT, L"MeleePartyMods", L"", WS_CHILD | WS_VSCROLL | WS_CLIPCHILDREN,
                                0, 0, S(10), S(10), g_main, nullptr, GetModuleHandleW(nullptr), nullptr);
     SetWindowTheme(g_window, L"DarkMode_Explorer", nullptr);
     auto button = [&](const wchar_t* label, int id) {

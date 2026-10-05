@@ -12,7 +12,7 @@ int g_failures = 0;
 
 int main() {
   namespace fs = std::filesystem;
-  const fs::path root = fs::temp_directory_path() / "melee_unlocked_profile_test";
+  const fs::path root = fs::temp_directory_path() / "melee_party_profile_test";
   std::error_code ec;
   fs::remove_all(root, ec);
   fs::create_directories(root, ec);

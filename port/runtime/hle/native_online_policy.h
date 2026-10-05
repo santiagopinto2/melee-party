@@ -8,12 +8,12 @@ namespace slippi::online {
 enum class NativeGameplayProfile { Vanilla, Akaneia, OtherMod };
 
 // Slippi's mode IDs are Ranked=0, Unranked=1, Direct=2, Teams=3, Party=4.
-// Melee Unlocked does not offer Ranked, on either engine; every matchmaking entry (the game's own
+// Melee Party does not offer Ranked, on either engine; every matchmaking entry (the game's own
 // online menus, practice matchmaking, Discord joins) goes through this check.
 // Direct is the only mode in which both clients can deliberately run Akaneia.
 inline const char* native_profile_mode_error(NativeGameplayProfile profile, int mode) {
   if (mode < 0 || mode > 4) return "Unsupported matchmaking mode";
-  if (mode == 0) return "Ranked is not available in Melee Unlocked. Play Unranked, Direct or Teams.";
+  if (mode == 0) return "Ranked is not available in Melee Party. Play Unranked, Direct or Teams.";
   // A mod's own gameplay (its fighters, stages and files) only in Direct, against the same build.
   // Source content views switch those modes to retail files. A Static mod session has no such
   // switch, so a non-Vanilla profile reaching here outside Direct is refused.

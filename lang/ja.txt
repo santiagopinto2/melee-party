@@ -1,4 +1,4 @@
-# Melee Unlocked launcher: 日本語
+# Melee Party launcher: 日本語
 mode.vanilla = バニラ
 mode.custom = カスタムISO
 lobby.build_unknown = 不明なバージョン
@@ -225,7 +225,7 @@ crash.offer = ゲームがクラッシュしました。修正のためにクラ
 @Send crash report = クラッシュレポートを送信
 @Crash report sent. Thank you! = クラッシュレポートを送信しました。ありがとうございます！
 @The report could not be sent automatically. A GitHub issue page and the folder with melee_crash_report.zip are open: attach the zip to the issue. = レポートを自動で送信できませんでした。GitHubのページと melee_crash_report.zip のフォルダを開きました。zipを報告に添付してください。
-@Melee Unlocked Launcher = Melee Unlocked ランチャー
+@Melee Party Launcher = Melee Party ランチャー
 @Mods = Mod
 @Installed = インストール済み
 @Not installed = 未インストール
@@ -423,12 +423,12 @@ crash.offer = ゲームがクラッシュしました。修正のためにクラ
 @Starting... = 開始中...
 @Static Recomp = Static Recomp
 @Stops at startup on the Static Recomp. Not supported yet. = Static Recompでは起動時に停止します。まだ対応していません。
-@The 7-Zip tool is missing from the launcher's tools folder (tools\7zr.exe). Reinstall Melee Unlocked to get it. = ランチャーのtoolsフォルダーに7-Zipツール（tools\7zr.exe）がありません。Melee Unlockedを再インストールしてください。
+@The 7-Zip tool is missing from the launcher's tools folder (tools\7zr.exe). Reinstall Melee Party to get it. = ランチャーのtoolsフォルダーに7-Zipツール（tools\7zr.exe）がありません。Melee Partyを再インストールしてください。
 @The archive could not be unpacked. Nothing was installed. = アーカイブを展開できませんでした。何もインストールされていません。
 @The download failed. Nothing was installed. = ダウンロードに失敗しました。何もインストールされていません。
-@The mod tools are missing (tools\xdelta3.exe, tools\7zr.exe). Reinstall Melee Unlocked to use Get. = MOD用ツール（tools\xdelta3.exe、tools\7zr.exe）がありません。入手を使うにはMelee Unlockedを再インストールしてください。
+@The mod tools are missing (tools\xdelta3.exe, tools\7zr.exe). Reinstall Melee Party to use Get. = MOD用ツール（tools\xdelta3.exe、tools\7zr.exe）がありません。入手を使うにはMelee Partyを再インストールしてください。
 @The verified patch was not found. Nothing was installed. = 検証済みパッチが見つかりませんでした。何もインストールされていません。
-@The xdelta3 tool is missing from the launcher's tools folder (tools\xdelta3.exe). Reinstall Melee Unlocked to get it. = ランチャーのtoolsフォルダーにxdelta3ツール（tools\xdelta3.exe）がありません。Melee Unlockedを再インストールしてください。
+@The xdelta3 tool is missing from the launcher's tools folder (tools\xdelta3.exe). Reinstall Melee Party to get it. = ランチャーのtoolsフォルダーにxdelta3ツール（tools\xdelta3.exe）がありません。Melee Partyを再インストールしてください。
 @Untested on the Static Recomp. = Static Recompでは未検証です。
 @This version is not supported yet. = このバージョンにはまだ対応していません。
 

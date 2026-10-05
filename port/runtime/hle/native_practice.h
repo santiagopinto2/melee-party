@@ -10,7 +10,7 @@
 
 namespace slippi::native_practice {
 
-// Values intentionally match Slippi's OnlinePlayMode (Melee Unlocked has no Ranked).
+// Values intentionally match Slippi's OnlinePlayMode (Melee Party has no Ranked).
 enum class MatchMode : uint8_t { None = 0xFF, Unranked = 1, Direct = 2 };
 
 struct Snapshot {

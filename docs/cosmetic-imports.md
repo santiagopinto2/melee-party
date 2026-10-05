@@ -21,7 +21,7 @@ search or match is active, and all changes require a restart to affect the runni
 The sections below document earlier importer milestones and may describe policies superseded by
 the v0.7 behavior above.
 
-Base commit: `cfea2f7f994a1427a2c1c10bf2dfd81b7fc3cab2` (fork `finalstock-dev/melee-unlocked`).
+Base commit: `cfea2f7f994a1427a2c1c10bf2dfd81b7fc3cab2` (fork `finalstock-dev/melee-party`).
 
 This milestone proves one model-replacement path without modifying the clean ISO or the translated
 vanilla DOL. It imports a structurally recognized costume DAT, stores it in one content-addressed

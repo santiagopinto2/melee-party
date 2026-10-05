@@ -7,7 +7,7 @@ IDI_LAUNCHER    ICON   "launcher.ico"
 IDB_LAUNCHER_BG BITMAP "launcher_bg.bmp"
 // The game's MU mark, drawn over the background so the launcher is branded by the logo itself
 // rather than by a line of text.
-IDI_MELEE_MARK  ICON   "melee_unlocked.ico"
+IDI_MELEE_MARK  ICON   "melee_party.ico"
 // Both of these are 32bpp with a premultiplied alpha channel, cut off the flat plate each was
 // composited on (the mark off navy, Bailey off white) before the build, so the launcher just
 // blends them onto the rail. The mark is kept at full resolution: the .ico tops out at 256 and
@@ -17,7 +17,7 @@ IDI_MELEE_MARK  ICON   "melee_unlocked.ico"
 IDB_MELEE_MARK  BITMAP "melee_mark.bmp"
 IDB_BAILEY      BITMAP "bailey_cut.bmp"
 
-// Version resource; see the same block in melee_unlocked.rc for why. The launcher needs it more
+// Version resource; see the same block in melee_party.rc for why. The launcher needs it more
 // than the game does: it is the file that downloads and replaces executables over the network,
 // which is the behaviour heuristics react to, and it is the one players have reported missing
 // after a download.
@@ -35,12 +35,12 @@ BEGIN
   BEGIN
     BLOCK "040904B0"   // US English, Unicode
     BEGIN
-      VALUE "CompanyName",      "Melee Unlocked"
-      VALUE "FileDescription",  "Melee Unlocked Launcher"
+      VALUE "CompanyName",      "Melee Party"
+      VALUE "FileDescription",  "Melee Party Launcher"
       VALUE "FileVersion",      MELEE_PORT_VERSION
-      VALUE "InternalName",     "MeleeUnlockedLauncher"
-      VALUE "OriginalFilename", "MeleeUnlockedLauncher.exe"
-      VALUE "ProductName",      "Melee Unlocked"
+      VALUE "InternalName",     "MeleePartyLauncher"
+      VALUE "OriginalFilename", "MeleePartyLauncher.exe"
+      VALUE "ProductName",      "Melee Party"
       VALUE "ProductVersion",   MELEE_PORT_VERSION
     END
   END

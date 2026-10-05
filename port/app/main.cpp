@@ -940,10 +940,10 @@ static LONG WINAPI crash_filter(EXCEPTION_POINTERS* info) {
     CloseHandle(dump);
   }
   if (g_crash_dialog) {
-    std::string text = std::string(head) + "\n\nMelee Unlocked crashed. The launcher can send this report: it asks once you close this "
+    std::string text = std::string(head) + "\n\nMelee Party crashed. The launcher can send this report: it asks once you close this "
                        "message. If you started the game without the launcher, please send melee_port.log, melee_port_crash.txt and "
-                       "melee_port_crash.dmp from the game folder with your bug report (https://github.com/hero88go/melee-unlocked/issues).";
-    MessageBoxA(nullptr, text.c_str(), "Melee Unlocked", MB_ICONERROR | MB_OK);
+                       "melee_port_crash.dmp from the game folder with your bug report (https://github.com/santiagopinto2/melee-party/issues).";
+    MessageBoxA(nullptr, text.c_str(), "Melee Party", MB_ICONERROR | MB_OK);
   }
   return EXCEPTION_EXECUTE_HANDLER;
 }
@@ -968,11 +968,11 @@ static void die_report(const char* message) {
     CloseHandle(dump);
   }
   if (g_crash_dialog) {
-    std::string text = std::string(head) + "\n\nMelee Unlocked stopped with an error. The launcher can send this report: it asks once you "
+    std::string text = std::string(head) + "\n\nMelee Party stopped with an error. The launcher can send this report: it asks once you "
                        "close this message. If you started the game without the launcher, please send melee_port.log, "
                        "melee_port_crash.txt and melee_port_crash.dmp from the game folder with your bug report "
-                       "(https://github.com/hero88go/melee-unlocked/issues).";
-    MessageBoxA(nullptr, text.c_str(), "Melee Unlocked", MB_ICONERROR | MB_OK);
+                       "(https://github.com/santiagopinto2/melee-party/issues).";
+    MessageBoxA(nullptr, text.c_str(), "Melee Party", MB_ICONERROR | MB_OK);
   }
 }
 
@@ -1012,7 +1012,7 @@ static void remember_iso(const std::string& iso) {
   if (!GetFullPathNameA(iso.c_str(), MAX_PATH, full, nullptr)) return;
   char* local = nullptr; size_t n = 0;
   if (_dupenv_s(&local, &n, "LOCALAPPDATA") != 0 || !local) return;
-  std::string dir = std::string(local) + "\\MeleeUnlocked";
+  std::string dir = std::string(local) + "\\MeleeParty";
   free(local);
   CreateDirectoryA(dir.c_str(), nullptr);
   FILE* f = std::fopen((dir + "\\launcher.ini").c_str(), "w");
@@ -1075,9 +1075,9 @@ static int __cdecl check_avx2_before_anything_else() {
   // last thing this should do is fault inside the code explaining a fault.
   char msg[768];
   wsprintfA(msg,
-                "Melee Unlocked needs a processor with AVX2, and this one reports that it does not "
+                "Melee Party needs a processor with AVX2, and this one reports that it does not "
                 "have it.\n\nAVX2 means Intel Core 4th generation (Haswell, 2013) or newer, or AMD "
-                "Ryzen or newer. Every version of Melee Unlocked has been built for it; older "
+                "Ryzen or newer. Every version of Melee Party has been built for it; older "
                 "versions crashed here without a message instead of showing this one.\n\n"
                 "Processor: %s\n"
                 "AVX: %s   AVX2: %s   OS support: %s\n\n"
@@ -1085,7 +1085,7 @@ static int __cdecl check_avx2_before_anything_else() {
                 "say exactly what the processor reported.",
                 brand, avx ? "yes" : "no", avx2 ? "yes" : "no",
                 (osxsave && (xcr0 & 6) == 6) ? "yes" : "no");
-  MessageBoxA(nullptr, msg, "Melee Unlocked", MB_ICONERROR | MB_OK);
+  MessageBoxA(nullptr, msg, "Melee Party", MB_ICONERROR | MB_OK);
   ExitProcess(3);
   return 0;
 #endif
@@ -1121,9 +1121,9 @@ int main(int argc, char** argv) { return melee_main(argc, argv); }
 
 static int melee_main(int argc, char** argv) {
   if (!cpu_has_avx2()) {
-    const char* msg = "Melee Unlocked needs a CPU with AVX2 (Intel Haswell 2013 or newer, AMD Ryzen or newer). This CPU does not support it.";
+    const char* msg = "Melee Party needs a CPU with AVX2 (Intel Haswell 2013 or newer, AMD Ryzen or newer). This CPU does not support it.";
     std::fprintf(stderr, "%s\n", msg);
-    MessageBoxA(nullptr, msg, "Melee Unlocked", MB_ICONERROR | MB_OK);
+    MessageBoxA(nullptr, msg, "Melee Party", MB_ICONERROR | MB_OK);
     return 3;
   }
   for (int i = 1; i < argc; ++i)
@@ -1550,7 +1550,7 @@ static int melee_main(int argc, char** argv) {
 
   {
     const char* version = MELEE_PORT_VERSION;
-    std::wstring base = L"Melee Unlocked ";
+    std::wstring base = L"Melee Party ";
     for (const char* c = version; *c; ++c) base += (wchar_t)(unsigned char)*c;
 #ifdef MELEE_SOURCE_PORT
     base += L"  |  Source Port";

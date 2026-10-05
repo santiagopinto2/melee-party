@@ -20,7 +20,7 @@
 namespace host::updater {
 namespace {
 // The release list rather than /releases/latest: that endpoint skips pre-releases (betas).
-const char* REPO_API = "https://api.github.com/repos/hero88go/melee-unlocked/releases?per_page=100";
+const char* REPO_API = "https://api.github.com/repos/santiagopinto2/melee-party/releases?per_page=100";
 std::atomic<State> g_state{State::Idle};
 std::mutex g_mutex;
 std::string g_current, g_latest, g_zip_url, g_message, g_zip_path;
@@ -43,7 +43,7 @@ bool http_get(const std::string& url, std::string* out, int* status) {
   uc.lpszHostName = host; uc.dwHostNameLength = 256; uc.lpszUrlPath = path; uc.dwUrlPathLength = 4096;
   uc.lpszExtraInfo = extra; uc.dwExtraInfoLength = 1024;
   if (!WinHttpCrackUrl(wurl.c_str(), 0, 0, &uc)) return false;
-  HINTERNET session = WinHttpOpen(L"MeleeUnlocked updater", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+  HINTERNET session = WinHttpOpen(L"MeleeParty updater", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
   if (!session) return false;
   WinHttpSetTimeouts(session, 8000, 8000, 30000, 120000);
   bool ok = false;
@@ -54,7 +54,7 @@ bool http_get(const std::string& url, std::string* out, int* status) {
     if (req) {
       DWORD redirect = WINHTTP_OPTION_REDIRECT_POLICY_ALWAYS;
       WinHttpSetOption(req, WINHTTP_OPTION_REDIRECT_POLICY, &redirect, sizeof redirect);
-      if (WinHttpSendRequest(req, L"User-Agent: MeleeUnlocked\r\nAccept: application/vnd.github+json\r\n", (DWORD)-1, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) && WinHttpReceiveResponse(req, nullptr)) {
+      if (WinHttpSendRequest(req, L"User-Agent: MeleeParty\r\nAccept: application/vnd.github+json\r\n", (DWORD)-1, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) && WinHttpReceiveResponse(req, nullptr)) {
         DWORD code = 0, size = sizeof code;
         WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_HEADER_NAME_BY_INDEX, &code, &size, WINHTTP_NO_HEADER_INDEX);
         if (status) *status = (int)code;
@@ -99,8 +99,7 @@ bool safe_version(const std::string& s) {
   return true;
 }
 bool release_url(const std::string& url) {
-  return url.rfind("https://github.com/Hero88go/melee-unlocked/releases/download/", 0) == 0 ||
-         url.rfind("https://github.com/hero88go/melee-unlocked/releases/download/", 0) == 0;
+  return url.rfind("https://github.com/santiagopinto2/melee-party/releases/download/", 0) == 0;
 }
 void rollback_message(const std::string& s) { std::lock_guard<std::mutex> lk(g_mutex); g_rollback_message = s; }
 bool valid_install(const std::filesystem::path& p, bool experimental) {
@@ -179,16 +178,16 @@ void check(const std::string& current_version, bool install_experimental) {
       std::string tag = r["tag_name"].get<std::string>();
       if (!tag.empty() && tag[0] == 'v') tag.erase(0, 1);
       if (!safe_version(tag)) continue;
-      Download d; d.release.version = tag; d.root_name = "MeleeUnlocked-" + tag;
+      Download d; d.release.version = tag; d.root_name = "MeleeParty-" + tag;
       if (r.count("published_at") && r["published_at"].is_string()) d.release.published = r["published_at"].get<std::string>().substr(0, 10);
       if (r.count("assets") && r["assets"].is_array()) for (const auto& a : r["assets"]) {
         if (!a.is_object()) continue;
         const std::string name = a.value("name", std::string());
         const std::string url = a.value("browser_download_url", std::string());
         if (!release_url(url)) continue;
-        if (name == "MeleeUnlocked-" + tag + "-win64.zip") { d.legacy_url = url; d.legacy_size = a.value("size", size_t(0)); d.release.legacy = true; }
+        if (name == "MeleeParty-" + tag + "-win64.zip") { d.legacy_url = url; d.legacy_size = a.value("size", size_t(0)); d.release.legacy = true; }
         if (name == "MeleePort-" + tag + "-win64.zip") { d.root_name = "MeleePort-" + tag; d.legacy_url = url; d.legacy_size = a.value("size", size_t(0)); d.release.legacy = true; }
-        if (name == "MeleeUnlocked-" + tag + "-DLSS5-Experimental.zip") { d.experimental_url = url; d.experimental_size = a.value("size", size_t(0)); d.release.experimental = true; }
+        if (name == "MeleeParty-" + tag + "-DLSS5-Experimental.zip") { d.experimental_url = url; d.experimental_size = a.value("size", size_t(0)); d.release.experimental = true; }
       }
       if (d.release.legacy || d.release.experimental) catalog.push_back(std::move(d));
       if (!j.is_object()) j = r;
@@ -206,8 +205,8 @@ void check(const std::string& current_version, bool install_experimental) {
     // DLSS5-Experimental download, or it would never be offered an update again. The old name is
     // only a fallback for a release that has no -win64.zip.
     (void)dir;
-    const std::string wanted = "MeleeUnlocked-" + tag + "-win64.zip";
-    const std::string fallback = "MeleeUnlocked-" + tag + "-DLSS5-Experimental.zip";
+    const std::string wanted = "MeleeParty-" + tag + "-win64.zip";
+    const std::string fallback = "MeleeParty-" + tag + "-DLSS5-Experimental.zip";
     if (j.count("assets") && j["assets"].is_array()) {
       for (auto& a : j["assets"]) if (a.is_object() && a.value("name", std::string()) == wanted) { zip = a.value("browser_download_url", std::string()); zip_size = a.value("size", size_t(0)); break; }
       if (zip.empty())
@@ -329,7 +328,7 @@ void download_and_install() {
       << "tar -xf update.zip -C update_tmp\r\n"
       << "if errorlevel 1 (echo could not unpack update.zip>> %LOG% & echo Could not unpack the update. & pause & exit /b 1)\r\n"
       << "set SRC=\r\n"
-      << "for /d %%d in (update_tmp\\MeleeUnlocked-* update_tmp\\MeleePort-*) do set SRC=%%d\r\n"
+      << "for /d %%d in (update_tmp\\MeleeParty-* update_tmp\\MeleePort-*) do set SRC=%%d\r\n"
       << "if not defined SRC (echo no release folder inside update.zip>> %LOG% & echo The update did not contain a release folder. & pause & exit /b 1)\r\n"
       << "echo copying from %SRC%>> %LOG%\r\n"
       // /r overwrites read-only files: Windows marks files unpacked from a downloaded zip read-only

@@ -31,7 +31,7 @@ then configure and build the host and launcher:
 
 ```powershell
 cmake -S . -B build-review -G "Visual Studio 17 2022" -A x64 -DMELEE_BUILD_EXPERIMENTAL_PORT=ON
-cmake --build build-review --config Release --target melee_source melee_unlocked --parallel
+cmake --build build-review --config Release --target melee_source melee_party --parallel
 Copy-Item build-sourceport-gcc/melee_game.dll build-review/port/Release/
 Copy-Item build-sourceport-gcc/melee_game.snapexcl build-review/port/Release/
 build-review/port/Release/melee_source.exe --iso "C:/path/to/melee.iso" --threaded-renderer

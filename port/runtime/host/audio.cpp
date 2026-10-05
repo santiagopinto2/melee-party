@@ -156,12 +156,12 @@ std::wstring to_wide(const std::string& s) {
 }
 
 // Auto mode remembers, per output device, the buffer it settled on, so the next session starts
-// there instead of relearning it through audible gaps. File: %USERPROFILE%\.melee-unlocked\audio-auto-v3.txt,
+// there instead of relearning it through audible gaps. File: %USERPROFILE%\.melee-party\audio-auto-v3.txt,
 // one "<ms> <endpoint id>" line per device. v3 holds the whole queue (the direct path); v2 held the
 // ring alone, before the device queue, and stays with the two-stage path.
 std::string auto_memory_path() {
   const char* home = std::getenv("USERPROFILE");
-  return home ? std::string(home) + (g_direct ? "\\.melee-unlocked\\audio-auto-v3.txt" : "\\.melee-unlocked\\audio-auto-v2.txt")
+  return home ? std::string(home) + (g_direct ? "\\.melee-party\\audio-auto-v3.txt" : "\\.melee-party\\audio-auto-v2.txt")
               : std::string();
 }
 int auto_memory_load(const std::string& device) {
@@ -189,7 +189,7 @@ void auto_memory_save(const std::string& device, int ms) {
     }
     std::fclose(f);
   }
-  CreateDirectoryA((std::string(std::getenv("USERPROFILE")) + "\\.melee-unlocked").c_str(), nullptr);
+  CreateDirectoryA((std::string(std::getenv("USERPROFILE")) + "\\.melee-party").c_str(), nullptr);
   if (FILE* f = std::fopen(path.c_str(), "w")) {
     for (const auto& k : keep) std::fprintf(f, "%s\n", k.c_str());
     std::fprintf(f, "%d %s\n", ms, device.c_str());

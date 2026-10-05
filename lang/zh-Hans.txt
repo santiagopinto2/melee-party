@@ -1,4 +1,4 @@
-# Melee Unlocked launcher: 简体中文
+# Melee Party launcher: 简体中文
 mode.vanilla = 原版
 mode.custom = 自定义 ISO
 lobby.build_unknown = 未知版本
@@ -225,7 +225,7 @@ crash.offer = 游戏崩溃了。要发送崩溃报告以便修复吗？\n\n将�
 @Send crash report = 发送崩溃报告
 @Crash report sent. Thank you! = 崩溃报告已发送。谢谢！
 @The report could not be sent automatically. A GitHub issue page and the folder with melee_crash_report.zip are open: attach the zip to the issue. = 无法自动发送报告。已打开 GitHub 页面和包含 melee_crash_report.zip 的文件夹：请把 zip 附加到问题中。
-@Melee Unlocked Launcher = Melee Unlocked 启动器
+@Melee Party Launcher = Melee Party 启动器
 @Mods = 模组
 @Installed = 已安装
 @Not installed = 未安装
@@ -423,12 +423,12 @@ crash.offer = 游戏崩溃了。要发送崩溃报告以便修复吗？\n\n将�
 @Starting... = 正在开始...
 @Static Recomp = Static Recomp
 @Stops at startup on the Static Recomp. Not supported yet. = 在 Static Recomp 上启动时会停止。暂不支持。
-@The 7-Zip tool is missing from the launcher's tools folder (tools\7zr.exe). Reinstall Melee Unlocked to get it. = 启动器的 tools 文件夹中缺少 7-Zip 工具（tools\7zr.exe）。请重新安装 Melee Unlocked。
+@The 7-Zip tool is missing from the launcher's tools folder (tools\7zr.exe). Reinstall Melee Party to get it. = 启动器的 tools 文件夹中缺少 7-Zip 工具（tools\7zr.exe）。请重新安装 Melee Party。
 @The archive could not be unpacked. Nothing was installed. = 无法解压归档。未安装任何内容。
 @The download failed. Nothing was installed. = 下载失败。未安装任何内容。
-@The mod tools are missing (tools\xdelta3.exe, tools\7zr.exe). Reinstall Melee Unlocked to use Get. = 缺少模组工具（tools\xdelta3.exe、tools\7zr.exe）。请重新安装 Melee Unlocked 后使用 获取。
+@The mod tools are missing (tools\xdelta3.exe, tools\7zr.exe). Reinstall Melee Party to use Get. = 缺少模组工具（tools\xdelta3.exe、tools\7zr.exe）。请重新安装 Melee Party 后使用 获取。
 @The verified patch was not found. Nothing was installed. = 找不到已验证的补丁。未安装任何内容。
-@The xdelta3 tool is missing from the launcher's tools folder (tools\xdelta3.exe). Reinstall Melee Unlocked to get it. = 启动器的 tools 文件夹中缺少 xdelta3 工具（tools\xdelta3.exe）。请重新安装 Melee Unlocked。
+@The xdelta3 tool is missing from the launcher's tools folder (tools\xdelta3.exe). Reinstall Melee Party to get it. = 启动器的 tools 文件夹中缺少 xdelta3 工具（tools\xdelta3.exe）。请重新安装 Melee Party。
 @Untested on the Static Recomp. = 尚未在 Static Recomp 上测试。
 @This version is not supported yet. = 此版本暂不支持。
 
