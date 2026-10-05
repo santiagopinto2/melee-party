@@ -81,8 +81,9 @@
 #define PARASOL_HANDLE 5.5f  /* the parasol's model: its handle's end below its origin */
 #define PARASOL_ANIM 2       /* open: the last frame of its animation 2 (it/kinds/itparasol.c) */
 #define PARASOL_FRAME 44.0f
-#define PARASOL_HAND_X 0.38f /* the winner's Snorlax's hand, in its heights from its middle and feet */
-#define PARASOL_HAND_Y 0.47f
+#define PARASOL_HAND_X 0.37f /* the winner's Snorlax's hand, in its heights from its middle and feet */
+#define PARASOL_HAND_Y 0.53f
+#define PARASOL_HAND_Z (-0.186f) /* the hand's depth: its last arm joint (-5.74 at 30.9 tall) */
 #define PARASOL_TILT (-0.26f) /* about 15 degrees, the top away from the Snorlax (toward +x) */
 #define FLY_UP_FRAMES 30     /* the winners' jump off the top of the screen */
 #define FLY_DROP 150.0f      /* how far above the Snorlax they come back down from */
@@ -338,7 +339,7 @@ static void draw_models(HSD_GObj* gobj, intptr_t pass)
                 float h = dm.snorlax_h, len = PARASOL_HANDLE * PARASOL_SCALE;
                 float hand_x = lane_x(i) + PARASOL_HAND_X * h, hand_y = dm.big_y[i] + PARASOL_HAND_Y * h;
                 place(dm.parasol, hand_x - len * sinf(PARASOL_TILT), hand_y + len * cosf(PARASOL_TILT),
-                      big_z(i) - 0.1f * h, 0.0f, 0.0f, PARASOL_SCALE, PARASOL_SCALE);
+                      big_z(i) + PARASOL_HAND_Z * h, 0.0f, 0.0f, PARASOL_SCALE, PARASOL_SCALE);
                 HSD_JObjSetRotationZ(dm.parasol, PARASOL_TILT);
                 HSD_JObjDispAll(dm.parasol, NULL, flags, 0);
             }
