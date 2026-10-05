@@ -24,6 +24,7 @@ enum {
     PARTY_STATE_BOARD = 1,
     PARTY_STATE_MINIGAME = 2,
     PARTY_STATE_RESULTS = 3,   /* a scripted match: the podium */
+    PARTY_STATE_LOBBY = 4,     /* online: the host picks board or minigame mode (lobby.c) */
     PARTY_END = -1,
 };
 
@@ -46,6 +47,8 @@ typedef struct PartyState {
     int mover;       /* whose board turn it is, 0..3 */
     int board;       /* index into the board table */
     int no_minigames; /* Debug Boards: board turn after board turn */
+    int lobby;       /* online: the host picks what to play in a lobby between games */
+    int lobby_minigames; /* the lobby picked minigame mode: back to it after each minigame */
     int star_space;
     int minigame;    /* index into the minigame table of the one being played */
     u32 mg_played;   /* bit per minigame already played this cycle */
@@ -59,6 +62,7 @@ extern PartyState party;
 /* party.c */
 void party_start(const VsModeData* vs, u32 seed); /* NULL vs: CPUs (and P1 human) */
 int party_advance(int phase);                  /* the phase after a match, or PARTY_END */
+void party_reset_scores(void);                 /* coins, stars and the board, for a new party */
 void party_setup_phase(int phase, StartMeleeData* start);
 void party_preload_phase(int phase);
 int party_test_minigame(void);
@@ -87,6 +91,10 @@ int board_turn_done(void);                     /* 1 once every player moved this
 int board_count(void);                         /* the boards the Melee Party menu lists */
 const char* board_name(int index);
 const char* board_description(int index);      /* two lines, for the menu */
+
+/* lobby.c: online, the host's choice between games. */
+void lobby_setup(StartMeleeData* start);
+void lobby_fighter_input(struct Fighter* fp);
 
 /* party_menu.c */
 enum { PARTY_MENU_MINIGAMES, PARTY_MENU_BOARDS, PARTY_MENU_DEBUG_BOARDS };

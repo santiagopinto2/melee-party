@@ -60,13 +60,19 @@ netcode. There are two ways in:
 1. **Connect.** Every player runs Melee Party with `--party on` (the default) and no other mod
    active. Open Online Play → Direct or Teams, enter the code, and pick a character. The team
    colours on the Teams character select do not matter, because the party decides its own teams.
-2. **Play.** When everyone locks in, the party starts. Every board turn, minigame and the podium
-   is a separate online game.
-   Between games there is a short pause, about 2 seconds, while the next game is agreed, then it
-   starts by itself. You do not go back to the character select.
-3. **Finish.** When the party ends, both players return to the online character select.
-   L+R+A+Start in any party game, a disconnect, or an opponent who does not start the next game
-   within 30 seconds also ends the party there.
+2. **Pick what to play.** When everyone locks in, the party opens its lobby: a match on Final
+   Destination with a menu over it. Only P1 (the first port) picks, with up/down and A (B goes
+   back); everyone else sees the same menu. There is no time limit.
+   - **Board**, then a board: a board party with minigames between the turns. After its podium
+     everyone is back in the lobby, and a new board party starts from scratch.
+   - **Minigames**, then a minigame: that minigame alone. When it is over everyone is back in the
+     lobby on the minigame list, so P1 can pick the next one, as many times as they like.
+3. **Play.** Every lobby, board turn, minigame and the podium is a separate online game. Between
+   games there is a short pause, about 2 seconds, while the next game is agreed, then it starts
+   by itself. You do not go back to the character select.
+4. **Finish.** L+R+A+Start in any party game ends the party and returns everyone to the online
+   character select. A disconnect, or an opponent who does not start the next game within 30
+   seconds, also ends it there.
 
 How it fits together:
 
@@ -159,6 +165,7 @@ decomp. Each hook is a few lines under `#ifdef MU_NATIVE`.
 | `mg_volley.c`, `mg_sandbag.c`, `mg_food.c`, `mg_domination.c` | The four minigames |
 | `results.c` | The podium |
 | `party_online.c` | The party over Slippi Direct |
+| `lobby.c` | Online: the lobby where P1 picks a board party or the next minigame |
 
 ### Adding a minigame
 
@@ -184,6 +191,7 @@ Set these as environment variables for `melee_source.exe`.
 | `MELEE_PARTY_AUTO_ROLL=1` | Idle humans roll after half a second instead of 10 seconds. |
 | `MELEE_PARTY_ONLINE_TEST=1` | Online party in any online mode, for the local test pair. |
 | `MELEE_PARTY_DEBUG_BOARDS=1` | No minigames between board turns, as when started from Debug Boards. |
+| `MELEE_PARTY_LOBBY_PICK=board` or `=<minigame id>` | The online lobby picks that by itself (scripted tests). Set the same on both sides. |
 
 For example, to watch a whole three-turn party with CPUs:
 

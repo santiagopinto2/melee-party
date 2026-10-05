@@ -312,9 +312,32 @@ int party_test_minigame(void)
 
 /* What follows a party match: the next phase (a PARTY_STATE_*), or PARTY_END. Shared by the
  * offline mode's states and the online party (party_online.c), so both play the same party. */
+/* Every player back to the start: coins, stars, places, the turn and the board. The players and
+ * the random generator stay. */
+void party_reset_scores(void)
+{
+    int i;
+    for (i = 0; i < PARTY_PLAYERS; i++) {
+        party.p[i].coins = 10;
+        party.p[i].stars = 0;
+        party.p[i].place = 0;
+    }
+    party.mg_played = 0;
+    party.round = 0;
+    board_reset();
+}
+
 int party_advance(int phase)
 {
     switch (phase) {
+    case PARTY_STATE_LOBBY:
+        if (party.lobby_minigames) {
+            party_log("lobby: minigame %s", minigame_get(party.minigame)->name);
+            return PARTY_STATE_MINIGAME;
+        }
+        party_reset_scores();   /* a new board party */
+        party_log("lobby: board %s", board_name(party.board));
+        return PARTY_STATE_BOARD;
     case PARTY_STATE_BOARD:
         if (party.no_minigames) {
             party_log("turn %d: board done (Debug Boards: no minigame)", party.turn);
@@ -328,11 +351,18 @@ int party_advance(int phase)
             return PARTY_STATE_MINIGAME;
         }
         minigame_finish();
+        if (party.lobby && party.lobby_minigames) {
+            return PARTY_STATE_LOBBY;   /* the host picks the next one */
+        }
         if (test_minigame >= 0) {
             return from_menu ? PARTY_STATE_CSS : PARTY_STATE_MINIGAME;
         }
         return party.turn >= party.max_turns ? PARTY_STATE_RESULTS : PARTY_STATE_BOARD;
     default:
+        if (party.lobby) {
+            party_log("party over: back to the lobby");
+            return PARTY_STATE_LOBBY;
+        }
         party_log("party over");
         return PARTY_END;
     }
@@ -352,6 +382,9 @@ void party_setup_phase(int phase, StartMeleeData* start)
         }
         minigame_setup(start);
         break;
+    case PARTY_STATE_LOBBY:
+        lobby_setup(start);
+        break;
     default:
         results_setup(start);
         break;
@@ -364,7 +397,8 @@ void party_preload_phase(int phase)
     if (phase == PARTY_STATE_MINIGAME) {
         party_preload_next(minigame_get(party.minigame)->stkind,
                            minigame_get(party.minigame)->extra_ckind);
-    } else if (phase == PARTY_STATE_BOARD || phase == PARTY_STATE_RESULTS) {
+    } else if (phase == PARTY_STATE_BOARD || phase == PARTY_STATE_RESULTS ||
+               phase == PARTY_STATE_LOBBY) {
         party_preload_next(St_Kind_Last, -1);
     }
 }
@@ -531,6 +565,9 @@ void mu_party_fighter_input(struct Fighter* fp)
         break;
     case PARTY_STATE_RESULTS:
         results_fighter_input(fp);
+        break;
+    case PARTY_STATE_LOBBY:
+        lobby_fighter_input(fp);
         break;
     case PARTY_STATE_MINIGAME:
         if (party.minigame >= 0 && minigame_get(party.minigame)->fighter_input != NULL) {

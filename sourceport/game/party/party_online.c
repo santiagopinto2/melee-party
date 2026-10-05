@@ -80,8 +80,13 @@ int mu_party_online_vs_prep(GameModeState* state)
         }
         /* The negotiated match is in the VS data (the splash or this decide applied it). */
         party_start(gmVsMelee_GetVsData(), ms->rng_offset ^ 0x5A17A9F1u);
+        /* Nothing from this side's offline menus: both sides must start alike. The host picks
+         * what to play in the lobby (lobby.c). */
+        party.board = 0;
+        party.no_minigames = 0;
+        party.lobby = 1;
         po.running = 1;
-        po.phase = PARTY_STATE_BOARD;
+        po.phase = PARTY_STATE_LOBBY;
         party_log("online: party starts, local port %d", ms->local_index);
     }
     memset(&po.start, 0, sizeof po.start);
