@@ -17,8 +17,10 @@ HAL Laboratory. Questions and bugs about this build go to this repository, not t
 Start the Source Port (`melee_source.exe`) and go to **VS. Mode → Melee Party**. To play a
 single minigame, use **VS. Mode → Party Minigames**.
 
-Each turn every player rolls a die (1 to 10) and walks that many spaces. Blue spaces give 3
-coins, red spaces take 3, and passing the star space buys a star for 20 coins. After everyone
+The board is Mario Party 4's Goomba's Greedy Gala, with its branching paths and the Goomba's
+roulette in the middle. Each turn every player rolls a die (1 to 10) and walks that many spaces.
+Blue spaces give 3 coins, red spaces take 3, and passing the star space buys a star for 20 coins.
+Shops, items, pipes and space events are not in play yet. After everyone
 moves there is a minigame, paying 10, 5, 3 and 0 coins by placement. After the last turn the
 player with the most stars (then coins) wins.
 

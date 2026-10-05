@@ -117,3 +117,37 @@ void party_draw_floor_quad(GXColor color, float y, const float corners[8])
     }
     GXEnd();
 }
+
+void party_draw_floor_arrow(GXColor color, float y, float x, float z, float dx, float dz, float len,
+                            float width)
+{
+    float head = len * 0.45f, hw = width * 1.6f;
+    float sx = x + dx * (len - head), sz = z + dz * (len - head);   /* where the head starts */
+    float nx = -dz * width * 0.5f, nz = dx * width * 0.5f;
+    float shaft[8];
+    shaft[0] = x - nx; shaft[1] = z - nz;
+    shaft[2] = sx - nx; shaft[3] = sz - nz;
+    shaft[4] = sx + nx; shaft[5] = sz + nz;
+    shaft[6] = x + nx; shaft[7] = z + nz;
+    party_draw_floor_quad(color, y, shaft);
+    mpLib_SetupDraw(color);
+    GXBegin(GX_TRIANGLES, GX_VTXFMT0, 3);
+    GXPosition3f32(sx - dz * hw, y, sz + dx * hw);
+    GXPosition3f32(x + dx * len, y, z + dz * len);
+    GXPosition3f32(sx + dz * hw, y, sz - dx * hw);
+    GXEnd();
+}
+
+void party_draw_floor_sector(GXColor color, float x, float y, float z, float r, float a0, float a1)
+{
+    enum { N = 12 };
+    int i;
+    mpLib_SetupDraw(color);
+    GXBegin(GX_TRIANGLEFAN, GX_VTXFMT0, N + 2);
+    GXPosition3f32(x, y, z);
+    for (i = 0; i <= N; i++) {
+        float a = a0 + (a1 - a0) * (float) i / N;
+        GXPosition3f32(x + cosf(a) * r, y, z + sinf(a) * r);
+    }
+    GXEnd();
+}
