@@ -121,6 +121,16 @@ class GeckoSet:
         return [c.name for c in self.codes if c.enabled]
 
 
+NO_GECKO_DATA = ("// Generated: no Slippi code tables (translated with --no-slippi).\n#include \"gecko_data.h\"\nnamespace gecko {\n"
+                 "const uint8_t codehandler_bin[1] = {0}; const size_t codehandler_bin_size = 0;\nconst uint8_t bootloader_gct[1] = {0}; const size_t bootloader_gct_size = 0;\n"
+                 "const uint8_t slippi_gct[1] = {0}; const size_t slippi_gct_size = 0;\n"
+                 "const Write boot_writes[1] = {{0, 0, nullptr}}; const size_t boot_writes_count = 0;\n"
+                 "const HookInstall boot_hooks[1] = {{0, 0, 0}}; const size_t boot_hooks_count = 0;\nconst uint32_t gct_base_used = 0;\n"
+                 "const uint32_t optional_gct_offset = 0; const uint32_t port_gct_offset = 0; bool option_widescreen = false; bool option_lagless_fod = false; bool option_pal_stock_icons = false; bool option_no_screen_shake = false;\n"
+                 "const OptionalWrite optional_writes[1] = {{0, 0, nullptr, nullptr, nullptr}}; const size_t optional_writes_count = 0;\n"
+                 "const OptionalCode optional_codes[1] = {{0, 0, nullptr}}; const size_t optional_codes_count = 0;\n}\n")
+
+
 def write_gecko_data(out, gs):
     def cbytes(name, blob):
         rows = []
@@ -181,6 +191,51 @@ def write_if_changed(path, text):
     return True
 
 
+def write_host_headers(out, symbols, hle_funcs):
+    """The two headers the host runtime includes: HLE declarations and guest symbol addresses."""
+    changed = 0
+    text = ["// Generated. HLE overrides referenced by generated code.\n#pragma once\n#include \"ppc.h\"\nnamespace hle {\n"]
+    for name in sorted(hle_funcs):
+        text.append("void %s(ppc::Context& c, uint8_t* m);\n" % name)
+    text.append("}\n")
+    changed += write_if_changed(out / "hle_decls.h", "".join(text))
+
+    # Guest symbol addresses for host code (functions and objects).
+    text = ["// Generated guest symbol addresses.\n#pragma once\n#include <cstdint>\nnamespace gs {\n"]
+    used = set()
+    for addr, name in sorted(symbols.names.items()):
+        ident = c_ident(name)
+        if ident in used:
+            ident = "%s_%08X" % (ident, addr)
+        used.add(ident)
+        text.append("constexpr uint32_t %s = 0x%08Xu;\n" % (ident, addr))
+    text.append("}\n")
+    changed += write_if_changed(out / "guest_symbols.h", "".join(text))
+    return changed
+
+
+def write_names(out, symbols):
+    text = ["#include <cstdint>\n#include <cstddef>\nnamespace guest {\nstruct NameEntry { uint32_t addr; const char* name; };\n",
+            "extern const NameEntry name_table[];\nextern const size_t name_table_count;\n",
+            "const NameEntry name_table[] = {\n"]
+    for func in symbols.functions:
+        text.append("  {0x%08Xu, \"%s\"},\n" % (func.addr, func.name.replace("\\", "\\\\").replace('"', '\\"')))
+    text.append("};\nconst size_t name_table_count = sizeof(name_table) / sizeof(name_table[0]);\n}\n")
+    return write_if_changed(out / "function_names.cpp", "".join(text))
+
+
+def read_hle(path, symbols):
+    hle = set()
+    for line in open(path, encoding="utf-8"):
+        line = line.split("#", 1)[0].strip()
+        if line:
+            hle.add(line)
+    missing = sorted(n for n in hle if n not in symbols.by_name)
+    if missing:
+        print("warning: HLE names not in symbol map:", ", ".join(missing))
+    return {n for n in hle if n in symbols.by_name}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "port/generated"))
@@ -194,7 +249,21 @@ def main():
     ap.add_argument("--sys-dir", default=str(SLIPPI_SYS), help="Slippi Sys folder with the code list to bake (port/slippi_sys, or port/slippi_sys_playback for the playback build)")
     ap.add_argument("--gct-base", default="0", help="guest address where the game loads the main GCT (from a previous run's log); "
                                                      "enables translation of C0 caves at their real addresses")
+    ap.add_argument("--host-only", action="store_true",
+                    help="write only what the Source Port host (melee_source) needs to configure and build: "
+                         "the headers, no translated game and no gecko_* hook names (needs no DOL; melee_port cannot link against it)")
     args = ap.parse_args()
+
+    if args.host_only:
+        out = Path(args.out)
+        out.mkdir(parents=True, exist_ok=True)
+        symbols = SymbolMap(args.symbols)
+        write_host_headers(out, symbols, read_hle(args.hle, symbols))
+        write_names(out, symbols)
+        write_if_changed(out / "gecko_data.cpp", NO_GECKO_DATA)
+        write_if_changed(out / "guest_sources.cmake", "# --host-only: no translated game\nset(GUEST_SOURCES)\n")
+        print("generated the host headers in %s (no translation)" % out)
+        return
 
     t0 = time.time()
     if hashlib.sha1(Path(args.dol).read_bytes()).hexdigest() != "08e0bf20134dfcb260699671004527b2d6bb1a45":
@@ -220,15 +289,7 @@ def main():
         for idx, a, b in (gs.boot.unsupported + gs.main.unsupported)[:10]:
             print("  unsupported Gecko line %d: %08X %08X" % (idx, a, b))
     infos, extra, thunks = analyze_all(dol, symbols, gs)
-    hle = set()
-    for line in open(args.hle, encoding="utf-8"):
-        line = line.split("#", 1)[0].strip()
-        if line:
-            hle.add(line)
-    missing = sorted(n for n in hle if n not in symbols.by_name)
-    if missing:
-        print("warning: HLE names not in symbol map:", ", ".join(missing))
-    hle_funcs = {n for n in hle if n in symbols.by_name}
+    hle_funcs = read_hle(args.hle, symbols)
     if gs is not None:
         for h in gs.hooks:
             owner = symbols.containing(h.hook)
@@ -247,14 +308,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     changed = 0
     if gs is None:
-        changed += write_if_changed(out / "gecko_data.cpp", "// Generated: no Slippi code tables (translated with --no-slippi).\n#include \"gecko_data.h\"\nnamespace gecko {\n"
-                                    "const uint8_t codehandler_bin[1] = {0}; const size_t codehandler_bin_size = 0;\nconst uint8_t bootloader_gct[1] = {0}; const size_t bootloader_gct_size = 0;\n"
-                                    "const uint8_t slippi_gct[1] = {0}; const size_t slippi_gct_size = 0;\n"
-                                    "const Write boot_writes[1] = {{0, 0, nullptr}}; const size_t boot_writes_count = 0;\n"
-                                    "const HookInstall boot_hooks[1] = {{0, 0, 0}}; const size_t boot_hooks_count = 0;\nconst uint32_t gct_base_used = 0;\n"
-                                     "const uint32_t optional_gct_offset = 0; const uint32_t port_gct_offset = 0; bool option_widescreen = false; bool option_lagless_fod = false; bool option_pal_stock_icons = false; bool option_no_screen_shake = false;\n"
-                                     "const OptionalWrite optional_writes[1] = {{0, 0, nullptr, nullptr, nullptr}}; const size_t optional_writes_count = 0;\n"
-                                     "const OptionalCode optional_codes[1] = {{0, 0, nullptr}}; const size_t optional_codes_count = 0;\n}\n")
+        changed += write_if_changed(out / "gecko_data.cpp", NO_GECKO_DATA)
 
     # Prototypes for every function.
     text = ["// Generated by port/recomp/recomp.py. Do not edit.\n#pragma once\n#include \"ppc.h\"\n",
@@ -265,24 +319,7 @@ def main():
     text.append("extern const FnEntry fn_table[];\nextern const size_t fn_table_count;\n}\n")
     changed += write_if_changed(out / "functions.h", "".join(text))
 
-    # HLE declarations.
-    text = ["// Generated. HLE overrides referenced by generated code.\n#pragma once\n#include \"ppc.h\"\nnamespace hle {\n"]
-    for name in sorted(hle_funcs):
-        text.append("void %s(ppc::Context& c, uint8_t* m);\n" % name)
-    text.append("}\n")
-    changed += write_if_changed(out / "hle_decls.h", "".join(text))
-
-    # Guest symbol addresses for host code (functions and objects).
-    text = ["// Generated guest symbol addresses.\n#pragma once\n#include <cstdint>\nnamespace gs {\n"]
-    used = set()
-    for addr, name in sorted(symbols.names.items()):
-        ident = c_ident(name)
-        if ident in used:
-            ident = "%s_%08X" % (ident, addr)
-        used.add(ident)
-        text.append("constexpr uint32_t %s = 0x%08Xu;\n" % (ident, addr))
-    text.append("}\n")
-    changed += write_if_changed(out / "guest_symbols.h", "".join(text))
+    changed += write_host_headers(out, symbols, hle_funcs)
 
     # Translation units.
     ordered = sorted(infos)
@@ -334,13 +371,7 @@ def main():
     changed += write_if_changed(out / "guest_sources.cmake", "".join(text))
 
     # Names for diagnostics.
-    text = ["#include <cstdint>\n#include <cstddef>\nnamespace guest {\nstruct NameEntry { uint32_t addr; const char* name; };\n",
-            "extern const NameEntry name_table[];\nextern const size_t name_table_count;\n",
-            "const NameEntry name_table[] = {\n"]
-    for func in symbols.functions:
-        text.append("  {0x%08Xu, \"%s\"},\n" % (func.addr, func.name.replace("\\", "\\\\").replace('"', '\\"')))
-    text.append("};\nconst size_t name_table_count = sizeof(name_table) / sizeof(name_table[0]);\n}\n")
-    changed += write_if_changed(out / "function_names.cpp", "".join(text))
+    changed += write_names(out, symbols)
 
     digest = hashlib.sha1(dol.ram).hexdigest()[:12]
     print("generated %d TUs, %d functions, %d HLE overrides, %d files changed, image %s, %.1fs" % (

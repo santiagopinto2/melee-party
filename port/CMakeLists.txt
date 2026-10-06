@@ -130,7 +130,7 @@ target_include_directories(port_ax_ucode_test PRIVATE runtime/hle)
 target_compile_features(port_ax_ucode_test PRIVATE cxx_std_17)
 add_test(NAME port_ax_ucode COMMAND port_ax_ucode_test)
 add_executable(port_hle_card_test tests/hle_card_lifecycle_test.cpp runtime/hle/hle_card.cpp)
-target_include_directories(port_hle_card_test PRIVATE runtime/hle runtime/host runtime/ppc generated)
+target_include_directories(port_hle_card_test PRIVATE runtime/hle runtime/host runtime/ppc "${PORT_GEN}")
 target_compile_features(port_hle_card_test PRIVATE cxx_std_17)
 target_compile_definitions(port_hle_card_test PRIVATE NOMINMAX _CRT_SECURE_NO_WARNINGS)
 add_test(NAME port_hle_card_lifecycle COMMAND port_hle_card_test)
@@ -364,6 +364,11 @@ add_custom_command(TARGET melee_port POST_BUILD
   VERBATIM)
 if(MELEE_CPU_BASELINE STREQUAL "AVX2")
   target_compile_definitions(melee_port PRIVATE MELEE_NEEDS_AVX2)
+endif()
+# The AVX2 check at the top of melee_main is for AVX2 builds only; an AVX or SSE2 build runs without it.
+if(NOT MELEE_CPU_BASELINE STREQUAL "AVX2")
+  target_compile_definitions(melee_port PRIVATE MELEE_BASELINE_BELOW_AVX2)
+  target_compile_definitions(melee_source PRIVATE MELEE_BASELINE_BELOW_AVX2)
 endif()
 
 # Melee Party client: Win32 launcher (Play page, Build tab, self-update). No runtime dependency.

@@ -1120,12 +1120,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 int main(int argc, char** argv) { return melee_main(argc, argv); }
 
 static int melee_main(int argc, char** argv) {
+#ifndef MELEE_BASELINE_BELOW_AVX2
   if (!cpu_has_avx2()) {
     const char* msg = "Melee Party needs a CPU with AVX2 (Intel Haswell 2013 or newer, AMD Ryzen or newer). This CPU does not support it.";
     std::fprintf(stderr, "%s\n", msg);
     MessageBoxA(nullptr, msg, "Melee Party", MB_ICONERROR | MB_OK);
     return 3;
   }
+#endif
   for (int i = 1; i < argc; ++i)
     if (std::string(argv[i]) == "--version") { std::printf("%s\n", MELEE_PORT_VERSION); return 0; }
 #ifdef MELEE_SOURCE_PORT

@@ -29,6 +29,10 @@ WRAPPED = re.compile(r"^ \.(?:bss|data)(?:\.[\w.]+)?$")
 
 def object_name(path):
     name = path.replace("\\", "/").rsplit("/", 1)[-1]
+    # Makefile builds on Linux link through an archive: "objects.a(AXAlloc.c.obj)"
+    m = re.match(r"^[^()]+\.a\((.+)\)$", name)
+    if m:
+        name = m.group(1)
     return name + "bj" if name.endswith(".c.o") else name
 
 
