@@ -153,6 +153,38 @@ Software rendering is slow, so keep rendered runs short and aim them with the kn
 took 7.5 minutes at 640x480, about 5 game frames a second. The board draws much more and runs at
 about 2 game frames a second at 1280x960.
 
+## Test builds for Santi
+
+Santi tries a change on his Windows PC before it ships. The flow:
+
+1. He asks for a change. Make it on a branch, build, run the tests and a CPU party, and look at a
+   screenshot of what changed (sections above).
+2. `tools/test_build.sh <name> "<what changed, one line>"` builds incrementally (the game library
+   and host trees stay cached; a party-only change takes a few minutes), plays a headless one-turn
+   CPU party as a smoke test, packages the zip and prints its link.
+3. Send him the link, `http://santi:8090/builds/MeleeParty-test-<name>-<date>.zip`. The page
+   `http://santi:8090/` lists the last five builds, newest first.
+4. "Ship it" means open the PR and merge it once checks are green, and add a line to
+   `docs/history/RELEASE_NOTES_UNRELEASED.md` if players would notice. "Change X" means a new
+   build and a new link.
+
+The zip (`tools/package_test_build.py`) is the runnable build output: `melee_source.exe` (static
+CRT, so no Visual C++ runtime is needed), `melee_game.dll` and `melee_game.snapexcl`. It also
+carries what a release has beside the game (Slippi's `Sys`, `ui_sources`, `licenses`), plus
+`PlayTest.bat` and a `README.txt`. He unzips it into its own folder and drags his ISO onto
+`PlayTest.bat` once; it remembers the path. The folder keeps its own settings, saves and replays,
+so his normal install is not touched. The packager refuses disc images and game file types outside
+`Sys/`, and anything over 64 MB.
+
+The server is the user unit `test-builds.service` on this machine (`~/services/test-builds/`): a
+static file server bound to the tailnet address only, port 8090. It is reachable from Santi's
+devices and nowhere else. Test builds never go to GitHub (the repository is public) or to a
+public site.
+
+The test build is built for AVX like the rest of this machine's builds, not for AVX2 like a
+release. It runs on any PC that runs the release, but its floating point is not bit-identical to
+a release build's, so it can only play online against the same test build.
+
 ## Gotchas
 
 - `melee_port.log` beside the exe is the first thing to read. A crash in the game library logs
@@ -172,7 +204,7 @@ Verified on 2026-10-05 (main at 75fcb17 plus this change):
 |---|---|
 | Root tests (native Linux) | 3/3 pass |
 | Game library tests (Wine) | 10/12 pass. `native_disc_offsets` hard-codes a Windows toolchain path (`tools/disc_offset_audit.py`); `native_disc_layout` (not in `all`) returns 1 |
-| Host tests (Wine) | 52/56 pass. Failing under Wine: `port_launch_process`, `port_frame_queue` (a 200 ms timing assertion), `port_cosmetic_mods` (ZIP/vault import), `port_gpu_resources` (needs a D3D12 device) |
+| Host tests (Wine, `xvfb-run`) | 54/56 pass. Failing under Wine: `port_launch_process` and `port_cosmetic_mods` (ZIP/vault import). `port_frame_queue` has a 200 ms timing assertion that can fail on a loaded machine |
 | `melee_source.exe` under Wine | boots, menus and party render; one-turn CPU party plays board, Domination and podium headless in 4 minutes |
 | Rendered board and Volleyball | captured at 1280x960 and 640x480 (slow, see above) |
 | Online pair (`tools/online_pair.py`) | not tried |
