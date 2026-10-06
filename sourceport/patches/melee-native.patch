@@ -49717,7 +49717,7 @@ index 96b0c87ee..ac62411ff 100644
  
      return ret_obj;
 diff --git a/src/melee/ef/efasync.c b/src/melee/ef/efasync.c
-index 636ba26f4..afd56721b 100644
+index 636ba26f4..d0b0c9949 100644
 --- a/src/melee/ef/efasync.c
 +++ b/src/melee/ef/efasync.c
 @@ -1122,8 +1122,7 @@ void* efAsync_Dispatch(s32 gfx_id, HSD_GObj* gobj, va_list vlist)
@@ -49770,11 +49770,13 @@ index 636ba26f4..afd56721b 100644
      EF_DAT_Entry* lookup;
      lookup = &efAsync_DatEntries[idx];
  
-@@ -1302,16 +1313,17 @@ void efAsync_LoadSync(int idx)
+@@ -1301,17 +1312,18 @@ void efAsync_LoadSync(int idx)
+     }
      {
          bool chk = lbArchive_80017040(NULL, lookup->ef_DAT_file, &spC,
-                                       lookup->effDataTable_name, 0);
+-                                      lookup->effDataTable_name, 0);
 -        if ((u32) spC->ef_DAT_file | (u32) spC->effDataTable_name) {
++                                      lookup->effDataTable_name, NULL);
 +        if (DISC_RAW(spC->ef_DAT_file) | DISC_RAW(spC->effDataTable_name)) {
              if (chk) {
 -                psInitDataBankLoad(idx, (void*) spC->ef_DAT_file,
@@ -120206,7 +120208,7 @@ index eda24277d..802fc092c 100644
  }
  
 diff --git a/src/melee/if/if_2F72.c b/src/melee/if/if_2F72.c
-index 857aaf900..d56e7d411 100644
+index 857aaf900..5ecc7e345 100644
 --- a/src/melee/if/if_2F72.c
 +++ b/src/melee/if/if_2F72.c
 @@ -10,6 +10,7 @@
@@ -120651,7 +120653,7 @@ index 857aaf900..d56e7d411 100644
 +    memzero(&scinfstc_models, sizeof(scinfstc_models));
 +    lbArchive_LoadSections(*ifAll_GetArchive(),
 +                           (void**) &scinfstc_models.scene_models,
-+                           lbl_803F9780, 0);
++                           lbl_803F9780, NULL);
  }
  
  void if_802F7E7C(void)
@@ -123498,7 +123500,7 @@ index cb116eaba..c64f6100e 100644
  /* 2FD708 */ void un_802FD708(DynamicModelDesc*, int);
  /* 2FD8A0 */ void un_802FD8A0(DynamicModelDesc*);
 diff --git a/src/melee/if/ifmagnify.c b/src/melee/if/ifmagnify.c
-index 1190b925c..9c53b63b6 100644
+index 1190b925c..6c9f3e8df 100644
 --- a/src/melee/if/ifmagnify.c
 +++ b/src/melee/if/ifmagnify.c
 @@ -9,7 +9,6 @@
@@ -123877,9 +123879,10 @@ index 1190b925c..9c53b63b6 100644
      ifMagnify_802FC7C0(&ifMagnify_804A1DE0);
      archive = ifAll_GetArchive();
      lbArchive_LoadSections(*archive, (void**) &ifMagnify_804A1DE0,
-                            ifMagnify_804D57E8, 0);
+-                           ifMagnify_804D57E8, 0);
 -    i = 0;
 -    do {
++                           ifMagnify_804D57E8, NULL);
 +    for (i = 0; i < 6; i++) {
          ifMagnify_802FC3C0(i);
 -        i++;
@@ -124296,7 +124299,7 @@ index 8020cdad3..413b811a1 100644
          HSD_SisLib_803A62A0(2, "SdPrize.usd", "SIS_PrizeData");
      } else {
 diff --git a/src/melee/if/ifstatus.c b/src/melee/if/ifstatus.c
-index a6068103c..ca8b868b9 100644
+index a6068103c..4b89260a4 100644
 --- a/src/melee/if/ifstatus.c
 +++ b/src/melee/if/ifstatus.c
 @@ -26,29 +26,9 @@
@@ -124719,7 +124722,7 @@ index a6068103c..ca8b868b9 100644
      HSD_Archive** arch;
      arch = ifAll_GetArchive();
      lbArchive_LoadSections(*arch, (void**) &num, num_models_name,
-                            (void**) &mrk, mrk_models_name, 0);
+-                           (void**) &mrk, mrk_models_name, 0);
 -    hud->unk258 = (*num)->joint;
 -    hud->jobj_desc_parent = (*num)->anims;
 -    hud->janim_selection_joints = (HSD_AnimJoint*) (*num)->matanims;
@@ -124728,6 +124731,7 @@ index a6068103c..ca8b868b9 100644
 -    hud->unk26C = (*mrk)->anims;
 -    hud->unk270 = (*mrk)->matanims;
 -    hud->unk274 = (*mrk)->shapeanims;
++                           (void**) &mrk, mrk_models_name, NULL);
 +    hud->damage_num_joint = DP(DP(*num)->joint);
 +    hud->damage_num_anims = DP(DP(*num)->anims);
 +    hud->damage_num_matanims = DP(DP(*num)->matanims);
@@ -149256,7 +149260,7 @@ index 007cd1b27..f271c45d4 100644
  /* 0205F0 */ void lbBgFlash_800205F0(s32 duration);
  /* 02063C */ void lbBgFlash_8002063C(int count);
 diff --git a/src/melee/lb/lbcardgame.c b/src/melee/lb/lbcardgame.c
-index f1158fcfe..e2fd8305f 100644
+index f1158fcfe..fc562bad9 100644
 --- a/src/melee/lb/lbcardgame.c
 +++ b/src/melee/lb/lbcardgame.c
 @@ -1,22 +1,60 @@
@@ -149745,9 +149749,9 @@ index f1158fcfe..e2fd8305f 100644
 -        _p(x60) = arg0;
 -        _p(enable) = 1;
 +    if (_p(icon_data) == NULL) {
-+        lbArchive_80016DBC("LbMcGame.", &_p(icon_data), "MemCardIconData", 0);
++        lbArchive_80016DBC("LbMcGame.", &_p(icon_data), "MemCardIconData", NULL);
 +        lbArchive_80016DBC("NtMemAc", &_p(scene_data),
-+                           "ScNtcCommon_scene_data", 0);
++                           "ScNtcCommon_scene_data", NULL);
 +        _p(jobj_translate_idx) = jobj_translate_idx;
 +        _p(enable) = true;
      }
@@ -160522,7 +160526,7 @@ index a01d721eb..8e6877e4f 100644
      {
          HSD_JObj* popup_jobj;
 diff --git a/src/melee/mn/mnevent.c b/src/melee/mn/mnevent.c
-index 94d9ef2bc..80265671e 100644
+index 94d9ef2bc..0de277848 100644
 --- a/src/melee/mn/mnevent.c
 +++ b/src/melee/mn/mnevent.c
 @@ -23,9 +23,12 @@
@@ -161115,7 +161119,7 @@ index 94d9ef2bc..80265671e 100644
 +        &MenMainConEv.animjoint, "MenMainConEv_Top_animjoint",
 +        &MenMainConEv.matanim_joint, "MenMainConEv_Top_matanim_joint",
 +        &MenMainConEv.shapeanim_joint, "MenMainConEv_Top_shapeanim_joint",
-+        &MenMainMarkEv.joint, "MenMainMarkEv_Top_joint", 0);
++        &MenMainMarkEv.joint, "MenMainMarkEv_Top_joint", NULL);
  
 -    if (first_time == 0) {
 +    if (first_time == false) {
@@ -171190,7 +171194,7 @@ index d2a9360e1..86ca75e12 100644
  typedef struct TyLightSymbolEntry TyLightSymbolEntry;
  typedef struct TyListArg TyListArg;
 diff --git a/src/melee/ty/toy.c b/src/melee/ty/toy.c
-index e4e03af90..da6f18abc 100644
+index e4e03af90..8c096d241 100644
 --- a/src/melee/ty/toy.c
 +++ b/src/melee/ty/toy.c
 @@ -4,7 +4,6 @@
@@ -172426,7 +172430,7 @@ index e4e03af90..da6f18abc 100644
 -        *(HSD_Archive**) (arg0 + 0x14) = lbArchive_LoadSymbols(
 -            *(char**) (arg0 + 0x8), &sym, *(char**) (arg0 + 0xC), 0);
 +        arg0->archive = lbArchive_LoadSymbols(arg0->archive_name, &sym,
-+                                              arg0->symbol_name, 0);
++                                              arg0->symbol_name, NULL);
      }
  }
  
