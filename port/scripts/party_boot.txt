@@ -1,0 +1,6 @@
+# Melee Party test boot: on a fresh memory card, accept "Create Game Data?" (A) and the notice
+# that follows (A). MELEE_PARTY_BOOT then goes straight into the party. See docs/agent-testing.md.
+130 A
+140
+400 A
+410

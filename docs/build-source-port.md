@@ -45,3 +45,6 @@ The native host shares rendering, audio, controllers and Slippi services with St
 Recomp. The game DLL is built from source; the host's translation is also used by
 the parity tests. v0.8.5 exposes TM-CE and 20XX TE under Mods; see
 [training-mod controls and limits](training-mods.md).
+
+To build on Linux instead (cross-compiled, run under Wine, no GPU needed), see
+[agent-testing.md](agent-testing.md).

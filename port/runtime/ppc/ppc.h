@@ -294,16 +294,23 @@ inline double f25(double d) {
   std::memcpy(&d, &i, 8); return d;
 }
 // Hardware FMA, exactly as Jit64 emits VFMADD/VFMSUB/VFNMADD/VFNMSUB (scalar double).
-inline double fmadd(double a, double c, double b) {
+// clang-cl (the Linux cross build) only accepts the intrinsics in functions built for FMA; MSVC
+// accepts them anywhere. Only these helpers get the feature, so nothing else is compiled with FMA.
+#if defined(__clang__)
+#define PPC_FMA_TARGET __attribute__((target("fma")))
+#else
+#define PPC_FMA_TARGET
+#endif
+PPC_FMA_TARGET inline double fmadd(double a, double c, double b) {
   return _mm_cvtsd_f64(_mm_fmadd_sd(_mm_set_sd(a), _mm_set_sd(c), _mm_set_sd(b)));
 }
-inline double fmsub(double a, double c, double b) {
+PPC_FMA_TARGET inline double fmsub(double a, double c, double b) {
   return _mm_cvtsd_f64(_mm_fmsub_sd(_mm_set_sd(a), _mm_set_sd(c), _mm_set_sd(b)));
 }
-inline double fnmadd(double a, double c, double b) {  // PPC fnmadd = -(a*c + b) = VFNMSUB
+PPC_FMA_TARGET inline double fnmadd(double a, double c, double b) {  // PPC fnmadd = -(a*c + b) = VFNMSUB
   return _mm_cvtsd_f64(_mm_fnmsub_sd(_mm_set_sd(a), _mm_set_sd(c), _mm_set_sd(b)));
 }
-inline double fnmsub(double a, double c, double b) {  // PPC fnmsub = -(a*c - b) = VFNMADD
+PPC_FMA_TARGET inline double fnmsub(double a, double c, double b) {  // PPC fnmsub = -(a*c - b) = VFNMADD
   return _mm_cvtsd_f64(_mm_fnmadd_sd(_mm_set_sd(a), _mm_set_sd(c), _mm_set_sd(b)));
 }
 double fres(double v);
