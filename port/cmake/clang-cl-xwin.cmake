@@ -38,8 +38,9 @@ set(CMAKE_EXE_LINKER_FLAGS_INIT "${_xwin_libs}")
 set(CMAKE_SHARED_LINKER_FLAGS_INIT "${_xwin_libs}")
 set(CMAKE_MODULE_LINKER_FLAGS_INIT "${_xwin_libs}")
 
-# xwin leaves out the debug CRT (msvcrtd.lib): the release CRT in every configuration.
-set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreadedDLL)
+# xwin leaves out the debug CRT (msvcrtd.lib), and a test zip must run on a PC without the VC++
+# redistributable: the static release CRT in every configuration.
+set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded)
 set(CMAKE_TRY_COMPILE_CONFIGURATION Release)
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 # Tests are Windows executables: ctest runs them under Wine.

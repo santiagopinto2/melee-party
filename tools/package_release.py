@@ -191,6 +191,88 @@ def imgui_font_notice():
     return "\n".join(lines) + "\n" + mit[grant.start():]
 
 
+def copy_sys(folder):
+    """The Slippi Sys files the game reads (code tables, game file diffs, the free DSP table)."""
+    sys_src = ROOT / "port/slippi_sys"
+    sys_dst = folder / "Sys"
+    (sys_dst / "GameSettings").mkdir(parents=True)
+    shutil.copy2(sys_src / "GameSettings/GALE01r2.ini", sys_dst / "GameSettings/GALE01r2.ini")
+    shutil.copy2(sys_src / "codehandler.bin", sys_dst / "codehandler.bin")
+    shutil.copy2(sys_src / "bootloader.gct", sys_dst / "bootloader.gct")
+    shutil.copytree(sys_src / "GameFiles", sys_dst / "GameFiles")
+    # Ship only the pinned generated free table, never a player's hardware ROM dump.
+    coef = sys_src / "GC/dsp_coef.bin"
+    if not coef.is_file() or hashlib.sha256(coef.read_bytes()).hexdigest() != \
+            "c41e7d9f763da40983e83a5291cbecec1f536fd8b08ac6dda05eab33f57501ea":
+        raise SystemExit(f"missing or unrecognized free DSP coefficient table: {coef}")
+    (sys_dst / "GC").mkdir(exist_ok=True)
+    shutil.copy2(coef, sys_dst / "GC/dsp_coef.bin")
+    return coef
+
+
+def copy_licenses_and_assets(folder, mod_tools=True):
+    """licenses/, the mod tools (unless mod_tools is False), the settings appearance assets and
+    TrainingMods.md."""
+    licenses = folder / "licenses"
+    licenses.mkdir()
+    # The program's own license and every third-party notice its files need (GPL-3.0 sections 4
+    # and 6; the MIT, BSD, ISC and LGPL texts; the NVIDIA, Intel and DLSS third-party terms). A
+    # missing text stops the build instead of shipping a package without it.
+    for src, dst in ((ROOT / "LICENSE", "COPYING.txt"),
+                     (ROOT / "NOTICE", "NOTICE.txt"),
+                     (ROOT / "port/third_party/streamline/license.txt", "streamline.txt"),
+                     (ROOT / "port/third_party/streamline/3rd-party-licenses.md", "streamline-third-party.md"),
+                     (ROOT / "port/third_party/streamline/reflex.license.txt", "nvidia-reflex.txt"),
+                     (ROOT / "port/third_party/ngx/LICENSE.txt", "nvidia-rtx-sdks.txt"),
+                     (ROOT / "docs/licenses/nvidia-dlss-third-party.txt", "nvidia-dlss-third-party.txt"),
+                     (ROOT / "port/third_party/xess/LICENSE.txt", "intel-xess.txt"),
+                     (ROOT / "port/third_party/dht/LICENCE", "dht.txt"),
+                     (ROOT / "port/third_party/monocypher/LICENCE.md", "monocypher.md"),
+                     (ROOT / "port/third_party/enet/LICENSE", "enet.txt"),
+                     (ROOT / "port/third_party/imgui/LICENSE.txt", "imgui.txt"),
+                     (ROOT / "port/third_party/libusb/COPYING", "libusb-LGPL-2.1.txt"),
+                     (ROOT / "port/third_party/stb/LICENSE", "stb.txt"),
+                     (ROOT / "port/third_party/earcut/LICENSE", "earcut.txt"),
+                     (ROOT / "port/third_party/asio/LICENSE.txt", "steinberg-asio-sdk.txt"),
+                     (ROOT / "port/third_party/asio/NOTICE-BSD.txt", "steinberg-asio-bsd.txt"),
+                     (ROOT / "docs/licenses/asio.html", "asio.html"),
+                     (ROOT / "docs/licenses/asio-compatible-logo-white.svg", "asio-compatible-logo-white.svg"),
+                     (ROOT / "docs/licenses/dsp-coefficients.txt", "dsp-coefficients.txt"),
+                     (ROOT / "docs/licenses/hps_decode-MIT.txt", "hps_decode.txt"),
+                     (ROOT / "docs/licenses/slippilab-MIT.txt", "slippilab.txt"),
+                     (ROOT / "port/runtime/gx/ui_sources/gd_melee/assets/kit/SourceSans3-OFL.md",
+                      "source-sans-3-OFL.md")):
+        if not src.is_file():
+            raise SystemExit(f"missing license text: {src}")
+        shutil.copy2(src, licenses / dst)
+    if mod_tools:
+        tools_src = ROOT / "port/third_party/mod_tools"
+        (folder / "tools").mkdir(exist_ok=True)
+        for tool, digest in (("xdelta3.exe", "d81f59b2fe5e8589c0ee9782e231c805084f4d23dfade413903a4cad63b4e342"),
+                             ("7zr.exe", "ad4c82fadcbdf93c03b4fc440f300509c7d60c5c2f4d183e35d9d70d6957037d")):
+            src = tools_src / tool
+            if not src.is_file() or hashlib.sha256(src.read_bytes()).hexdigest() != digest:
+                raise SystemExit(f"missing or altered mod tool: {src}")
+            shutil.copy2(src, folder / "tools" / tool)
+        for src, dst in (("xdelta-COPYING.txt", "xdelta3-GPL-2.txt"),
+                         ("7zip-license.txt", "7zip.txt"), ("SOURCES.txt", "mod-tools-sources.txt")):
+            shutil.copy2(tools_src / src, licenses / dst)
+    (licenses / "nlohmann-json.txt").write_text(json_notice(), encoding="utf-8")
+    (licenses / "imgui-fonts.txt").write_text(imgui_font_notice(), encoding="utf-8")
+    # The settings appearance picker loads these at runtime from beside the executable.
+    # Keep the GD import separate so it can be removed without touching the other themes.
+    ui_src = ROOT / "port/runtime/gx/ui_sources"
+    for source in ("gd_melee", "mockups", "menu_previews", "vendor"):
+        assets = ui_src / source / "assets"
+        if not assets.is_dir():
+            raise SystemExit(f"missing settings appearance assets: {assets}")
+        shutil.copytree(assets, folder / "ui_sources" / source)
+    shutil.copy2(ROOT / "docs/third-party-ui-attribution.md", licenses / "ui-attribution.md")
+    shutil.copy2(ROOT / "docs/third-party-training-mode-ce.txt", licenses / "training-mode-ce.txt")
+    shutil.copy2(ROOT / "docs/training-mods.md", folder / "TrainingMods.md")
+    shutil.copy2(ui_src / "gd_melee/ORIGIN.md", licenses / "gd-melee-origin.md")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--version", default=(ROOT / "VERSION").read_text().strip())
@@ -319,20 +401,7 @@ def main():
     for dll in redist[-1].glob("*.dll"):
         shutil.copy2(dll, folder / dll.name)
     print(f"visual c++ runtime: {redist[-1]}")
-    sys_src = ROOT / "port/slippi_sys"
-    sys_dst = folder / "Sys"
-    (sys_dst / "GameSettings").mkdir(parents=True)
-    shutil.copy2(sys_src / "GameSettings/GALE01r2.ini", sys_dst / "GameSettings/GALE01r2.ini")
-    shutil.copy2(sys_src / "codehandler.bin", sys_dst / "codehandler.bin")
-    shutil.copy2(sys_src / "bootloader.gct", sys_dst / "bootloader.gct")
-    shutil.copytree(sys_src / "GameFiles", sys_dst / "GameFiles")
-    # Ship only the pinned generated free table, never a player's hardware ROM dump.
-    coef = sys_src / "GC/dsp_coef.bin"
-    if not coef.is_file() or hashlib.sha256(coef.read_bytes()).hexdigest() != \
-            "c41e7d9f763da40983e83a5291cbecec1f536fd8b08ac6dda05eab33f57501ea":
-        raise SystemExit(f"missing or unrecognized free DSP coefficient table: {coef}")
-    (sys_dst / "GC").mkdir(exist_ok=True)
-    shutil.copy2(coef, sys_dst / "GC/dsp_coef.bin")
+    coef = copy_sys(folder)
     # Playback normally finds Sys too, but keep its standalone Sys tree complete.
     if args.playback_exe:
         (folder / "SysPlayback/GC").mkdir(exist_ok=True)
@@ -350,63 +419,7 @@ def main():
     if args.playback_exe:
         (folder / "WatchReplay.bat").write_bytes(PLAYBACK_BAT.replace("\n", "\r\n").encode("utf-8"))
     (folder / "README.txt").write_text(README.format(version=args.version), encoding="utf-8")
-    licenses = folder / "licenses"
-    licenses.mkdir()
-    # The program's own license and every third-party notice its files need (GPL-3.0 sections 4
-    # and 6; the MIT, BSD, ISC and LGPL texts; the NVIDIA, Intel and DLSS third-party terms). A
-    # missing text stops the build instead of shipping a package without it.
-    for src, dst in ((ROOT / "LICENSE", "COPYING.txt"),
-                     (ROOT / "NOTICE", "NOTICE.txt"),
-                     (ROOT / "port/third_party/streamline/license.txt", "streamline.txt"),
-                     (ROOT / "port/third_party/streamline/3rd-party-licenses.md", "streamline-third-party.md"),
-                     (ROOT / "port/third_party/streamline/reflex.license.txt", "nvidia-reflex.txt"),
-                     (ROOT / "port/third_party/ngx/LICENSE.txt", "nvidia-rtx-sdks.txt"),
-                     (ROOT / "docs/licenses/nvidia-dlss-third-party.txt", "nvidia-dlss-third-party.txt"),
-                     (ROOT / "port/third_party/xess/LICENSE.txt", "intel-xess.txt"),
-                     (ROOT / "port/third_party/dht/LICENCE", "dht.txt"),
-                     (ROOT / "port/third_party/monocypher/LICENCE.md", "monocypher.md"),
-                     (ROOT / "port/third_party/enet/LICENSE", "enet.txt"),
-                     (ROOT / "port/third_party/imgui/LICENSE.txt", "imgui.txt"),
-                     (ROOT / "port/third_party/libusb/COPYING", "libusb-LGPL-2.1.txt"),
-                     (ROOT / "port/third_party/stb/LICENSE", "stb.txt"),
-                     (ROOT / "port/third_party/earcut/LICENSE", "earcut.txt"),
-                     (ROOT / "port/third_party/asio/LICENSE.txt", "steinberg-asio-sdk.txt"),
-                     (ROOT / "port/third_party/asio/NOTICE-BSD.txt", "steinberg-asio-bsd.txt"),
-                     (ROOT / "docs/licenses/asio.html", "asio.html"),
-                     (ROOT / "docs/licenses/asio-compatible-logo-white.svg", "asio-compatible-logo-white.svg"),
-                     (ROOT / "docs/licenses/dsp-coefficients.txt", "dsp-coefficients.txt"),
-                     (ROOT / "docs/licenses/hps_decode-MIT.txt", "hps_decode.txt"),
-                     (ROOT / "docs/licenses/slippilab-MIT.txt", "slippilab.txt"),
-                     (ROOT / "port/runtime/gx/ui_sources/gd_melee/assets/kit/SourceSans3-OFL.md",
-                      "source-sans-3-OFL.md")):
-        if not src.is_file():
-            raise SystemExit(f"missing license text: {src}")
-        shutil.copy2(src, licenses / dst)
-    mod_tools = ROOT / "port/third_party/mod_tools"
-    (folder / "tools").mkdir(exist_ok=True)
-    for tool, digest in (("xdelta3.exe", "d81f59b2fe5e8589c0ee9782e231c805084f4d23dfade413903a4cad63b4e342"),
-                         ("7zr.exe", "ad4c82fadcbdf93c03b4fc440f300509c7d60c5c2f4d183e35d9d70d6957037d")):
-        src = mod_tools / tool
-        if not src.is_file() or hashlib.sha256(src.read_bytes()).hexdigest() != digest:
-            raise SystemExit(f"missing or altered mod tool: {src}")
-        shutil.copy2(src, folder / "tools" / tool)
-    for src, dst in (("xdelta-COPYING.txt", "xdelta3-GPL-2.txt"),
-                     ("7zip-license.txt", "7zip.txt"), ("SOURCES.txt", "mod-tools-sources.txt")):
-        shutil.copy2(mod_tools / src, licenses / dst)
-    (licenses / "nlohmann-json.txt").write_text(json_notice(), encoding="utf-8")
-    (licenses / "imgui-fonts.txt").write_text(imgui_font_notice(), encoding="utf-8")
-    # The settings appearance picker loads these at runtime from beside the executable.
-    # Keep the GD import separate so it can be removed without touching the other themes.
-    ui_src = ROOT / "port/runtime/gx/ui_sources"
-    for source in ("gd_melee", "mockups", "menu_previews", "vendor"):
-        assets = ui_src / source / "assets"
-        if not assets.is_dir():
-            raise SystemExit(f"missing settings appearance assets: {assets}")
-        shutil.copytree(assets, folder / "ui_sources" / source)
-    shutil.copy2(ROOT / "docs/third-party-ui-attribution.md", licenses / "ui-attribution.md")
-    shutil.copy2(ROOT / "docs/third-party-training-mode-ce.txt", licenses / "training-mode-ce.txt")
-    shutil.copy2(ROOT / "docs/training-mods.md", folder / "TrainingMods.md")
-    shutil.copy2(ui_src / "gd_melee/ORIGIN.md", licenses / "gd-melee-origin.md")
+    copy_licenses_and_assets(folder)
     def zip_folder(zip_path):
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
             for path in folder.rglob("*"):
