@@ -1,3 +1,5 @@
+/* Melee Party, Mario Party 4 runtime: camera motions and Hu3D matrix helpers, from the MP4 decompilation
+ * (github.com/mariopartyrd/partyboard src/game/hsfex.c, CC0). */
 #include "game/hsfex.h"
 #include "game/hu3d.h"
 #include "game/disp.h"

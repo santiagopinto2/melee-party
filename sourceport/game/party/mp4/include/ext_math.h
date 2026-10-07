@@ -1,3 +1,4 @@
+/* From partyboard (github.com/mariopartyrd/partyboard include/ext_math.h, CC0). */
 #ifndef _EXT_MATH_H
 #define _EXT_MATH_H
 

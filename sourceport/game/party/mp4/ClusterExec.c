@@ -1,3 +1,5 @@
+/* Melee Party, Mario Party 4 runtime: cluster deformations, from the MP4 decompilation
+ * (github.com/mariopartyrd/partyboard src/game/ClusterExec.c, CC0). */
 #include "game/ClusterExec.h"
 #include "game/EnvelopeExec.h"
 #include "game/hu3d.h"

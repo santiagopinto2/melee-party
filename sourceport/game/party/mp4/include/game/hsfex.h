@@ -1,3 +1,4 @@
+/* From partyboard (github.com/mariopartyrd/partyboard include/game/hsfex.h, CC0). */
 #ifndef _GAME_HSFEX_H
 #define _GAME_HSFEX_H
 

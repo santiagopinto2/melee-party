@@ -1,3 +1,4 @@
+/* From partyboard (github.com/mariopartyrd/partyboard include/game/animdata.h, CC0). */
 #ifndef _GAME_ANIMDATA_H
 #define _GAME_ANIMDATA_H
 

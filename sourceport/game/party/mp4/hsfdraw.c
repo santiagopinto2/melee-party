@@ -1,3 +1,5 @@
+/* Melee Party, Mario Party 4 runtime: drawing HSF models: display lists, materials, TEV and textures, from the MP4 decompilation
+ * (github.com/mariopartyrd/partyboard src/game/hsfdraw.c, CC0). */
 #include "game/disp.h"
 #include "game/hu3d.h"
 #include "game/hsfformat.h"

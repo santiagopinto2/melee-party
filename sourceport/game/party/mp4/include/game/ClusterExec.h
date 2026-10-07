@@ -1,3 +1,4 @@
+/* From partyboard (github.com/mariopartyrd/partyboard include/game/ClusterExec.h, CC0). */
 #ifndef _GAME_CLUSTER_EXEC_H
 #define _GAME_CLUSTER_EXEC_H
 

@@ -1,3 +1,4 @@
+/* From partyboard (github.com/mariopartyrd/partyboard include/game/EnvelopeExec.h, CC0). */
 #ifndef _GAME_ENVELOPE_EXEC_H
 #define _GAME_ENVELOPE_EXEC_H
 

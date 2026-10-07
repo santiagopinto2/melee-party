@@ -1,3 +1,4 @@
+/* From partyboard (github.com/mariopartyrd/partyboard include/game/humath.h, CC0). */
 #ifndef _HU_MATH_H
 #define _HU_MATH_H
 

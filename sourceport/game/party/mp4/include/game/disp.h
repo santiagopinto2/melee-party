@@ -1,3 +1,4 @@
+/* From partyboard (github.com/mariopartyrd/partyboard include/game/disp.h, CC0). */
 #ifndef _GAME_DISP_H
 #define _GAME_DISP_H
 

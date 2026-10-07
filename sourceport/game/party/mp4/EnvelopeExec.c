@@ -1,3 +1,5 @@
+/* Melee Party, Mario Party 4 runtime: skinned (envelope) meshes, from the MP4 decompilation
+ * (github.com/mariopartyrd/partyboard src/game/EnvelopeExec.c, CC0). */
 #include "game/EnvelopeExec.h"
 #include "game/hsfex.h"
 

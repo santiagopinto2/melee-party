@@ -1,3 +1,5 @@
+/* Melee Party, Mario Party 4 runtime: HSF motions, from the MP4 decompilation
+ * (github.com/mariopartyrd/partyboard src/game/hsfmotion.c, CC0). */
 #include "game/ClusterExec.h"
 #include "game/EnvelopeExec.h"
 #include "game/ShapeExec.h"

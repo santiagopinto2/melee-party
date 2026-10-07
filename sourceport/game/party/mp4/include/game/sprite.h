@@ -1,3 +1,4 @@
+/* From partyboard (github.com/mariopartyrd/partyboard include/game/sprite.h, CC0). */
 #ifndef _GAME_SPRITE_H
 #define _GAME_SPRITE_H
 

@@ -1,3 +1,4 @@
+/* From partyboard (github.com/mariopartyrd/partyboard include/game/hsfload.h, CC0). */
 #ifndef _GAME_HSFLOAD_H
 #define _GAME_HSFLOAD_H
 

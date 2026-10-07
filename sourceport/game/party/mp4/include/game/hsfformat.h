@@ -1,3 +1,4 @@
+/* From partyboard (github.com/mariopartyrd/partyboard include/game/hsfformat.h, CC0). */
 #ifndef _GAME_HSFFORMAT_H
 #define _GAME_HSFFORMAT_H
 

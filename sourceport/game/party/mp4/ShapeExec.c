@@ -1,3 +1,5 @@
+/* Melee Party, Mario Party 4 runtime: shape (morph) meshes, from the MP4 decompilation
+ * (github.com/mariopartyrd/partyboard src/game/ShapeExec.c, CC0). */
 #include "game/ShapeExec.h"
 #include "game/EnvelopeExec.h"
 

@@ -1,3 +1,4 @@
+/* From partyboard (github.com/mariopartyrd/partyboard include/game/hu3d.h, CC0). */
 #ifndef _GAME_HSFMAN_H
 #define _GAME_HSFMAN_H
 
