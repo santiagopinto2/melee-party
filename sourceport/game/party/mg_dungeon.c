@@ -815,6 +815,7 @@ static void sections(int team)
             t->look_z = SCALE * -11500.0f;
         }
         if (both(team, out_of_q)) {
+            party_log("dungeon: team %d both out of the first holes", team + 1);
             t->section++;
             t->lock_z = SCALE * -13500.0f;
             t->lock_y = node_y("q0");
@@ -831,6 +832,7 @@ static void sections(int team)
         if (both(team, out_of_q)) {
             /* Both out of the last hole: the camera moves to the pump and both walk to it. */
             Vec3f look, eye;
+            party_log("dungeon: team %d both out of the second holes", team + 1);
             team_camera(team, &look, &eye);
             t->section++;
             t->ride = 120;

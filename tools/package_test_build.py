@@ -23,29 +23,78 @@ import package_release
 ROOT = Path(__file__).resolve().parents[1]
 
 BAT = r"""@echo off
+rem Melee Party test build. Drag your Melee NTSC 1.02 ISO onto this file once: it remembers the
+rem path in iso-path.txt. Or put the ISO next to this file named melee.iso. playtest.log says what
+rem it tried. No parenthesized blocks around paths: an ISO named "Melee (USA) (v1.02).iso" or a
+rem folder with & in its name must not break the script.
+setlocal EnableExtensions DisableDelayedExpansion
 cd /d "%~dp0"
-rem Drop your Melee NTSC 1.02 ISO onto this file once; it remembers the path in iso-path.txt.
-rem Or put the ISO next to this file named melee.iso.
+set "HERE=%~dp0"
+set "LOG=%~dp0playtest.log"
+set "SAVED=%~dp0iso-path.txt"
 set "ISO="
-if not "%~1"=="" if exist "%~1" (
-  set "ISO=%~f1"
-  > "%~dp0iso-path.txt" echo %~f1
-)
-if not defined ISO if exist "%~dp0iso-path.txt" set /p ISO=<"%~dp0iso-path.txt"
-if not defined ISO if exist "%~dp0melee.iso" set "ISO=%~dp0melee.iso"
-if not defined ISO (
-  echo Drop your Melee NTSC 1.02 ISO onto PlayTest.bat, or put it next to it named melee.iso
-  pause
-  exit /b 1
-)
-if not exist "%ISO%" (
-  echo Cannot find "%ISO%". Drop the ISO onto PlayTest.bat again.
-  del "%~dp0iso-path.txt" 2>nul
-  pause
-  exit /b 1
-)
-melee_source.exe --iso "%ISO%" --threaded-renderer --settings-path "%~dp0port-settings.ini" --sys-dir "%~dp0Sys" --user-dir "%~dp0User\Slippi" --replay-dir "%~dp0Replays" --card-dir "%~dp0User\GC\CardA"
-if errorlevel 1 pause
+> "%LOG%" echo PlayTest.bat started
+set "MSG=folder: %HERE%"
+call :log
+if "%~1"=="" goto :remembered
+set "ISO=%~f1"
+set "MSG=dropped: %~f1"
+call :log
+if not exist "%ISO%" goto :missing
+setlocal EnableDelayedExpansion
+> "!SAVED!" echo !ISO!
+endlocal
+goto :play
+
+:remembered
+if not exist "%SAVED%" goto :beside
+set /p "ISO=" < "%SAVED%"
+set "MSG=remembered: %ISO%"
+call :log
+if exist "%ISO%" goto :play
+set "MSG=the remembered ISO is gone; forgetting it"
+call :log
+del "%SAVED%" 2>nul
+set "ISO="
+
+:beside
+if exist "%HERE%melee.iso" set "ISO=%HERE%melee.iso"
+if not defined ISO goto :noiso
+set "MSG=next to it: %ISO%"
+call :log
+
+:play
+set "MSG=starting melee_source.exe"
+call :log
+"%HERE%melee_source.exe" --iso "%ISO%" --threaded-renderer --settings-path "%HERE%port-settings.ini" --sys-dir "%HERE%Sys" --user-dir "%HERE%User\Slippi" --replay-dir "%HERE%Replays" --card-dir "%HERE%User\GC\CardA"
+set "CODE=%ERRORLEVEL%"
+set "MSG=melee_source.exe exited with code %CODE%"
+call :log
+if "%CODE%"=="0" exit /b 0
+echo.
+echo The game stopped with code %CODE%. Send melee_port.log and playtest.log from this folder.
+pause
+exit /b 1
+
+:missing
+echo Cannot find the file that was dropped. Drop the ISO onto PlayTest.bat again.
+set "MSG=not found"
+call :log
+pause
+exit /b 1
+
+:noiso
+echo Drag your Melee NTSC 1.02 ISO onto PlayTest.bat, or put it next to it named melee.iso.
+set "MSG=no ISO dropped, remembered or next to it"
+call :log
+pause
+exit /b 1
+
+:log
+setlocal EnableDelayedExpansion
+>> "!LOG!" echo !MSG!
+endlocal
+exit /b 0
 """
 
 README = """Melee Party test build: {name}
