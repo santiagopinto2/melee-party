@@ -38,7 +38,16 @@ set "MSG=folder: %HERE%"
 call :log
 if "%~1"=="" goto :remembered
 set "ISO=%~f1"
-set "MSG=dropped: %~f1"
+if exist "%ISO%" goto :dropped
+rem Explorer quotes a dropped path only when it has a space, so cmd splits one like
+rem C:\Games\Melee,v1.02.iso (a comma or semicolon, no space) into several arguments: take the
+rem whole argument line back, as it was dropped.
+set "ISO=%*"
+set "ISO=%ISO:"=%"
+for %%I in ("%ISO%") do set "ISO=%%~fI"
+
+:dropped
+set "MSG=dropped: %ISO%"
 call :log
 if not exist "%ISO%" goto :missing
 setlocal EnableDelayedExpansion
