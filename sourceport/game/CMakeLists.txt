@@ -146,6 +146,14 @@ set_target_properties(mu_card_endian_test PROPERTIES C_STANDARD 11 C_EXTENSIONS 
 target_link_libraries(mu_card_endian_test PRIVATE game_flags)
 add_test(NAME native_card_endian COMMAND mu_card_endian_test)
 
+# Melee Party's Mario Party 4 archives: the disc header, file system and archive tables and the
+# six decoders, on bytes the test makes itself (no disc data).
+add_executable(mu_mp4_data_test tests/mp4_data.c party/mp4/mp4_format.c party/mp4/mp4_decode.c)
+set_target_properties(mu_mp4_data_test PROPERTIES C_STANDARD 11 C_EXTENSIONS ON)
+target_link_libraries(mu_mp4_data_test PRIVATE game_flags)
+target_include_directories(mu_mp4_data_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4")
+add_test(NAME native_mp4_data COMMAND mu_mp4_data_test)
+
 # Every annotated DISC_STRUCT field sits at its console offset in the host layout (tools/disc_offset_audit.py).
 # An 8-byte pointer field in a disc struct shifted Link's attributes from +0x94 and went unnoticed.
 add_test(NAME native_disc_offsets COMMAND "${MELEE_PYTHON}" "${REPO}/tools/disc_offset_audit.py")
@@ -175,6 +183,12 @@ list(APPEND SHIM_SOURCES ${GXNATIVE_SOURCES})
 # Melee Party: the board mode and its minigames (party/party.h).
 file(GLOB PARTY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/party/*.c")
 list(APPEND SHIM_SOURCES ${PARTY_SOURCES})
+# Its Mario Party 4 runtime (party/mp4/mp4.h): MP4's own code from the MP4 decompilation, which
+# includes its headers as "game/..." from party/mp4/include.
+file(GLOB_RECURSE PARTY_MP4_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/*.c")
+set_property(SOURCE ${PARTY_MP4_SOURCES} APPEND PROPERTY INCLUDE_DIRECTORIES
+  "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4" "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/include")
+list(APPEND SHIM_SOURCES ${PARTY_MP4_SOURCES})
 # Akaneia's added fighters, native (akaneia/INTEGRATION.md): the registry and each fighter's own C.
 # The fighters themselves are work in progress: they build only with -DMU_AKANEIA_FIGHTERS=ON, so a
 # release never carries an unfinished fighter (the registry alone keeps every added fighter locked).

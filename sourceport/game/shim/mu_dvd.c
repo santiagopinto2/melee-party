@@ -58,3 +58,12 @@ BOOL DVDReadAsyncPrio(DVDFileInfo* fileInfo, void* addr, s32 length, s32 offset,
     mu_host->disc_read(fileInfo->startAddr + (u32) offset, addr, (uint32_t) length, mu_dvd_done, fileInfo);
     return 1;
 }
+
+/* Melee Party's Mario Party 4 disc (party/mp4/mp4_disc.c): a second image, read in place and at
+ * once. 0 when the host has none. */
+u32 mu_mp4_disc_read(u32 offset, void* dst, u32 size)
+{
+    if (mu_host->version < 17 || mu_host->mp4_disc_read == NULL)
+        return 0;
+    return mu_host->mp4_disc_read(offset, dst, size);
+}
