@@ -228,6 +228,9 @@ ANIMDATA *HuSprAnimRead(void *data)
     ANIMDATA *anim = data;
 #ifdef BYTESWAPPING
     s16 j;
+    if (data == NULL) {   /* Melee Party: a DOL texture the disc could not give */
+        return NULL;
+    }
     if (anim->valid == ANIM_DATA_ALLOCATION_VALID) {
         anim->useNum++;
         return anim;
