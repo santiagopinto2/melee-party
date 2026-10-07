@@ -74,3 +74,9 @@ void mp4_gx_set_array(int attr, const void* data, unsigned int size, unsigned ch
     }
     GXSetArray((GXAttr) attr, data, stride);
 }
+
+/* GX's draw-done sync in Hu3DExec (between its cameras, and after the shadow pass): on the
+ * GameCube it would fire Melee's draw-done callback in the middle of a frame (HSD_VIDrawDoneXFB,
+ * which asserts), and the native GX draws in order without it. */
+void mp4_gx_draw_done(void) {}
+void mp4_gx_wait_draw_done(void) {}

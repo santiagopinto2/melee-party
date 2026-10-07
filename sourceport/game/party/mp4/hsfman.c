@@ -175,6 +175,8 @@ void Hu3DPreProc(void) {
 #define HU3D_ATTR_CAMERA_UPDATE (HU3D_ATTR_CAMERA_MOTON|HU3D_ATTR_DISPOFF)
 
 void Hu3DAdvance(void);
+void mp4_gx_draw_done(void);
+void mp4_gx_wait_draw_done(void);
 extern s16 Hu3DAdvanceExternF;
 extern float mp4_camera_scale;
 
@@ -208,10 +210,10 @@ void Hu3DExec(void) {
                 if (Hu3DCameraNo == 0 && Hu3DShadowF != 0 && Hu3DShadowCamBit != 0) {
                     Hu3DShadowExec();
                     syncF = TRUE;
-                    GXSetDrawDone();
+                    mp4_gx_draw_done();
                 } else if (Hu3DCameraNo != 0) {
                     syncF = TRUE;
-                    GXSetDrawDone();
+                    mp4_gx_draw_done();
                 }
             } else if (Hu3DCameraNo == 0 && Hu3DShadowF != 0 && Hu3DShadowCamBit != 0) {
                 Hu3DShadowExec();
@@ -295,7 +297,7 @@ void Hu3DExec(void) {
                                         data->attr |= 0x800;
                                     }
                                     if (syncF && (data->attr & HU3D_ATTR_HOOKFUNC) != 0) {
-                                        GXWaitDrawDone();
+                                        mp4_gx_wait_draw_done();
                                         syncF = FALSE;
                                     }
                                     if ((data->attr & HU3D_ATTR_HOOK) == 0 && (0.0f != data->scale.x || 0.0f != data->scale.y || 0.0f != data->scale.z)) {
