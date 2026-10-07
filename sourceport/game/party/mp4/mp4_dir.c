@@ -47,9 +47,12 @@ static DataDir* dir_open(s32 dataNum)
         OSReport("[party] mp4: no %s on the disc\n", DataDirName[dirId]);
         return NULL;
     }
-    if (!mp4_disc_read(dir->offset, count, 4) || (n = mp4_archive_count(count, 4)) < 0 ||
-        (u32) n * 4 + 4 > dir->size)
-    {
+    /* the count word first, then the table it sizes (mp4_archive_count wants the whole table) */
+    if (!mp4_disc_read(dir->offset, count, 4)) {
+        return NULL;
+    }
+    n = ((s32) count[0] << 24) | ((s32) count[1] << 16) | ((s32) count[2] << 8) | (s32) count[3];
+    if (n < 0 || n > 0xFFFF || (u32) n * 4 + 4 > dir->size) {
         return NULL;
     }
     dir->table_size = (u32) n * 4 + 4;
