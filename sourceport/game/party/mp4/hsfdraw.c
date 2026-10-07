@@ -65,6 +65,7 @@ static u8 polyTypeBak;
 static s32 shadingBak;
 static void *DLBufP;
 static void *DLBufStartP;
+
 static HSFDRAWDATA *DrawData;
 static s32 drawCnt;
 static s16 lightBit;
@@ -2577,7 +2578,14 @@ void MakeDisplayList(HU3DMODELID modelId, uintptr_t no)
     curModelID = modelId;
     mallocNo = no;
     faceNumBuf = HuMemDirectMallocNum(HEAP_DATA, 0x800 * sizeof(u16), mallocNo);
+    /* Melee Party: Melee runs GX with its XF flush workaround on (gmmain.c: GXSetMisc(1, 8)), so
+     * GXBegin after a register change sends a dummy primitive of 8 vertices at the vertex size of
+     * the moment. Recorded into a list, that primitive is replayed under the list's own vertex
+     * layout, which throws the decoder off by the size difference and leaves the mesh garbage.
+     * MP4 never turned the workaround on; it is off while its lists are recorded (0 none, 8 safe). */
+    GXSetMisc(GX_MT_XF_FLUSH, 0);
     MDObjCall(hsf, hsf->root);
+    GXSetMisc(GX_MT_XF_FLUSH, 8);
     HuMemDirectFree(faceNumBuf);
     if (modelP->attr & HU3D_ATTR_SHADOW) {
         Hu3DShadowCamBit++;
