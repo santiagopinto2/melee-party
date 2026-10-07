@@ -183,6 +183,39 @@ decomp. Each hook is a few lines under `#ifdef MU_NATIVE`.
 | `results.c` | The podium |
 | `party_online.c` | The party over Slippi Direct |
 | `lobby.c` | Online: the lobby where P1 picks a board party or the next minigame |
+| `mp4/` | The Mario Party 4 runtime (below) |
+
+### The Mario Party 4 runtime
+
+The MP4 minigames run MP4's own code and draw MP4's own models, loaded from the player's Mario
+Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
+[partyboard](https://github.com/mariopartyrd/partyboard) (CC0), mostly as its PC port builds it.
+
+- **The disc.** The host opens a Mario Party 4 (USA) disc, GMPE01 Rev 0 or 1, as a plain `.iso`
+  (not `.ciso`, `.gcz`, `.rvz` or NKit). It looks first at `--mp4-iso <path>`, then at
+  `MELEE_PARTY_MP4_ISO`, then at `mp4.iso` beside the Melee ISO. It reads the disc in place
+  and hands the game reads of it (host API 17, `mp4_disc_read`). The game checks the header
+  and reads the file system table (`mp4_disc.c`, `mp4_format.c`). Without such a disc, or with
+  `--party off`, everything MP4 stays off and the log says why
+  (`[party] mp4: ...: the MP4 minigames are off`).
+- **Archives.** MP4 data numbers (`DATADIR_*`, an archive in the high half and a file in the
+  low half) read one file of a `data/*.bin` archive off the disc and unpack it: none, LZ, SLIDE,
+  FSLIDE and RLE, types 0 to 5 (`mp4_dir.c`, `mp4_decode.c`). Only each archive's offset table
+  stays in memory.
+- **Memory.** MP4's heaps (`HuMem`, `mp4_mem.c`) sit in one 11.7 MB pool in the game image, not in
+  Melee's main memory. GX reads the textures, vertex arrays and display lists of MP4 models in
+  place, and it can only address MEM1 and the image (below 0x84000000). The pool is zero-filled
+  `.bss` and costs nothing without an MP4 disc. Rollback snapshots leave it out, because the MP4
+  minigames are offline only for now.
+- **Models.** `hsfload.c` (with `hsf_byteswap.c`), `hsfdraw.c`, `hsfman.c` (the Hu3D model,
+  camera and light layer), `hsfmotion.c`, `EnvelopeExec.c`, `ShapeExec.c`, `ClusterExec.c` and
+  `hsfex.c` are MP4's. They draw through Melee's GX, which now records display lists
+  (`gxnative/GXFifo_native.c`), as MP4's loader builds one for every mesh. The PC port keeps
+  vertex arrays in host order, so `mp4_gx.c` hands GX a big-endian copy of each array every
+  frame. `mp4_party.c` draws the models from a GObj on the party's render link, with the match
+  camera's view.
+- **Not yet** (`mp4_stubs.c`): sprites, texture animations, particles, processes (`omObj`,
+  `HuPrc`), and the reflection, toon and highlight maps MP4 keeps in its executable.
 
 ### Adding a minigame
 
@@ -210,6 +243,9 @@ Set these as environment variables for `melee_source.exe`.
 | `MELEE_PARTY_ONLINE_TEST=1` | Online party in any online mode, for the local test pair. |
 | `MELEE_PARTY_DEBUG_BOARDS=1` | No minigames between board turns, as when started from Debug Boards. |
 | `MELEE_PARTY_LOBBY_PICK=board` or `=<minigame id>` | The online lobby picks that by itself (scripted tests). Set the same on both sides. |
+| `MELEE_PARTY_MP4_ISO=<path>` | The Mario Party 4 disc, as `--mp4-iso` (that flag wins). |
+| `MELEE_PARTY_MP4_MODEL=<archive>:<file>[:<motion>]` | Every party match draws this MP4 model at the stage's centre, for checking the MP4 runtime against a disc: the archive by name (`m440`), the file and an optional motion from the same archive by number (decimal or `0x` hex). The log says what loaded (`[party] mp4: model ...`). |
+| `MELEE_PARTY_MP4_SCALE=s`, `MELEE_PARTY_MP4_Y=y` | That model's scale (default 0.1, MP4's units against Melee's) and height. |
 
 For example, to watch a whole three-turn party with CPUs:
 

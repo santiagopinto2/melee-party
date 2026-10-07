@@ -15,6 +15,7 @@
 #include <melee/mn/forward.h>
 #include <sysdolphin/baselib/random.h>
 
+#include "mp4/mp4.h"
 #include "party.h"
 
 /* From the host's C runtime: the game's own library (MSL) has neither (see mu_shim.h). */
@@ -389,6 +390,7 @@ void party_setup_phase(int phase, StartMeleeData* start)
         results_setup(start);
         break;
     }
+    mp4_debug_setup(start);
 }
 
 /* The next phase's fighters and stage, preloaded while the scene before it ends. */
