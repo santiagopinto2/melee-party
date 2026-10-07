@@ -153,6 +153,17 @@ set_target_properties(mu_mp4_data_test PROPERTIES C_STANDARD 11 C_EXTENSIONS ON)
 target_link_libraries(mu_mp4_data_test PRIVATE game_flags)
 target_include_directories(mu_mp4_data_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4")
 add_test(NAME native_mp4_data COMMAND mu_mp4_data_test)
+# And MP4's HSF model loader with its 64-bit structures, on a model the test writes byte by byte.
+add_executable(mu_mp4_hsf_test tests/mp4_hsf.c party/mp4/hsfload.c party/mp4/hsf_byteswap.c
+  party/mp4/mp4_mem.c party/mp4/EnvelopeExec.c party/mp4/mp4_math.c $<TARGET_OBJECTS:sdk_math>
+  "${SDK}/mtx/mtx.c" "${SDK}/mtx/mtxvec.c")
+set_target_properties(mu_mp4_hsf_test PROPERTIES C_STANDARD 11 C_EXTENSIONS ON)
+target_link_libraries(mu_mp4_hsf_test PRIVATE game_flags)
+target_include_directories(mu_mp4_hsf_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4"
+  "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/include")
+target_compile_options(mu_mp4_hsf_test PRIVATE
+  "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/include/port/mp4_port.h")
+add_test(NAME native_mp4_hsf COMMAND mu_mp4_hsf_test)
 
 # Every annotated DISC_STRUCT field sits at its console offset in the host layout (tools/disc_offset_audit.py).
 # An 8-byte pointer field in a disc struct shifted Link's attributes from +0x94 and went unnoticed.
@@ -188,6 +199,8 @@ list(APPEND SHIM_SOURCES ${PARTY_SOURCES})
 file(GLOB_RECURSE PARTY_MP4_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/*.c")
 set_property(SOURCE ${PARTY_MP4_SOURCES} APPEND PROPERTY INCLUDE_DIRECTORIES
   "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4" "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/include")
+set_property(SOURCE ${PARTY_MP4_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS
+  " -include ${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/include/port/mp4_port.h")
 list(APPEND SHIM_SOURCES ${PARTY_MP4_SOURCES})
 # Akaneia's added fighters, native (akaneia/INTEGRATION.md): the registry and each fighter's own C.
 # The fighters themselves are work in progress: they build only with -DMU_AKANEIA_FIGHTERS=ON, so a
