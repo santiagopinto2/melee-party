@@ -4,6 +4,7 @@
 #ifndef PORT_BYTESWAP_H_
 #define PORT_BYTESWAP_H_
 
+#include "game/animdata.h"
 #include "game/hsfformat.h"
 #include "ext_math.h"
 
@@ -290,5 +291,46 @@ void byteswap_hsfbitmapkey(HsfBitmapKey32b *src, HSFBITMAPKEY *dest);
 void byteswap_hsftrack(HsfTrack32b *src, HSFTRACK *dest);
 void byteswap_hsfmotion(HsfMotion32b *src, HSFMOTION *dest);
 void byteswap_hsfface(HsfFace32b *src, HSFFACE *dest);
+
+
+/* The sprite animation structures (sprman.c), as the file holds them: 32-bit offsets. */
+typedef struct AnimData32b {
+    s16 bankNum;
+    s16 patNum;
+    s16 bmpNum;
+    s16 useNum;
+    u32 bank;
+    u32 pat;
+    u32 bmp;
+} AnimData32b;
+typedef struct AnimBankData32b {
+    s16 timeNum;
+    s16 unk;
+    u32 frame;
+} AnimBankData32b;
+typedef struct AnimPatData32b {
+    s16 layerNum;
+    s16 centerX;
+    s16 centerY;
+    s16 sizeX;
+    s16 sizeY;
+    u32 layer;
+} AnimPatData32b;
+typedef struct AnimBmpData32b {
+    u8 pixSize;
+    u8 dataFmt;
+    s16 palNum;
+    s16 sizeX;
+    s16 sizeY;
+    u32 dataSize;
+    u32 palData;
+    u32 data;
+} AnimBmpData32b;
+void byteswap_animdata(void *src, ANIMDATA *dest);
+void byteswap_animbankdata(AnimBankData32b *src, ANIMBANK *dest);
+void byteswap_animpatdata(AnimPatData32b *src, ANIMPAT *dest);
+void byteswap_animbmpdata(AnimBmpData32b *src, ANIMBMP *dest);
+void byteswap_animframedata(ANIMFRAME *src);
+void byteswap_animlayerdata(ANIMLAYER *src);
 
 #endif

@@ -1,16 +1,22 @@
-/* Melee Party, Mario Party 4 runtime: MP4's models in a Melee match.
+/* Melee Party, Mario Party 4 runtime: an MP4 minigame running inside a Melee match.
  *
- * MP4's own Hu3DExec draws every model it holds, from a GObj on the same render link the party's
- * flat shapes use (party_draw.c), so the match camera draws them with the scene, after the stage.
- * Its camera takes the match camera's view (mp4_camera_view in hsfman.c) and keeps Melee's
- * projection and viewport.
+ * MP4's frame (main.c there) is: read the pads, run every process (HuPrcCall: the object manager,
+ * which runs the minigame's objects), the banners (MGSeqMain), then draw (Hu3DExec, with the
+ * sprites) and the screen wipe. Here the first half runs from the match's on_frame_start hook and
+ * the drawing from a GObj on the party's render link, after the stage, so the match camera draws
+ * MP4's models with the scene. The cameras take the match camera's view (mp4_camera_view in
+ * hsfman.c), scaled from MP4's units into Melee's, and the wrapper feeds MP4's camera back to the
+ * match camera each frame, so the fighters and MP4's models agree.
  *
- * MELEE_PARTY_MP4_MODEL=<archive>:<file>[:<motion file>] draws one model from the MP4 disc in
- * every party match, at the stage's centre: the archive by its name in the disc's data directory
- * (m440, or data/m440.bin), the file by its number in it (decimal, or 0x hex), and optionally a
- * motion from the same archive played on a loop. MELEE_PARTY_MP4_SCALE (default 0.1, MP4's units
- * against Melee's) and MELEE_PARTY_MP4_Y (default 0) place it. Without an MP4 disc, or with the
- * knob unset, nothing here runs. */
+ * The runtime (processes, sprites, models, the object manager) comes up once, at the first
+ * minigame; between minigames MP4's own overlay switch frees everything the last one loaded.
+ *
+ * MELEE_PARTY_MP4_MODEL=<archive>:<file>[:<motion file>] (a check of the model layer) draws one
+ * model from the MP4 disc in every party match, at the stage's centre: the archive by its name in
+ * the disc's data directory (m440, or data/m440.bin), the file by its number in it (decimal, or
+ * 0x hex), and optionally a motion from the same archive played on a loop. MELEE_PARTY_MP4_SCALE
+ * (default 0.1) and MELEE_PARTY_MP4_Y (default 0) place it. */
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -25,20 +31,228 @@
 #include <sysdolphin/baselib/tev.h>
 
 #include "game/data.h"
+#include "game/gamework_data.h"
 #include "game/hu3d.h"
+#include "game/init.h"
+#include "game/minigame_seq.h"
+#include "game/object.h"
+#include "game/pad.h"
+#include "game/process.h"
+#include "game/sprite.h"
+#include "game/wipe.h"
 #include "mp4.h"
+#include "../party.h"
 
 char* getenv(const char* name);
 double atof(const char* s);
 void HSD_ClearVtxDesc(void);
 void mp4_gx_frame_begin(void);
 extern MtxPtr mp4_camera_view;
+extern float mp4_camera_scale;
+extern s16 Hu3DAdvanceExternF;
+extern u32 GlobalCounter;
+void Hu3DAdvance(void);
+
+static int runtime_up;
+static int match_running;
+static Vec world_offset;
+static u16 pad_prev[4];
+
+/* ---- the runtime ---- */
+
+static void runtime_open(void)
+{
+    s32 i;
+    if (runtime_up) {
+        return;
+    }
+    runtime_up = 1;
+    HuPrcInit();
+    HuSprInit();
+    Hu3DInit();
+    MGSeqInit();
+    WipeInit(RenderMode);
+    for (i = 0; i < 4; i++) {
+        GWPlayerCfg[i].character = -1;
+    }
+    omMasterInit(0, NULL, DLL_MAX, DLL_bootDll);
+    Hu3DAdvanceExternF = 1;   /* motions step in mp4_frame, drawn or not */
+}
+
+/* Melee's cached GX state no longer holds after MP4's draws. */
+static void gx_restore(void)
+{
+    GXSetCurrentMtx(0);
+    GXInvalidateVtxCache();
+    GXInvalidateTexAll();
+    HSD_StateInvalidate(-1);
+    HSD_StateInitTev();
+    HSD_ClearVtxDesc();
+}
+
+static void draw(HSD_GObj* gobj, intptr_t pass)
+{
+    HU3DMODEL* model;
+    Mtx view, shift;
+    s16 i;
+    (void) gobj;
+    (void) pass;
+    HSD_CObjGetViewingMtx(HSD_CObjGetCurrent(), view);
+    /* MP4's origin sits at the offset in Melee's world */
+    MTXTrans(shift, world_offset.x, world_offset.y, world_offset.z);
+    MTXConcat(view, shift, view);
+    mp4_camera_view = view;
+    mp4_camera_scale = MP4_SCALE;
+    mp4_gx_frame_begin();
+    /* what Hu3DPreProc does at the start of MP4's frame, without its EFB clear colour */
+    for (i = 0, model = Hu3DData; i < HU3D_MODEL_MAX; i++, model++) {
+        if (model->hsf != NULL) {
+            model->attr &= ~HU3D_ATTR_MOT_EXEC;
+        }
+    }
+    Hu3DExec();
+    WipeExecAlways();
+    mp4_camera_view = NULL;
+    mp4_camera_scale = 1.0f;
+    gx_restore();
+}
+
+static void draw_gobj_create(void)
+{
+    /* Not in the item list: item loops read every entry there as an Item (party_draw.c). */
+    HSD_GObj* gobj = GObj_Create(14, 15, 0);
+    if (gobj != NULL) {
+        GObj_SetupGXLink(gobj, draw, 6, 0);
+    }
+}
+
+/* ---- a minigame ---- */
+
+void mp4_match_begin(int overlay, float offset_x, float offset_y, float offset_z)
+{
+    int i;
+    if (!mp4_available()) {
+        return;
+    }
+    runtime_open();
+    world_offset.x = offset_x;
+    world_offset.y = offset_y;
+    world_offset.z = offset_z;
+    for (i = 0; i < PARTY_PLAYERS; i++) {
+        PlayerConfig* cfg = &GWPlayerCfg[i];
+        int level = party.p[i].cpu_level;
+        cfg->character = (s16) i;   /* its MP4 character only names its hidden model */
+        cfg->pad_idx = (s16) i;
+        cfg->iscom = party.p[i].slot_type == Gm_PKind_Cpu;
+        /* MP4's easy, normal, hard, very hard from Melee's levels 1-9 */
+        cfg->diff = (s16) (level >= 9 ? 3 : level >= 6 ? 2 : level >= 3 ? 1 : 0);
+        cfg->group = 0;
+        memset(&GWPlayer[i], 0, sizeof GWPlayer[i]);
+    }
+    memset(&GWSystem, 0, sizeof GWSystem);
+    GWSystem.player_curr = (s8) (party.mover >= 0 && party.mover < PARTY_PLAYERS ? party.mover : 0);
+    memset(pad_prev, 0, sizeof pad_prev);
+    mp4_boot_reset();
+    omOvlCallEx((OMOVL) overlay, 1, 0, 0);
+    match_running = 1;
+    draw_gobj_create();
+    party_log("mp4: overlay %d starts", overlay);
+}
+
+void mp4_frame(void)
+{
+    int i;
+    if (!match_running) {
+        return;
+    }
+    /* what HuPadRead leaves of the last frame's pads: a press is new for one frame */
+    for (i = 0; i < 4; i++) {
+        HuPadBtnDown[i] = HuPadBtn[i] & ~pad_prev[i];
+        pad_prev[i] = HuPadBtn[i];
+    }
+    GlobalCounter++;
+    HuPrcCall(1);
+    MGSeqMain();
+    Hu3DAdvance();
+}
+
+int mp4_match_over(void)
+{
+    return match_running && mp4_boot_reached();
+}
+
+void mp4_pad(int pad, u32 held, float stick_x, float stick_y, float substick_x, float substick_y,
+             float trigger)
+{
+    if (pad < 0 || pad >= 4) {
+        return;
+    }
+    HuPadBtn[pad] = (u16) (held & 0x0FFF & ~PAD_BUTTON_DIR);
+    if (trigger >= 0.75f) {
+        HuPadBtn[pad] |= PAD_BUTTON_TRIGGER_L;
+    }
+    HuPadStkX[pad] = (s8) (stick_x * 72.0f);
+    HuPadStkY[pad] = (s8) (stick_y * 72.0f);
+    HuPadSubStkX[pad] = (s8) (substick_x * 72.0f);
+    HuPadSubStkY[pad] = (s8) (substick_y * 72.0f);
+    HuPadTrigL[pad] = HuPadTrigR[pad] = (u8) (trigger * 255.0f);
+}
+
+int mp4_player_pose(int player, float* x, float* y, float* z, float* yaw)
+{
+    s16 model = mp4_char_model(player);
+    HU3DMODEL* m;
+    if (model < 0 || !match_running) {
+        return 0;
+    }
+    m = &Hu3DData[model];
+    if (m->hsf == NULL) {
+        return 0;
+    }
+    *x = m->pos.x * MP4_SCALE + world_offset.x;
+    *y = m->pos.y * MP4_SCALE + world_offset.y;
+    *z = m->pos.z * MP4_SCALE + world_offset.z;
+    *yaw = m->rot.y * (float) (M_PI / 180.0);
+    return 1;
+}
+
+s32 mp4_player_motion(int player)
+{
+    s16 model = mp4_char_model(player);
+    if (model < 0 || Hu3DData[model].hsf == NULL) {
+        return -1;
+    }
+    return Hu3DData[model].motId;
+}
+
+int mp4_player_coins(int player)
+{
+    return player >= 0 && player < 4 ? GWPlayer[player].coin_win : 0;
+}
+
+/* MP4's camera (the first Hu3D camera) in Melee's world. */
+int mp4_camera(float eye[3], float look[3], float* fov)
+{
+    HU3DCAMERA* cam = &Hu3DCamera[0];
+    if (!match_running || cam->fov == -1.0f) {
+        return 0;
+    }
+    eye[0] = cam->pos.x * MP4_SCALE + world_offset.x;
+    eye[1] = cam->pos.y * MP4_SCALE + world_offset.y;
+    eye[2] = cam->pos.z * MP4_SCALE + world_offset.z;
+    look[0] = cam->target.x * MP4_SCALE + world_offset.x;
+    look[1] = cam->target.y * MP4_SCALE + world_offset.y;
+    look[2] = cam->target.z * MP4_SCALE + world_offset.z;
+    *fov = cam->fov;
+    return 1;
+}
+
+/* ---- the model check ---- */
 
 static int hu3d_ready;
 static void (*chained_start)(void);
 static s16 debug_model = -1;
 
-/* Hu3DInit once, the first time MP4 models are wanted; between matches the models go. */
 static void hu3d_open(void)
 {
     if (!hu3d_ready) {
@@ -53,7 +267,7 @@ static void hu3d_open(void)
     Hu3DGLightInfinitytSet(0);
 }
 
-static void draw(HSD_GObj* gobj, intptr_t pass)
+static void debug_draw(HSD_GObj* gobj, intptr_t pass)
 {
     HU3DMODEL* model;
     Mtx view;
@@ -63,7 +277,6 @@ static void draw(HSD_GObj* gobj, intptr_t pass)
     HSD_CObjGetViewingMtx(HSD_CObjGetCurrent(), view);
     mp4_camera_view = view;
     mp4_gx_frame_begin();
-    /* what Hu3DPreProc does at the start of MP4's frame, without its EFB clear colour */
     for (i = 0, model = Hu3DData; i < HU3D_MODEL_MAX; i++, model++) {
         if (model->hsf != NULL) {
             model->attr &= ~HU3D_ATTR_MOT_EXEC;
@@ -71,13 +284,7 @@ static void draw(HSD_GObj* gobj, intptr_t pass)
     }
     Hu3DExec();
     mp4_camera_view = NULL;
-    /* Melee's cached GX state no longer holds after MP4's draws */
-    GXSetCurrentMtx(0);
-    GXInvalidateVtxCache();
-    GXInvalidateTexAll();
-    HSD_StateInvalidate(-1);
-    HSD_StateInitTev();
-    HSD_ClearVtxDesc();
+    gx_restore();
 }
 
 static s32 knob_num(const char* text)
@@ -149,10 +356,9 @@ static void debug_start(void)
              Hu3DData[debug_model].hsf->objectNum, Hu3DData[debug_model].hsf->motionNum,
              motion_file >= 0 ? ", with a motion" : "");
 
-    /* Not in the item list: item loops read every entry there as an Item (party_draw.c). */
     gobj = GObj_Create(14, 15, 0);
     if (gobj != NULL) {
-        GObj_SetupGXLink(gobj, draw, 6, 0);
+        GObj_SetupGXLink(gobj, debug_draw, 6, 0);
     }
 }
 

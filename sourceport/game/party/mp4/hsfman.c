@@ -1,7 +1,7 @@
 /* Melee Party, Mario Party 4 runtime: the Hu3D layer (models, cameras, lights, shadows), from the
  * MP4 decompilation (github.com/mariopartyrd/partyboard src/game/hsfman.c, CC0). One addition:
  * mp4_camera_view, a view the cameras take instead of their own (mp4_party.c draws with the
- * Melee match camera's). */
+ * Melee match camera's), scaled by mp4_camera_scale (MP4's units into Melee's). */
 #include "game/hu3d.h"
 #include "game/ClusterExec.h"
 #include "game/data.h"
@@ -174,6 +174,10 @@ void Hu3DPreProc(void) {
 
 #define HU3D_ATTR_CAMERA_UPDATE (HU3D_ATTR_CAMERA_MOTON|HU3D_ATTR_DISPOFF)
 
+void Hu3DAdvance(void);
+extern s16 Hu3DAdvanceExternF;
+extern float mp4_camera_scale;
+
 void Hu3DExec(void) {
     GXColor unusedColor = {0, 0, 0, 0};
     HU3DCAMERA* camera;
@@ -223,7 +227,8 @@ void Hu3DExec(void) {
                 HuSprExec(0x7F);
             }
             if (FogData.fogType != GX_FOG_NONE) {
-                GXSetFog(FogData.fogType, FogData.fogStart, FogData.fogEnd, camera->nnear, camera->ffar, FogData.color);
+                GXSetFog(FogData.fogType, FogData.fogStart * mp4_camera_scale, FogData.fogEnd * mp4_camera_scale,
+                         camera->nnear * mp4_camera_scale, camera->ffar * mp4_camera_scale, FogData.color);
             }
             for (j = 0; j < 8; j++) {
                 if (layerHook[j] != 0) {
@@ -317,6 +322,21 @@ void Hu3DExec(void) {
     }
     HuSprDispInit();
     HuSprExec(0);
+    if (!Hu3DAdvanceExternF) {
+        Hu3DAdvance();
+    }
+    HuPerfEnd(3);
+}
+
+/* Melee Party: the end of Hu3DExec, which steps every motion, sprite animation and texture
+ * animation by a frame. MP4 does it after drawing; the runtime sets Hu3DAdvanceExternF and calls
+ * it from the match's logic frame instead (mp4_party.c), so a frame the host does not draw
+ * still advances them. */
+s16 Hu3DAdvanceExternF;
+
+void Hu3DAdvance(void) {
+    HU3DMODEL* data;
+    s16 i;
     data = Hu3DData;
     for (i = 0; i < HU3D_MODEL_MAX; i++, data++) {
         if (data->hsf != 0 && (data->motId != -1 || (data->attr & HU3D_ATTR_CLUSTER_ON) != 0 || data->motIdShape != -1) && (Hu3DPauseF == 0 || (data->attr & HU3D_ATTR_NOPAUSE) != 0)) {
@@ -325,7 +345,6 @@ void Hu3DExec(void) {
     }
     HuSprFinish();
     Hu3DAnimExec();
-    HuPerfEnd(3);
 }
 
 void Hu3DAllKill(void) {
@@ -1288,6 +1307,7 @@ void Hu3DCameraAllKill(void) {
 }
 
 MtxPtr mp4_camera_view;
+float mp4_camera_scale = 1.0f;
 
 void Hu3DCameraSet(s32 arg0, Mtx arg1) {
     Mtx44 sp10;
@@ -1296,7 +1316,9 @@ void Hu3DCameraSet(s32 arg0, Mtx arg1) {
 
     if (mp4_camera_view != NULL) {
         /* the match camera's view; its projection, viewport and scissor are already set */
-        MTXCopy(mp4_camera_view, arg1);
+        Mtx scale;
+        MTXScale(scale, mp4_camera_scale, mp4_camera_scale, mp4_camera_scale);
+        MTXConcat(mp4_camera_view, scale, arg1);
         return;
     }
     temp_r31 = &Hu3DCamera[arg0];
