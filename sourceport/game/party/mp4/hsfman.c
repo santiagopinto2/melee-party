@@ -2007,7 +2007,16 @@ void Hu3DShadowSizeSet(u16 arg0) {
     Hu3DShadowData.buf = HuMemDirectMalloc(HEAP_DATA, arg0 * arg0);
 }
 
+/* Melee Party: the shadow-map pass is not drawn yet. It renders the scene from the light into a
+ * corner of the frame buffer and copies that out as a texture; here that corner stayed on screen
+ * and the pass cost more than the scene. Models keep their HU3D_ATTR_SHADOW flags, so turning it
+ * on again is this one line. */
+static int mp4_shadow_pass_on;
+
 void Hu3DShadowExec(void) {
+    if (!mp4_shadow_pass_on) {
+        return;
+    }
     HU3DMODEL* var_r31;
     s16 var_r30;
     Mtx spB8;

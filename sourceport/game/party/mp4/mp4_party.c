@@ -29,6 +29,7 @@
 #include <sysdolphin/baselib/gobjproc.h>
 #include <sysdolphin/baselib/state.h>
 #include <sysdolphin/baselib/tev.h>
+#include <sysdolphin/baselib/video.h>
 
 #include "game/data.h"
 #include "game/gamework_data.h"
@@ -80,30 +81,38 @@ static void runtime_open(void)
     Hu3DAdvanceExternF = 1;   /* motions step in mp4_frame, drawn or not */
 }
 
-/* The match camera's projection, viewport and scissor, as set when MP4's draw starts. MP4's sprite
- * layer (HuSprDispInit) replaces them with its 640x480 orthographic ones, so every MP4 camera
- * puts them back (Hu3DCameraSet, through mp4_camera_restore), and so does the end of the draw. */
-static struct {
-    f32 projection[7];
-    f32 viewport[6];
-    u32 scissor[4];
-} match_view;
+/* The match camera's projection, as set when MP4's draw starts, and its viewport and scissor from
+ * the camera itself (as HSD sets them, setupNormalCamera in cobj.c). MP4's sprite layer
+ * (HuSprDispInit) and each sprite replace them with their own, so every MP4 camera puts them back
+ * (Hu3DCameraSet, through mp4_camera_restore), and so does the end of the draw. */
+static f32 match_projection[7];
 
 static void match_view_save(void)
 {
-    GXGetProjectionv(match_view.projection);
-    GXGetViewportv(match_view.viewport);
-    GXGetScissor(&match_view.scissor[0], &match_view.scissor[1], &match_view.scissor[2],
-                 &match_view.scissor[3]);
+    GXGetProjectionv(match_projection);
 }
 
 void mp4_camera_restore(void)
 {
-    GXSetProjectionv(match_view.projection);
-    GXSetViewport(match_view.viewport[0], match_view.viewport[1], match_view.viewport[2],
-                  match_view.viewport[3], match_view.viewport[4], match_view.viewport[5]);
-    GXSetScissor(match_view.scissor[0], match_view.scissor[1], match_view.scissor[2],
-                 match_view.scissor[3]);
+    HSD_CObj* cobj = HSD_CObjGetCurrent();
+    GXRenderModeObj* rmode = HSD_VIGetRenderMode();
+    f32 xs = (f32) rmode->fbWidth / (f32) rmode->viWidth;
+    f32 ys = (f32) rmode->efbHeight / (f32) rmode->viHeight;
+    f32 l, t, r, b;
+    GXSetProjectionv(match_projection);
+    if (cobj == NULL) {
+        return;
+    }
+    l = cobj->viewport.xmin * xs;
+    r = cobj->viewport.xmax * xs;
+    t = cobj->viewport.ymin * ys;
+    b = cobj->viewport.ymax * ys;
+    GXSetViewport(l, t, r - l, b - t, 0.0f, 1.0f);
+    l = cobj->scissor.left * xs;
+    r = cobj->scissor.right * xs;
+    t = cobj->scissor.top * ys;
+    b = cobj->scissor.bottom * ys;
+    GXSetScissor((u32) l, (u32) t, (u32) (r - l), (u32) (b - t));
 }
 
 /* Melee's cached GX state no longer holds after MP4's draws. */
@@ -424,6 +433,36 @@ static void debug_start(void)
     OSReport("[party] mp4: model %s:%d (%d objects, %d motions)%s\n", archive, file,
              Hu3DData[debug_model].hsf->objectNum, Hu3DData[debug_model].hsf->motionNum,
              motion_file >= 0 ? ", with a motion" : "");
+    {
+        /* its vertices' extent, a check of the loaded data (MP4's units) */
+        HSFDATA* hsf = Hu3DData[debug_model].hsf;
+        HSFOBJECT* obj = hsf->object;
+        float lo[3] = { 1e30f, 1e30f, 1e30f }, hi[3] = { -1e30f, -1e30f, -1e30f };
+        u32 total = 0;
+        s32 i, j;
+        for (i = 0; i < hsf->objectNum; i++, obj++) {
+            HuVecF* v;
+            if (obj->type != HSF_OBJ_MESH || obj->mesh.vertex == NULL) {
+                continue;
+            }
+            v = obj->mesh.vertex->data;
+            for (j = 0; j < (s32) obj->mesh.vertex->count; j++, v++, total++) {
+                float c[3] = { v->x, v->y, v->z };
+                int k;
+                for (k = 0; k < 3; k++) {
+                    lo[k] = c[k] < lo[k] ? c[k] : lo[k];
+                    hi[k] = c[k] > hi[k] ? c[k] : hi[k];
+                }
+            }
+            if (obj->mesh.vertex->count > 0 && i < 3) {
+                v = obj->mesh.vertex->data;
+                OSReport("[party] mp4: object %d \"%s\" %u vertices, first %g %g %g\n", i,
+                         obj->name != NULL ? obj->name : "", obj->mesh.vertex->count, v->x, v->y, v->z);
+            }
+        }
+        OSReport("[party] mp4: %u vertices in [%g %g %g]..[%g %g %g]\n", total, lo[0], lo[1], lo[2],
+                 hi[0], hi[1], hi[2]);
+    }
 
     gobj = GObj_Create(14, 15, 0);
     if (gobj != NULL) {

@@ -20,8 +20,9 @@
  * 10 MB) and the pool together must end below 0x84000000; mp4_mem_fits checks. */
 static const u32 HeapSizeTbl[HEAP_MAX] = { 0x100000, 0x10000, 0x900000, 0x100000, 0x40000 };
 #define MP4_POOL_SIZE (0x100000 + 0x10000 + 0x900000 + 0x100000 + 0x40000)
-/* After the heaps, the frame's big-endian copies of vertex arrays (mp4_gx.c). */
-#define MP4_GX_SCRATCH_SIZE 0x100000
+/* After the heaps, the frame's big-endian copies of vertex arrays (mp4_gx.c): all the float arrays
+ * the frame's models draw with. As much as fits under 0x84000000 with the heaps above. */
+#define MP4_GX_SCRATCH_SIZE 0x280000
 static u8 mp4_pool[MP4_POOL_SIZE + MP4_GX_SCRATCH_SIZE] __attribute__((aligned(64)));
 static void *HeapTbl[HEAP_MAX];
 
