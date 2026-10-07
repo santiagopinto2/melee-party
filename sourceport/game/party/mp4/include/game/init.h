@@ -7,6 +7,7 @@
 
 extern GXRenderModeObj *RenderMode;
 /* MP4 ran its game logic at 60 Hz: one retrace a frame. */
+extern u32 minimumVcount;
 extern float minimumVcountf;
 
 #endif

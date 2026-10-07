@@ -35,6 +35,7 @@ void mp4_mtx_ro_mult_vec_array(ROMtx m, Vec* srcBase, Vec* dstBase, u32 count);
 #define C_MTXOrtho MTXOrtho
 #define C_MTXLightPerspective MTXLightPerspective
 #define C_VECHalfAngle VECHalfAngle
+static inline void MTXRotAxisDeg(Mtx m, Vec* axis, f32 deg) { MTXRotAxisRad(m, axis, deg * 0.017453292519943295f); }
 static inline void OSf32tos16(f32* f, s16* out) { *out = (s16) *f; }
 
 /* Melee's C library has the float trigonometry only. */

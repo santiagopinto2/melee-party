@@ -201,6 +201,22 @@ set_property(SOURCE ${PARTY_MP4_SOURCES} APPEND PROPERTY INCLUDE_DIRECTORIES
   "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4" "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/include")
 set_property(SOURCE ${PARTY_MP4_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS
   " -include ${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/include/port/mp4_port.h")
+# Each MP4 minigame (party/mp4/m4xx) keeps the decompilation's symbol names, which repeat from one
+# minigame to the next: a generated header prefixes them with the minigame's name.
+file(GLOB PARTY_MP4_RELS LIST_DIRECTORIES true CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/m4*")
+foreach(rel ${PARTY_MP4_RELS})
+  if(IS_DIRECTORY "${rel}")
+    get_filename_component(rel_name "${rel}" NAME)
+    set(rel_names "${CMAKE_CURRENT_BINARY_DIR}/mp4_rel/${rel_name}_names.h")
+    execute_process(COMMAND "${MELEE_PYTHON}" "${REPO}/tools/mp4_rel_names.py" "${rel}" "${rel_names}"
+      RESULT_VARIABLE rel_names_result)
+    if(NOT rel_names_result EQUAL 0)
+      message(FATAL_ERROR "tools/mp4_rel_names.py failed for ${rel}")
+    endif()
+    file(GLOB rel_sources CONFIGURE_DEPENDS "${rel}/*.c")
+    set_property(SOURCE ${rel_sources} APPEND_STRING PROPERTY COMPILE_FLAGS " -include ${rel_names}")
+  endif()
+endforeach()
 list(APPEND SHIM_SOURCES ${PARTY_MP4_SOURCES})
 # Akaneia's added fighters, native (akaneia/INTEGRATION.md): the registry and each fighter's own C.
 # The fighters themselves are work in progress: they build only with -DMU_AKANEIA_FIGHTERS=ON, so a
