@@ -52,6 +52,8 @@ static inline double mp4_atan2(double y, double x) { return atan2f((float) y, (f
 /* GX reads vertex arrays big-endian, as the console did; the PC port keeps them in host order. Each
  * array goes to GX through a big-endian copy made for the frame (mp4_gx.c). */
 void mp4_gx_set_array(int attr, const void* data, unsigned int size, unsigned char stride, int host_order);
+#include <dolphin/gx/GXGeometry.h> /* defines its own GXSETARRAY: this one has to come after it */
+#undef GXSETARRAY
 #define GXSETARRAY(attr, data, size, stride, le) mp4_gx_set_array((attr), (data), (size), (stride), (le))
 
 /* The data cache: nothing to store back natively (shim/mu_cache.c keeps the SDK's others). */
