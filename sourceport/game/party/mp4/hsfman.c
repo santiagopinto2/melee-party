@@ -179,6 +179,7 @@ void mp4_gx_draw_done(void);
 void mp4_gx_wait_draw_done(void);
 extern s16 Hu3DAdvanceExternF;
 extern float mp4_camera_scale;
+void mp4_camera_restore(void);
 
 void Hu3DExec(void) {
     GXColor unusedColor = {0, 0, 0, 0};
@@ -1317,8 +1318,9 @@ void Hu3DCameraSet(s32 arg0, Mtx arg1) {
     HU3DCAMERA* temp_r31;
 
     if (mp4_camera_view != NULL) {
-        /* the match camera's view; its projection, viewport and scissor are already set */
+        /* the match camera's view, with its projection, viewport and scissor (mp4_party.c) */
         Mtx scale;
+        mp4_camera_restore();
         MTXScale(scale, mp4_camera_scale, mp4_camera_scale, mp4_camera_scale);
         MTXConcat(mp4_camera_view, scale, arg1);
         return;

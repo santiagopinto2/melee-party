@@ -67,6 +67,7 @@ static void runtime_open(void)
         return;
     }
     runtime_up = 1;
+    GWGameStat.language = 1;   /* English, as the USA disc's banners (MGSeqInit reads it) */
     HuPrcInit();
     HuSprInit();
     Hu3DInit();
@@ -79,9 +80,36 @@ static void runtime_open(void)
     Hu3DAdvanceExternF = 1;   /* motions step in mp4_frame, drawn or not */
 }
 
+/* The match camera's projection, viewport and scissor, as set when MP4's draw starts. MP4's sprite
+ * layer (HuSprDispInit) replaces them with its 640x480 orthographic ones, so every MP4 camera
+ * puts them back (Hu3DCameraSet, through mp4_camera_restore), and so does the end of the draw. */
+static struct {
+    f32 projection[7];
+    f32 viewport[6];
+    u32 scissor[4];
+} match_view;
+
+static void match_view_save(void)
+{
+    GXGetProjectionv(match_view.projection);
+    GXGetViewportv(match_view.viewport);
+    GXGetScissor(&match_view.scissor[0], &match_view.scissor[1], &match_view.scissor[2],
+                 &match_view.scissor[3]);
+}
+
+void mp4_camera_restore(void)
+{
+    GXSetProjectionv(match_view.projection);
+    GXSetViewport(match_view.viewport[0], match_view.viewport[1], match_view.viewport[2],
+                  match_view.viewport[3], match_view.viewport[4], match_view.viewport[5]);
+    GXSetScissor(match_view.scissor[0], match_view.scissor[1], match_view.scissor[2],
+                 match_view.scissor[3]);
+}
+
 /* Melee's cached GX state no longer holds after MP4's draws. */
 static void gx_restore(void)
 {
+    mp4_camera_restore();
     GXSetCurrentMtx(0);
     GXInvalidateVtxCache();
     GXInvalidateTexAll();
@@ -103,6 +131,7 @@ static void draw(HSD_GObj* gobj, intptr_t pass)
     MTXConcat(view, shift, view);
     mp4_camera_view = view;
     mp4_camera_scale = MP4_SCALE;
+    match_view_save();
     mp4_gx_frame_begin();
     /* what Hu3DPreProc does at the start of MP4's frame, without its EFB clear colour */
     for (i = 0, model = Hu3DData; i < HU3D_MODEL_MAX; i++, model++) {
@@ -159,6 +188,44 @@ void mp4_match_begin(int overlay, float offset_x, float offset_y, float offset_z
     party_log("mp4: overlay %d starts", overlay);
 }
 
+/* MELEE_PARTY_MP4_LOG=1: a line a second on where the minigame is (the players' models, the
+ * banner sequence, the overlay), for runs nobody watches. */
+static void frame_log(void)
+{
+    static int enabled = -1;
+    static u32 frames;
+    HU3DMODEL* m;
+    s16 i, models = 0;
+    int p;
+    if (enabled < 0) {
+        const char* v = getenv("MELEE_PARTY_MP4_LOG");
+        enabled = v != NULL && *v && *v != '0';
+    }
+    if (!enabled || (frames++ % 60) != 0) {
+        return;
+    }
+    for (i = 0, m = Hu3DData; i < HU3D_MODEL_MAX; i++, m++) {
+        models += m->hsf != NULL;
+    }
+    party_log("mp4: frame %u ovl %d models %d seq %d exit %d", frames - 1, (int) omcurovl, models,
+              (int) MGSeqDoneCheck(), (int) omSysExitReq);
+    {
+        float eye[3], look[3], fov;
+        if (mp4_camera(eye, look, &fov)) {
+            party_log("mp4:   camera eye %.1f %.1f %.1f look %.1f %.1f %.1f fov %.1f near %.1f far %.1f",
+                      eye[0], eye[1], eye[2], look[0], look[1], look[2], fov, Hu3DCamera[0].nnear,
+                      Hu3DCamera[0].ffar);
+        }
+    }
+    for (p = 0; p < 4; p++) {
+        float x, y, z, yaw;
+        if (mp4_player_pose(p, &x, &y, &z, &yaw)) {
+            party_log("mp4:   P%d at %.1f %.1f %.1f yaw %.0f motion %d coins %d", p + 1, x, y, z,
+                      yaw * (float) (180.0 / M_PI), (int) mp4_player_motion(p), mp4_player_coins(p));
+        }
+    }
+}
+
 void mp4_frame(void)
 {
     int i;
@@ -174,6 +241,7 @@ void mp4_frame(void)
     HuPrcCall(1);
     MGSeqMain();
     Hu3DAdvance();
+    frame_log();
 }
 
 int mp4_match_over(void)
@@ -276,6 +344,7 @@ static void debug_draw(HSD_GObj* gobj, intptr_t pass)
     (void) pass;
     HSD_CObjGetViewingMtx(HSD_CObjGetCurrent(), view);
     mp4_camera_view = view;
+    match_view_save();
     mp4_gx_frame_begin();
     for (i = 0, model = Hu3DData; i < HU3D_MODEL_MAX; i++, model++) {
         if (model->hsf != NULL) {
