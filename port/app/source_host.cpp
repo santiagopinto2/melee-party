@@ -20,6 +20,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <system_error>
 #include <unordered_map>
@@ -554,6 +555,11 @@ bool read_cosmetic(uint32_t offset, void* dst, uint32_t size, bool* ok) {
 bool g_slippi_menus_requested = true;   // --slippi-menus on|off
 bool g_slippi_menus = false;            // requested and the layer loaded
 bool g_party = true;                    // --party on|off: Melee Party (sourceport/game/party)
+// Melee Party's second disc, Mario Party 4 (USA), for the minigames ported from it
+// (sourceport/game/party/mp4). Read in place; the game checks its header.
+std::string g_mp4_iso_arg;              // --mp4-iso
+std::FILE* g_mp4_disc = nullptr;
+std::mutex g_mp4_mutex;
 // Melee Party's online identity: sha256("melee-party online protocol 6"). Change the string when
 // a change to the party would make two builds play different matches.
 const char* const kPartyFingerprint = "5279f70a6f47eeb8cd2d05d951df93a2b54e1753a78c8442d394d0464da56465";
@@ -1424,6 +1430,11 @@ void h_disc_read(uint32_t offset, void* dst, uint32_t size, MuDiscDone done, voi
 }
 int32_t h_disc_status() { return 0; }
 uint32_t h_disc_id(void* out, uint32_t size) { const uint32_t n = std::min<uint32_t>(size, 0x20); std::memcpy(out, (void*)MEM1_BASE, n); return n; }
+uint32_t h_mp4_disc_read(uint32_t offset, void* dst, uint32_t size) {
+  std::lock_guard<std::mutex> lock(g_mp4_mutex);
+  if (!g_mp4_disc || _fseeki64(g_mp4_disc, offset, SEEK_SET) != 0) return 0;
+  return (uint32_t)std::fread(dst, 1, size, g_mp4_disc);
+}
 
 // Memory card: slot A is a Dolphin-compatible folder of .gci files. The game-side shim passes
 // native pointers here, so directory entries are converted explicitly instead of exposing their
@@ -2141,6 +2152,7 @@ MuHostApi make_host() {
   h.hud_scales = h_hud_scales;
   h.hud_player = h_hud_player;
   h.vi_idle_step = h_vi_idle_step;
+  h.mp4_disc_read = h_mp4_disc_read;
   return h;
 }
 
@@ -2228,6 +2240,33 @@ bool set_online_test(const char* spec) {
 
 void set_slippi_menus(bool on) { g_slippi_menus_requested = on; }
 void set_party(bool on) { g_party = on; }
+void set_mp4_iso(const char* path) { g_mp4_iso_arg = path; }
+
+void open_mp4_disc(const std::string& melee_iso) {
+  if (!g_party) return;
+  std::string path = g_mp4_iso_arg;
+  const char* how = "--mp4-iso";
+  if (path.empty()) {
+    if (const char* env = std::getenv("MELEE_PARTY_MP4_ISO"); env && *env) {
+      path = env;
+      how = "MELEE_PARTY_MP4_ISO";
+    }
+  }
+  if (path.empty()) {
+    std::error_code ec;
+    const std::filesystem::path beside = std::filesystem::u8path(melee_iso).parent_path() / "mp4.iso";
+    if (!std::filesystem::is_regular_file(beside, ec)) {
+      host::log("party: no Mario Party 4 disc (%s, --mp4-iso or MELEE_PARTY_MP4_ISO); its minigames are off",
+                beside.u8string().c_str());
+      return;
+    }
+    path = beside.u8string();
+    how = "beside the Melee ISO";
+  }
+  g_mp4_disc = _wfopen(std::filesystem::u8path(path).wstring().c_str(), L"rb");
+  if (!g_mp4_disc) host::log("party: cannot open the Mario Party 4 disc %s (%s)", path.c_str(), how);
+  else host::log("party: Mario Party 4 disc %s (%s)", path.c_str(), how);
+}
 
 void set_mod_directory(const char* path) {
   g_mod_layers.push_back({mods::LayerKind::Dir, std::filesystem::u8path(path)});
