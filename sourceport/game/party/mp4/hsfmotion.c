@@ -123,7 +123,8 @@ void Hu3DMotionSet(s16 arg0, s16 arg1)
     Hu3DData[arg0].motId = arg1;
     Hu3DData[arg0].motWork.time = 0.0f;
     Hu3DData[arg0].motWork.start = 0.0f;
-    Hu3DData[arg0].motWork.end = Hu3DMotionMaxTimeGet(arg0);
+    /* Melee Party: no motion (a model nobody sees skips its motions, m412's reflections) */
+    Hu3DData[arg0].motWork.end = arg1 >= 0 ? Hu3DMotionMaxTimeGet(arg0) : 0.0f;
 }
 
 void Hu3DMotionOverlaySet(s16 arg0, s16 arg1)
@@ -159,6 +160,9 @@ void Hu3DMotionShiftSet(s16 arg0, s16 arg1, float arg2, float arg3, u32 arg4)
     HU3DMOTION *sp10 = &Hu3DMotion[arg1];
     s32 var_r30;
 
+    if (arg1 < 0) {
+        return;   /* Melee Party: no motion (see Hu3DMotionSet) */
+    }
     arg4 &= ~HU3D_MOTATTR;
     var_r30 = 0;
     if (temp_r31->motIdShift != -1) {

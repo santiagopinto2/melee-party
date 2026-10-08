@@ -18,17 +18,23 @@
  * loaded here, the DVD heap only holds an archive record while it is unpacked (a bigger one goes to
  * the data heap), and the data heap holds 64-bit structures beside the files. The image (about
  * 10 MB) and the pool together must end below 0x84000000; mp4_mem_fits checks. */
-/* MP4's sizes, but the system heap doubled: its structures are bigger here (64-bit pointers),
- * and m438 keeps two effects per Chain Chomp lane there, 48 lanes, which filled 1 MB. */
-static const u32 HeapSizeTbl[HEAP_MAX] = { 0x200000, 0x10000, 0x900000, 0x100000, 0x40000 };
-#define MP4_POOL_SIZE (0x200000 + 0x10000 + 0x900000 + 0x100000 + 0x40000)
+/* MP4's sizes, except: the system heap is twice MP4's (its structures are bigger here, with
+ * 64-bit pointers, and m438 keeps two effects per Chain Chomp lane in it, 48 lanes, which filled
+ * 1 MB), and the data heap holds what MP4's 9 MB held plus the DVD, music and misc heaps' share
+ * of the pool. Those three never hold anything GX reads (a compressed record while it unpacks, a
+ * sound, a scrap), so they live on the C runtime's heap instead, outside the pool. Each loaded
+ * model keeps its unpacked file and the 64-bit structures made from it, so a minigame that loads
+ * four characters twice (m412: a player and its reflection on the ice) needs the room. */
+static const u32 HeapSizeTbl[HEAP_MAX] = { 0x200000, 0x10000, 0xAD0000, 0x100000, 0x40000 };
+#define MP4_POOL_SIZE (0x200000 + 0xAD0000)   /* the system and data heaps: what GX reads */
 /* After the heaps, the frame's big-endian copies of vertex arrays (mp4_gx.c): all the float arrays
  * the frame's models draw with. As much of this as still fits under 0x84000000 with the heaps
  * above it (mp4_gx_scratch): every minigame linked in moves the pool up by its code's size, and
  * the scratch is what gives. A frame that wants more than the scratch has says so in the log. */
-#define MP4_GX_SCRATCH_SIZE 0x180000   /* m438's frames want 283 KB, m440's less */
-#define MP4_GX_SCRATCH_MIN 0x100000
+#define MP4_GX_SCRATCH_SIZE 0x100000   /* a frame of m438 wants 283 KB, of m440 less */
+#define MP4_GX_SCRATCH_MIN 0x80000
 static u8 mp4_pool[MP4_POOL_SIZE + MP4_GX_SCRATCH_SIZE] __attribute__((aligned(64)));
+void* malloc(size_t size);
 static void *HeapTbl[HEAP_MAX];
 
 #define MEM_ALLOC_SIZE(size) ((((size) - 1) / 32 + 1) * 32 + 64)
@@ -47,14 +53,20 @@ struct memory_block {
 };
 
 static void *HuMemMemoryAlloc2(void *heap_ptr, size_t size, uintptr_t num, uintptr_t retaddr);
+size_t HuMemUsedMemorySizeGet(void *heap_ptr);
 
 void HuMemInitAll(void)
 {
     u8 *ptr = mp4_pool;
     s32 i;
     for (i = 0; i < HEAP_MAX; i++) {
-        HeapTbl[i] = HuMemInit(ptr, HeapSizeTbl[i]);
-        ptr += HeapSizeTbl[i];
+        if (i == HEAP_SYSTEM || i == HEAP_DATA) {
+            HeapTbl[i] = HuMemInit(ptr, HeapSizeTbl[i]);
+            ptr += HeapSizeTbl[i];
+        } else {
+            void* mem = malloc(HeapSizeTbl[i]);
+            HeapTbl[i] = mem != NULL ? HuMemInit(mem, HeapSizeTbl[i]) : NULL;
+        }
     }
 }
 
@@ -172,6 +184,7 @@ static void *HuMemMemoryAlloc2(void *heap_ptr, size_t size, uintptr_t num, uintp
         block = block->next;
     } while (block != heap_ptr);
     OSReport("[party] mp4: out of memory, %x bytes (%x) in heap %p\n", (u32) size, (u32) num, heap_ptr);
+    HuMemHeapDump(heap_ptr, 0);
     return NULL;
 }
 
