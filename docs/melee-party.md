@@ -54,6 +54,7 @@ disc they are left out of the list and the rotation, and the log says why.
 | Dungeon Duos | Final Destination (a dungeon drawn away from it) | After Mario Party 4's, on a split screen with its camera. Random teams of 2 each run their own copy of the dungeon, and the first team out wins. Mash B at a switch to open your partner's gate; mash A at a crank to turn a bar over a pit, jump on and ride it across; find the hole that leads on (the others send you to another hole); then alternate L and R at the pump, and the team's strokes add up to 1000. The stick moves you in any direction with Melee's walk, dash and run, and X/Y jump and double jump. A player who falls into a pit comes back at the last checkpoint. Nobody wins after 5 minutes. |
 | Bowser's Bigger Blast | Final Destination (MP4's stage drawn away from it); needs the MP4 disc | Mario Party 4's own. Each player in turn pushes one of five plungers; one of them sets Bowser's bomb off, and the player who pushed it is out. The last one standing wins. The fighters only follow the game: nobody walks by the stick. |
 | Chain Chomp Fever | Final Destination (MP4's arena drawn away from it); needs the MP4 disc | Mario Party 4's own. Chain Chomps charge across a round arena ringed with fire for 60 seconds. The stick walks you with Melee's walk, dash and run (each fighter's own speed); a Chomp that runs into you flings you out, and so does the edge. The survivors win, placed by who lasted longest. No jumping. |
+| Mr. Blizzard's Brigade | Final Destination (MP4's lake drawn away from it); needs the MP4 disc | Mario Party 4's own. Three Mr. Blizzards pelt a frozen lake with snowballs for a minute while the camera circles it. You slide on the ice as in MP4 (its acceleration and friction: the ice is the game, so this one keeps MP4's movement and the fighters follow). A snowball freezes you inside a snowman until the end; the survivors share first place, the frozen share last. |
 
 ## Playing online
 
@@ -211,13 +212,17 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
   low half) read one file of a `data/*.bin` archive off the disc and unpack it: none, LZ, SLIDE,
   FSLIDE and RLE, types 0 to 5 (`mp4_dir.c`, `mp4_decode.c`). Only each archive's offset table
   stays in memory.
-- **Memory.** MP4's heaps (`HuMem`, `mp4_mem.c`) sit in one pool in the game image, not in
-  Melee's main memory: MP4's own sizes (a 9 MB data heap for models and motions, a 1 MB DVD heap)
-  but a 2 MB system heap, twice MP4's, since the structures are bigger here and Chain Chomp Fever
-  keeps two effects per Chomp lane in it. GX reads the textures, vertex arrays and display lists of
-  MP4 models in place, and it can only address MEM1 and the image (below 0x84000000); after the
-  heaps comes the per-frame scratch for big-endian copies of vertex arrays, which takes whatever
-  still fits under that limit (1.5 MB at most, a frame of m438 uses 0.3 MB). Each minigame linked
+- **Memory.** MP4's two heaps that GX reads from (`HuMem`, `mp4_mem.c`) sit in one pool in the
+  game image, not in Melee's main memory: a 10.8 MB data heap for models and motions (MP4's 9 MB
+  plus the share of its DVD, music and misc heaps, which live on the C runtime's heap here since
+  GX never reads them) and a 2 MB system heap, twice MP4's, since the structures are bigger here
+  and Chain Chomp Fever keeps two effects per Chomp lane in it. A loaded model keeps its unpacked
+  file and the 64-bit structures made from it; a minigame that loads four characters twice (Mr.
+  Blizzard's Brigade: a player and its reflection) needs most of the data heap. GX reads the
+  textures, vertex arrays and display lists of MP4 models in place, and it can only address MEM1
+  and the image (below 0x84000000); after the heaps comes the per-frame scratch for big-endian
+  copies of vertex arrays, which takes whatever still fits under that limit (1 MB at most, a
+  frame of m438 uses 0.3 MB). Each minigame linked
   in moves the pool up by its code's size; when less than 1 MB of scratch is left the MP4
   minigames switch themselves off and the log says so. The pool is zero-filled `.bss` and costs
   nothing without an MP4 disc. Rollback snapshots leave it out, because the MP4 minigames are
@@ -260,6 +265,14 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
   state.
 - **Not yet**: MP4's sound and music, its shadow pass, the reflection, toon and highlight maps
   MP4 keeps in its executable, and its instruction screens.
+- **Online, later.** The MP4 minigames play offline only. What putting them online would need,
+  kept here so nothing done now makes it harder: the MP4 pool (`mp4_mem.c`) and the MP4 runtime's
+  variables in the rollback snapshot (they are `.bss`, which the snapshot's image regions can
+  cover; the pool is left out today); the coroutine stacks in a snapshot region too (today they
+  come from the C runtime's heap, which a snapshot cannot see: a static pool in the image would
+  do, outside the GX window); a protocol bump and a disc-revision handshake (GMPE01 Rev 0 and 1
+  differ); and an audit that each minigame's logic draws its random numbers from MP4's own
+  seeded generators (`frand`, `rand8`, both in the image) and nothing from time or the host.
 
 ### Adding a minigame
 

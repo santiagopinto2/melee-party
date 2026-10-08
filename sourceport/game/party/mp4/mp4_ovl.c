@@ -23,9 +23,11 @@ void* malloc(size_t size);
 
 void m440_ObjectSetup(void);
 void m438_ObjectSetup(void);
+void m412_ObjectSetup(void);
 
 const int mp4_overlay_m440 = DLL_m440Dll;
 const int mp4_overlay_m438 = DLL_m438Dll;
+const int mp4_overlay_m412 = DLL_m412Dll;
 
 /* The markers: a byte before and a byte after the overlay's variables (see above). */
 #define OVERLAY_MARKERS(name)                                                       \
@@ -33,6 +35,7 @@ const int mp4_overlay_m438 = DLL_m438Dll;
     __attribute__((section(".data$" #name "z"))) static char name##_data_end = 1;
 OVERLAY_MARKERS(m440)
 OVERLAY_MARKERS(m438)
+OVERLAY_MARKERS(m412)
 
 static int boot_reached;
 
@@ -50,6 +53,7 @@ static const struct {
     { DLL_bootDll, boot_ObjectSetup, NULL, NULL },
     { DLL_m440Dll, m440_ObjectSetup, &m440_data_begin, &m440_data_end },
     { DLL_m438Dll, m438_ObjectSetup, &m438_data_begin, &m438_data_end },
+    { DLL_m412Dll, m412_ObjectSetup, &m412_data_begin, &m412_data_end },
 };
 #define OVERLAYS (sizeof overlays / sizeof overlays[0])
 

@@ -192,6 +192,11 @@ s32 CharFXPlayPos(s16 charNo, s16 seId, Vec *pos)
     return -1;
 }
 
+void CharEffectLayerSet(s16 layerNo)
+{
+    (void) layerNo;   /* no character effects here (chrman.c's) */
+}
+
 s16 mp4_char_model(int charNo)
 {
     chars_init();

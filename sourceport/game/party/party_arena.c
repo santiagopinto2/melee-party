@@ -28,7 +28,7 @@
 extern Camera game_camera;
 
 /* The character motions every MP4 character has (mariomot.bin), by file. */
-enum { MOT_WALK = 0x02, MOT_RUN = 0x03, MOT_WIN = 0x17, MOT_VOICE = 0x48 };
+enum { MOT_WALK = 0x02, MOT_RUN = 0x03, MOT_WIN = 0x17, MOT_VOICE = 0x48, MOT_WIN2 = 0x4B };
 
 static struct {
     float offset_y;   /* where MP4's origin sits in Melee's world */
@@ -155,6 +155,7 @@ void party_arena_follow(Fighter* fp, int airborne)
         break;
     case MOT_VOICE:
     case MOT_WIN:
+    case MOT_WIN2:   /* m412's winners */
         if (began) {
             fp->input.held_buttons[0] = HSD_PAD_DPADUP;
         }

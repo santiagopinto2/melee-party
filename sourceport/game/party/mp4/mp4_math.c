@@ -23,3 +23,18 @@ void mp4_mtx_ro_mult_vec_array(ROMtx m, Vec* srcBase, Vec* dstBase, u32 count)
         dstBase[i].z = m[0][2] * v.x + m[1][2] * v.y + m[2][2] * v.z + m[3][2];
     }
 }
+
+/* The vector helpers MP4's minigames use (ext_math.h), written in assembly in MP4. */
+void HuSetVecF(Vec* v, f32 x, f32 y, f32 z)
+{
+    v->x = x;
+    v->y = y;
+    v->z = z;
+}
+
+void HuSubVecF(Vec* out, Vec* a, Vec* b)
+{
+    out->x = a->x - b->x;
+    out->y = a->y - b->y;
+    out->z = a->z - b->z;
+}

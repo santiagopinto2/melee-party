@@ -25,6 +25,8 @@ void HuAudFXListnerSetEX(Vec *pos, Vec *heading, float sndDist, float sndSpeed, 
     (void) backSurDis;
 }
 int HuAudFXEmiterPlay(int seId, Vec *pos) { (void) seId; (void) pos; return -1; }
+s32 PlayerFXPlay(s16 player, s16 seId) { (void) player; (void) seId; return -1; }
+s32 PlayerFXPlayPos(s16 player, s16 seId, Vec *pos) { (void) player; (void) seId; (void) pos; return -1; }
 void HuAudFXEmiterUpDate(int seNo, Vec *pos) { (void) seNo; (void) pos; }
 void HuAudFXPauseAll(BOOL pauseF) { (void) pauseF; }
 s32 HuAudFXVolSet(int seNo, s16 vol) { (void) seNo; (void) vol; return -1; }
