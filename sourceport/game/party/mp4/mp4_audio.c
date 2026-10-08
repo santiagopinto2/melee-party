@@ -1,6 +1,7 @@
 /* Melee Party, Mario Party 4 runtime: MP4's sound (audio.c) is not played: the minigames' sound
  * effects, music and voices are MP4's own and are not part of this port. Every call plays nothing
  * and returns "no sound". */
+#include "game/msm.h"
 #include <dolphin/types.h>
 
 #include "game/audio.h"
@@ -48,4 +49,12 @@ void HuAudAllStop(void)
     HuAudSeqAllStop();
     HuAudFXAllStop();
     HuAudSStreamAllStop();
+}
+
+/* msm (the sound manager): a sound effect's parameters (m404 sets a volume) */
+s32 msmSeSetParam(int seNo, MSM_SEPARAM* param)
+{
+    (void) seNo;
+    (void) param;
+    return 0;
 }

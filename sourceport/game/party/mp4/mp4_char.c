@@ -223,6 +223,15 @@ char* CharModelItemHookGet(s16 charNo, s16 model, s16 hookNo)
     return names[hookNo >= 0 && hookNo < 5 ? hookNo : 0];
 }
 
+/* chrman.c: the speed of the player's motion (m404 plays the walk backwards for a step back) */
+void CharMotionSpeedSet(s16 charNo, float speed)
+{
+    s16 model = mp4_char_model(charNo);
+    if (model != HU3D_MODELID_NONE) {
+        Hu3DMotionSpeedSet(model, speed);
+    }
+}
+
 void CharModelLayerSetAll2(s16 layerNo)
 {
     CharEffectLayerSet(layerNo);
