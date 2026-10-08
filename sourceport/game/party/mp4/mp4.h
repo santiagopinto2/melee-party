@@ -57,6 +57,12 @@ int mp4_player_coins(int player);
 /* MP4's camera (the first Hu3D camera) in Melee's world; 0 if there is none yet. */
 int mp4_camera(float eye[3], float look[3], float* fov);
 
+/* mp4_party.c: a split screen. The Hu3D cameras in use are the views (1 when there is one or
+ * none); mp4_view_begin sets the match camera up for one of them, before it draws. */
+struct HSD_CObj;
+int mp4_views(void);
+void mp4_view_begin(int view, struct HSD_CObj* cobj);
+
 /* mp4_ovl.c: the overlay numbers (OMOVL) of the minigames linked in. */
 extern const int mp4_overlay_m440;
 extern const int mp4_overlay_m438;
@@ -66,6 +72,7 @@ extern const int mp4_overlay_m441;
 extern const int mp4_overlay_m404;
 extern const int mp4_overlay_m416;
 extern const int mp4_overlay_m422;
+extern const int mp4_overlay_m421;
 
 /* mp4_char.c: the player's hidden model, a Hu3D model id or -1. */
 s16 mp4_char_model(int charNo);

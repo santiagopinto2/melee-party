@@ -184,6 +184,13 @@ void mp4_gx_draw_done(void);
 void mp4_gx_wait_draw_done(void);
 extern s16 Hu3DAdvanceExternF;
 extern float mp4_camera_scale;
+extern float mp4_fog_near, mp4_fog_far;   /* the match camera's projection, for the fog */
+extern MtxPtr mp4_camera_view;
+extern int mp4_hud_full;
+/* A split-screen match (mp4_view_begin): the one Hu3D camera this draw renders, or -1 for all;
+ * and whether this draw ends with MP4's screen-wide sprite pass (the HUD), drawn once a frame. */
+s16 mp4_only_camera = -1;
+int mp4_hud_pass = 1;
 void mp4_camera_restore(void);
 
 void Hu3DExec(void) {
@@ -208,6 +215,9 @@ void Hu3DExec(void) {
     HuSprBegin();
     syncF = FALSE;
     for (Hu3DCameraNo = 0; Hu3DCameraNo < HU3D_CAM_MAX; Hu3DCameraNo++, camera++) {
+        if (mp4_only_camera >= 0 && Hu3DCameraNo != mp4_only_camera) {
+            continue;   /* another view's camera (mp4_view_begin) */
+        }
         if (-1.0f != camera->fov) {
             GXInvalidateVtxCache();
             cameraBit = (s16) (1 << Hu3DCameraNo);
@@ -236,7 +246,8 @@ void Hu3DExec(void) {
             }
             if (FogData.fogType != GX_FOG_NONE) {
                 GXSetFog(FogData.fogType, FogData.fogStart * mp4_camera_scale, FogData.fogEnd * mp4_camera_scale,
-                         camera->nnear * mp4_camera_scale, camera->ffar * mp4_camera_scale, FogData.color);
+                         mp4_camera_view != NULL ? mp4_fog_near : camera->nnear,
+                         mp4_camera_view != NULL ? mp4_fog_far : camera->ffar, FogData.color);
             }
             for (j = 0; j < 8; j++) {
                 if (layerHook[j] != 0) {
@@ -328,8 +339,12 @@ void Hu3DExec(void) {
             }
         }
     }
-    HuSprDispInit();
-    HuSprExec(0);
+    if (mp4_hud_pass) {
+        mp4_hud_full = 1;   /* the HUD on the whole screen, whatever this view's viewport */
+        HuSprDispInit();
+        HuSprExec(0);
+        mp4_hud_full = 0;
+    }
     if (!Hu3DAdvanceExternF) {
         Hu3DAdvance();
     }

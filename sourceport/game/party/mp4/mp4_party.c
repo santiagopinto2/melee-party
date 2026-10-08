@@ -94,6 +94,18 @@ static void match_view_save(void)
     GXGetProjectionv(match_projection);
 }
 
+/* A split-screen match (mp4_views, mp4_view_begin): the whole screen's viewport, scissor and
+ * aspect, saved when the first view of a frame is set up, for the HUD and for carving the
+ * views out of it. */
+static int views_active;
+static HSD_RectF32 full_viewport;
+static Scissor full_scissor;
+static f32 full_aspect;
+int mp4_hud_full;
+extern s16 mp4_only_camera;
+extern int mp4_hud_pass;
+extern int mp4_draw_rearm(void);
+
 void mp4_camera_restore(void)
 {
     HSD_CObj* cobj = HSD_CObjGetCurrent();
@@ -101,20 +113,110 @@ void mp4_camera_restore(void)
     f32 xs = (f32) rmode->fbWidth / (f32) rmode->viWidth;
     f32 ys = (f32) rmode->efbHeight / (f32) rmode->viHeight;
     f32 l, t, r, b;
+    HSD_RectF32 vp;
+    Scissor sc;
     GXSetProjectionv(match_projection);
     if (cobj == NULL) {
         return;
     }
-    l = cobj->viewport.xmin * xs;
-    r = cobj->viewport.xmax * xs;
-    t = cobj->viewport.ymin * ys;
-    b = cobj->viewport.ymax * ys;
+    vp = cobj->viewport;
+    sc = cobj->scissor;
+    if (views_active && mp4_hud_full) {
+        vp = full_viewport;
+        sc = full_scissor;
+    }
+    l = vp.xmin * xs;
+    r = vp.xmax * xs;
+    t = vp.ymin * ys;
+    b = vp.ymax * ys;
     GXSetViewport(l, t, r - l, b - t, 0.0f, 1.0f);
-    l = cobj->scissor.left * xs;
-    r = cobj->scissor.right * xs;
-    t = cobj->scissor.top * ys;
-    b = cobj->scissor.bottom * ys;
+    l = sc.left * xs;
+    r = sc.right * xs;
+    t = sc.top * ys;
+    b = sc.bottom * ys;
     GXSetScissor((u32) l, (u32) t, (u32) (r - l), (u32) (b - t));
+}
+
+/* The Hu3D cameras in use, in index order: how many views the match camera draws. */
+static int view_cameras(s16 out[HU3D_CAM_MAX])
+{
+    int n = 0;
+    s16 i;
+    for (i = 0; i < HU3D_CAM_MAX; i++) {
+        if (Hu3DCamera[i].fov != -1.0f) {
+            out[n++] = i;
+        }
+    }
+    return n;
+}
+
+int mp4_views(void)
+{
+    s16 cams[HU3D_CAM_MAX];
+    int n;
+    if (!match_running) {
+        views_active = 0;
+        mp4_only_camera = -1;
+        mp4_hud_pass = 1;
+        return 1;
+    }
+    n = view_cameras(cams);
+    if (n <= 1) {
+        views_active = 0;
+        mp4_only_camera = -1;
+        mp4_hud_pass = 1;
+        return 1;
+    }
+    return n;
+}
+
+/* One view of a split screen, before the match camera draws it (the party draws the last view
+ * first): the match camera takes the Hu3D camera's eye, target and fov, and the camera's
+ * viewport and scissor carved out of the whole screen's; the MP4 draw renders that camera alone,
+ * once per view, and the HUD once a frame, on the view drawn last. */
+void mp4_view_begin(int view, HSD_CObj* cobj)
+{
+    s16 cams[HU3D_CAM_MAX];
+    int n = view_cameras(cams);
+    HU3DCAMERA* cam;
+    HSD_RectF32 vp;
+    Vec3 eye, look;
+    f32 sx, sy;
+    if (n <= 1 || view < 0 || view >= n) {
+        return;
+    }
+    if (view == n - 1) {
+        views_active = 1;
+        full_viewport = cobj->viewport;
+        full_scissor = cobj->scissor;
+        full_aspect = HSD_CObjGetAspect(cobj);
+    }
+    cam = &Hu3DCamera[cams[view]];
+    mp4_only_camera = cams[view];
+    mp4_hud_pass = view == 0;
+    mp4_draw_rearm();
+    /* MP4 lays its cameras out on a 640 x 480 screen */
+    sx = (full_viewport.xmax - full_viewport.xmin) / 640.0f;
+    sy = (full_viewport.ymax - full_viewport.ymin) / 480.0f;
+    vp.xmin = full_viewport.xmin + cam->viewportX * sx;
+    vp.xmax = vp.xmin + cam->viewportW * sx;
+    vp.ymin = full_viewport.ymin + cam->viewportY * sy;
+    vp.ymax = vp.ymin + cam->viewportH * sy;
+    HSD_CObjSetViewportfx4(cobj, vp.xmin, vp.xmax, vp.ymin, vp.ymax);
+    HSD_CObjSetScissorx4(cobj, (u16) (full_viewport.xmin + cam->scissorX * sx),
+                         (u16) (full_viewport.xmin + (cam->scissorX + cam->scissorW) * sx),
+                         (u16) (full_viewport.ymin + cam->scissorY * sy),
+                         (u16) (full_viewport.ymin + (cam->scissorY + cam->scissorH) * sy));
+    HSD_CObjSetAspect(cobj, full_aspect * (cam->viewportW / 640.0f) / (cam->viewportH / 480.0f));
+    eye.x = cam->pos.x * MP4_SCALE + world_offset.x;
+    eye.y = cam->pos.y * MP4_SCALE + world_offset.y;
+    eye.z = cam->pos.z * MP4_SCALE + world_offset.z;
+    look.x = cam->target.x * MP4_SCALE + world_offset.x;
+    look.y = cam->target.y * MP4_SCALE + world_offset.y;
+    look.z = cam->target.z * MP4_SCALE + world_offset.z;
+    HSD_CObjSetEyePosition(cobj, &eye);
+    HSD_CObjSetInterest(cobj, &look);
+    HSD_CObjSetFov(cobj, cam->fov);
 }
 
 /* Melee's cached GX state no longer holds after MP4's draws. */
@@ -135,6 +237,16 @@ static void gx_restore(void)
  * pass 0, with the pass 2 call marking the end of a frame. */
 static int draw_armed = 1;
 
+float mp4_fog_near = 1.0f;
+float mp4_fog_far = 16384.0f;
+
+/* mp4_view_begin: the next pass 0 draws again (a split screen draws once per view). */
+int mp4_draw_rearm(void)
+{
+    draw_armed = 1;
+    return 1;
+}
+
 static void draw(HSD_GObj* gobj, intptr_t pass)
 {
     HU3DMODEL* model;
@@ -150,6 +262,10 @@ static void draw(HSD_GObj* gobj, intptr_t pass)
     }
     draw_armed = 0;
     HSD_CObjGetViewingMtx(HSD_CObjGetCurrent(), view);
+    /* GX fog maps the depth buffer back to eye space with the projection's near and far: the
+     * match camera's, not the Hu3D camera's (hsfman.c scales MP4's fog distances only) */
+    mp4_fog_near = HSD_CObjGetNear(HSD_CObjGetCurrent());
+    mp4_fog_far = HSD_CObjGetFar(HSD_CObjGetCurrent());
     /* MP4's origin sits at the offset in Melee's world */
     MTXTrans(shift, world_offset.x, world_offset.y, world_offset.z);
     MTXConcat(view, shift, view);

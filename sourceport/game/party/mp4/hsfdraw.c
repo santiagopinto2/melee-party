@@ -9,6 +9,8 @@
 #include "ext_math.h"
 #include <string.h>
 
+extern float mp4_camera_scale;   /* Melee Party: MP4 units into Melee's (hsfman.c) */
+
 #define DRAW_OBJ_MAX 512
 
 #define PTR_INVALID ((void *)-1)
@@ -242,10 +244,14 @@ static void objMesh(HU3DMODEL *modelP, HSFOBJECT *objPtr) {
             scale->z = prevScale->z * transformP->scale.z;
             drawObj->scale = *scale;
             if (objPtr->flags & HSF_MATERIAL_BBOARD) {
+                /* Melee Party: a billboard is rebuilt in camera space from its own scale alone,
+                 * which drops the MP4-into-Melee scale the camera matrix carries here (1 on the
+                 * GameCube): put it back, or every billboard is ten times too big. */
                 MTXInverse(MTXBuf[MTXIdx], mtx);
                 mtx[0][3] = mtx[1][3] = mtx[2][3] = 0.0f;
                 MTXConcat(MTXBuf[MTXIdx], mtx, drawObj->matrix);
-                mtxScaleCat(drawObj->matrix, scale->x, scale->y, scale->z);
+                mtxScaleCat(drawObj->matrix, scale->x * mp4_camera_scale, scale->y * mp4_camera_scale,
+                            scale->z * mp4_camera_scale);
             } else {
                 MTXCopy(MTXBuf[MTXIdx], drawObj->matrix);
             }
@@ -256,7 +262,8 @@ static void objMesh(HU3DMODEL *modelP, HSFOBJECT *objPtr) {
                 MTXInverse(MTXBuf[MTXIdx - 1], mtx);
                 mtx[0][3] = mtx[1][3] = mtx[2][3] = 0.0f;
                 MTXConcat(MTXBuf[MTXIdx - 1], mtx, drawObj->matrix);
-                mtxScaleCat(drawObj->matrix, scaleBuf[MTXIdx - 1].x, scaleBuf[MTXIdx - 1].y, scaleBuf[MTXIdx - 1].z);
+                mtxScaleCat(drawObj->matrix, scaleBuf[MTXIdx - 1].x * mp4_camera_scale,
+                            scaleBuf[MTXIdx - 1].y * mp4_camera_scale, scaleBuf[MTXIdx - 1].z * mp4_camera_scale);
             } else {
                 MTXCopy(MTXBuf[MTXIdx - 1], drawObj->matrix);
             }

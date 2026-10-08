@@ -228,3 +228,13 @@ void party_arena_drawn(Fighter* fp)
     ftPartSetRotY(fp, 0, yaw);
     HSD_JObjSetTranslate(fp->gobj->hsd_obj, &pos);
 }
+
+int party_arena_camera_views(void)
+{
+    return mp4_views();
+}
+
+void party_arena_camera_view(int view, struct HSD_CObj* cobj)
+{
+    mp4_view_begin(view, cobj);
+}

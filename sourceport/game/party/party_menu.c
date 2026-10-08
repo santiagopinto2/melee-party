@@ -710,6 +710,7 @@ static const struct {
     { "trace-race", "Steer your brush along\nthe line. Closest wins." },
     { "candlelight-flight", "One carries the candle;\nthree blow at it with A." },
     { "money-belts", "Grab the coins riding\nthe belts. One vs three." },
+    { "hop-or-pop", "Pop the balloons, or hop\nclear of the ball. 1 vs 3." },
 };
 
 static const char* description_of(int menu_kind, int selection)

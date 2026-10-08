@@ -119,3 +119,12 @@ void HuSysVWaitSet(s16 vcount)
 {
     (void) vcount;
 }
+
+/* gamework.c: each MP4 character's colour (m421's player markers) */
+void GWCharColorGet(s32 character, GXColor* color)
+{
+    static const GXColor char_color[8] = { { 227, 67, 67, 255 }, { 68, 67, 227, 255 }, { 241, 158, 220, 255 },
+                                           { 67, 228, 68, 255 }, { 138, 60, 180, 255 }, { 146, 85, 55, 255 },
+                                           { 227, 228, 68, 255 }, { 40, 40, 40, 255 } };
+    *color = char_color[character >= 0 && character < 8 ? character : 7];
+}

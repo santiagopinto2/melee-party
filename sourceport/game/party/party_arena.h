@@ -20,6 +20,7 @@
 #include <dolphin/types.h>
 
 struct Fighter;
+struct HSD_CObj;
 
 /* on_match_start: the arena forgets the last match's players and starts the minigame's overlay
  * (mp4_match_begin), with MP4's origin at the offset in Melee's world. */
@@ -47,5 +48,10 @@ void party_arena_map(struct Fighter* fp);
 /* fighter_drawn: drawn at the MP4 player's pose, plus whatever height Melee gave it; out of sight
  * once the game hid the player. */
 void party_arena_drawn(struct Fighter* fp);
+
+/* camera_views and camera_view, for a minigame that splits the screen: one view per Hu3D camera
+ * the minigame uses, each with that camera's eye, fov and viewport. */
+int party_arena_camera_views(void);
+void party_arena_camera_view(int view, struct HSD_CObj* cobj);
 
 #endif
