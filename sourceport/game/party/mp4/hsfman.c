@@ -187,9 +187,11 @@ extern float mp4_camera_scale;
 extern float mp4_fog_near, mp4_fog_far;   /* the match camera's projection, for the fog */
 extern MtxPtr mp4_camera_view;
 extern int mp4_hud_full;
-/* A split-screen match (mp4_view_begin): the one Hu3D camera this draw renders, or -1 for all;
- * and whether this draw ends with MP4's screen-wide sprite pass (the HUD), drawn once a frame. */
-s16 mp4_only_camera = -1;
+/* A split-screen match (mp4_view_begin): the Hu3D cameras this draw renders (bits), or -1 for
+ * all; and whether this draw ends with MP4's screen-wide sprite pass (the HUD), drawn once a
+ * frame. */
+s16 mp4_view_cameras = -1;
+void mp4_camera_set(s32 camNo, Mtx out);
 int mp4_hud_pass = 1;
 void mp4_camera_restore(void);
 
@@ -215,7 +217,7 @@ void Hu3DExec(void) {
     HuSprBegin();
     syncF = FALSE;
     for (Hu3DCameraNo = 0; Hu3DCameraNo < HU3D_CAM_MAX; Hu3DCameraNo++, camera++) {
-        if (mp4_only_camera >= 0 && Hu3DCameraNo != mp4_only_camera) {
+        if (mp4_view_cameras >= 0 && (mp4_view_cameras & (1 << Hu3DCameraNo)) == 0) {
             continue;   /* another view's camera (mp4_view_begin) */
         }
         if (-1.0f != camera->fov) {
@@ -1340,11 +1342,8 @@ void Hu3DCameraSet(s32 arg0, Mtx arg1) {
     HU3DCAMERA* temp_r31;
 
     if (mp4_camera_view != NULL) {
-        /* the match camera's view, with its projection, viewport and scissor (mp4_party.c) */
-        Mtx scale;
-        mp4_camera_restore();
-        MTXScale(scale, mp4_camera_scale, mp4_camera_scale, mp4_camera_scale);
-        MTXConcat(mp4_camera_view, scale, arg1);
+        /* in the match: the match camera's view for the view's camera, its own for a pass (mp4_party.c) */
+        mp4_camera_set(arg0, arg1);
         return;
     }
     temp_r31 = &Hu3DCamera[arg0];

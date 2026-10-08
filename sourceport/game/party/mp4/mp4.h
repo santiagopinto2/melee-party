@@ -57,8 +57,9 @@ int mp4_player_coins(int player);
 /* MP4's camera (the first Hu3D camera) in Melee's world; 0 if there is none yet. */
 int mp4_camera(float eye[3], float look[3], float* fov);
 
-/* mp4_party.c: a split screen. The Hu3D cameras in use are the views (1 when there is one or
- * none); mp4_view_begin sets the match camera up for one of them, before it draws. */
+/* mp4_party.c: a split screen. The viewports the players' models are drawn in are the views (1
+ * when there is one or none); mp4_view_begin sets the match camera up for one of them, before it
+ * draws. A camera drawing no player is a render pass inside the frame, with its own setup. */
 struct HSD_CObj;
 int mp4_views(void);
 void mp4_view_begin(int view, struct HSD_CObj* cobj);
@@ -73,6 +74,7 @@ extern const int mp4_overlay_m404;
 extern const int mp4_overlay_m416;
 extern const int mp4_overlay_m422;
 extern const int mp4_overlay_m421;
+extern const int mp4_overlay_m434;
 
 /* mp4_char.c: the player's hidden model, a Hu3D model id or -1. */
 s16 mp4_char_model(int charNo);

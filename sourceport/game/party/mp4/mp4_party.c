@@ -102,7 +102,7 @@ static HSD_RectF32 full_viewport;
 static Scissor full_scissor;
 static f32 full_aspect;
 int mp4_hud_full;
-extern s16 mp4_only_camera;
+extern s16 mp4_view_cameras;
 extern int mp4_hud_pass;
 extern int mp4_draw_rearm(void);
 
@@ -137,33 +137,95 @@ void mp4_camera_restore(void)
     GXSetScissor((u32) l, (u32) t, (u32) (r - l), (u32) (b - t));
 }
 
-/* The Hu3D cameras in use, in index order: how many views the match camera draws. */
-static int view_cameras(s16 out[HU3D_CAM_MAX])
+/* The views of a frame: the viewports the players' models are drawn in, one view each, in index
+ * order (Team Treasure Trek draws everything four times, a quarter of the screen a camera; a
+ * one-camera game has one). A camera that draws no player (Cheep Cheep Sweep's reflection
+ * cameras, rendering into a corner for a screen copy, and its other full-screen passes) is not
+ * a view: it draws inside the frame with its own perspective, viewport and eye (mp4_camera_set).
+ * A view's primary camera is the first in it that draws a player: the match camera takes its
+ * eye, so the fighters land in MP4's scene. */
+typedef struct {
+    s16 primary;      /* the camera the match camera follows */
+    s16 cameras;      /* bits: the cameras drawn in this view */
+    f32 x, y, w, h;   /* its viewport, on MP4's 640 x 480 */
+} MP4View;
+
+extern s16 mp4_char_model(int charNo);
+
+static int view_list(MP4View out[HU3D_CAM_MAX])
 {
+    s16 players = 0;
+    s16 all = 0;
     int n = 0;
-    s16 i;
-    for (i = 0; i < HU3D_CAM_MAX; i++) {
-        if (Hu3DCamera[i].fov != -1.0f) {
-            out[n++] = i;
+    int p;
+    s16 i, v;
+    for (p = 0; p < 4; p++) {
+        s16 model = mp4_char_model(p);
+        if (model >= 0 && Hu3DData[model].hsf != NULL) {
+            players |= Hu3DData[model].cameraBit;
         }
+    }
+    for (i = 0; i < HU3D_CAM_MAX; i++) {
+        HU3DCAMERA* cam = &Hu3DCamera[i];
+        if (cam->fov == -1.0f) {
+            continue;
+        }
+        all |= (s16) (1 << i);
+        if ((players & (1 << i)) == 0) {
+            continue;
+        }
+        for (v = 0; v < n; v++) {
+            if (out[v].x == cam->viewportX && out[v].y == cam->viewportY && out[v].w == cam->viewportW &&
+                out[v].h == cam->viewportH) {
+                break;
+            }
+        }
+        if (v == n) {
+            out[n].primary = i;
+            out[n].cameras = 0;
+            out[n].x = cam->viewportX;
+            out[n].y = cam->viewportY;
+            out[n].w = cam->viewportW;
+            out[n].h = cam->viewportH;
+            n++;
+        }
+        out[v].cameras |= (s16) (1 << i);
+    }
+    if (n == 0) {
+        /* no player yet (the overlay is loading): one view, the first camera, everything in it */
+        for (i = 0; i < HU3D_CAM_MAX && (all & (1 << i)) == 0; i++) {
+        }
+        out[0].primary = i < HU3D_CAM_MAX ? i : 0;
+        out[0].cameras = -1;
+        out[0].x = out[0].y = 0.0f;
+        out[0].w = 640.0f;
+        out[0].h = 480.0f;
+        return 1;
+    }
+    if (n == 1) {
+        out[0].cameras = -1;   /* the passes without players draw in the one view too */
     }
     return n;
 }
 
+float mp4_fog_near = 1.0f;     /* the match camera's projection depths, for the fog and the passes */
+float mp4_fog_far = 16384.0f;
+static s16 view_primary;   /* this draw's: Hu3DCameraSet follows it (mp4_camera_set) */
+
 int mp4_views(void)
 {
-    s16 cams[HU3D_CAM_MAX];
+    MP4View views[HU3D_CAM_MAX];
     int n;
     if (!match_running) {
         views_active = 0;
-        mp4_only_camera = -1;
+        mp4_view_cameras = -1;
         mp4_hud_pass = 1;
         return 1;
     }
-    n = view_cameras(cams);
+    n = view_list(views);
     if (n <= 1) {
         views_active = 0;
-        mp4_only_camera = -1;
+        mp4_view_cameras = -1;
         mp4_hud_pass = 1;
         return 1;
     }
@@ -171,13 +233,14 @@ int mp4_views(void)
 }
 
 /* One view of a split screen, before the match camera draws it (the party draws the last view
- * first): the match camera takes the Hu3D camera's eye, target and fov, and the camera's
- * viewport and scissor carved out of the whole screen's; the MP4 draw renders that camera alone,
- * once per view, and the HUD once a frame, on the view drawn last. */
+ * first): the match camera takes the primary camera's eye, target and fov, and the view's
+ * viewport and scissor carved out of the whole screen's; the MP4 draw renders the view's cameras
+ * alone, once per view, and the HUD once a frame, on the view drawn last. */
 void mp4_view_begin(int view, HSD_CObj* cobj)
 {
-    s16 cams[HU3D_CAM_MAX];
-    int n = view_cameras(cams);
+    MP4View views[HU3D_CAM_MAX];
+    int n = view_list(views);
+    MP4View* v;
     HU3DCAMERA* cam;
     HSD_RectF32 vp;
     Vec3 eye, look;
@@ -191,23 +254,25 @@ void mp4_view_begin(int view, HSD_CObj* cobj)
         full_scissor = cobj->scissor;
         full_aspect = HSD_CObjGetAspect(cobj);
     }
-    cam = &Hu3DCamera[cams[view]];
-    mp4_only_camera = cams[view];
+    v = &views[view];
+    cam = &Hu3DCamera[v->primary];
+    view_primary = v->primary;
+    mp4_view_cameras = v->cameras;
     mp4_hud_pass = view == 0;
     mp4_draw_rearm();
     /* MP4 lays its cameras out on a 640 x 480 screen */
     sx = (full_viewport.xmax - full_viewport.xmin) / 640.0f;
     sy = (full_viewport.ymax - full_viewport.ymin) / 480.0f;
-    vp.xmin = full_viewport.xmin + cam->viewportX * sx;
-    vp.xmax = vp.xmin + cam->viewportW * sx;
-    vp.ymin = full_viewport.ymin + cam->viewportY * sy;
-    vp.ymax = vp.ymin + cam->viewportH * sy;
+    vp.xmin = full_viewport.xmin + v->x * sx;
+    vp.xmax = vp.xmin + v->w * sx;
+    vp.ymin = full_viewport.ymin + v->y * sy;
+    vp.ymax = vp.ymin + v->h * sy;
     HSD_CObjSetViewportfx4(cobj, vp.xmin, vp.xmax, vp.ymin, vp.ymax);
     HSD_CObjSetScissorx4(cobj, (u16) (full_viewport.xmin + cam->scissorX * sx),
                          (u16) (full_viewport.xmin + (cam->scissorX + cam->scissorW) * sx),
                          (u16) (full_viewport.ymin + cam->scissorY * sy),
                          (u16) (full_viewport.ymin + (cam->scissorY + cam->scissorH) * sy));
-    HSD_CObjSetAspect(cobj, full_aspect * (cam->viewportW / 640.0f) / (cam->viewportH / 480.0f));
+    HSD_CObjSetAspect(cobj, full_aspect * (v->w / 640.0f) / (v->h / 480.0f));
     eye.x = cam->pos.x * MP4_SCALE + world_offset.x;
     eye.y = cam->pos.y * MP4_SCALE + world_offset.y;
     eye.z = cam->pos.z * MP4_SCALE + world_offset.z;
@@ -217,6 +282,61 @@ void mp4_view_begin(int view, HSD_CObj* cobj)
     HSD_CObjSetEyePosition(cobj, &eye);
     HSD_CObjSetInterest(cobj, &look);
     HSD_CObjSetFov(cobj, cam->fov);
+}
+
+/* hsfman.c, Hu3DCameraSet, while MP4 draws in the match: a camera's GX setup and view matrix.
+ * The view's primary camera takes the match camera's projection, viewport, scissor and view
+ * (the fighters are drawn with them). Any other camera in the draw is a render pass of its own
+ * (Cheep Cheep Sweep's reflection cameras render into a corner for a screen copy): it keeps its
+ * own perspective, viewport, scissor and eye, in Melee's units. */
+void mp4_camera_set(s32 camNo, Mtx out)
+{
+    Mtx scale, shift, view;
+    HU3DCAMERA* cam;
+    Vec3 eye, up, look;
+    Mtx44 proj;
+    GXRenderModeObj* rmode;
+    f32 xs, ys, sx, sy, l, t, r, b;
+    MTXScale(scale, mp4_camera_scale, mp4_camera_scale, mp4_camera_scale);
+    if (camNo < 0 || camNo >= HU3D_CAM_MAX || camNo == view_primary) {
+        mp4_camera_restore();
+        MTXConcat(mp4_camera_view, scale, out);
+        return;
+    }
+    cam = &Hu3DCamera[camNo];
+    /* the match camera's near and far, not the pass's own: the depth buffer must compare across
+     * the passes and with Melee's fighters (MP4's cameras all share one pair, so it does there) */
+    C_MTXPerspective(proj, cam->fov, full_aspect * (cam->viewportW / 640.0f) / (cam->viewportH / 480.0f),
+                     mp4_fog_near, mp4_fog_far);
+    GXSetProjection(proj, GX_PERSPECTIVE);
+    rmode = HSD_VIGetRenderMode();
+    xs = (f32) rmode->fbWidth / (f32) rmode->viWidth;
+    ys = (f32) rmode->efbHeight / (f32) rmode->viHeight;
+    sx = (full_viewport.xmax - full_viewport.xmin) / 640.0f;
+    sy = (full_viewport.ymax - full_viewport.ymin) / 480.0f;
+    l = (full_viewport.xmin + cam->viewportX * sx) * xs;
+    r = (full_viewport.xmin + (cam->viewportX + cam->viewportW) * sx) * xs;
+    t = (full_viewport.ymin + cam->viewportY * sy) * ys;
+    b = (full_viewport.ymin + (cam->viewportY + cam->viewportH) * sy) * ys;
+    GXSetViewport(l, t, r - l, b - t, cam->viewportNear, cam->viewportFar);
+    l = (full_viewport.xmin + cam->scissorX * sx) * xs;
+    r = (full_viewport.xmin + (cam->scissorX + cam->scissorW) * sx) * xs;
+    t = (full_viewport.ymin + cam->scissorY * sy) * ys;
+    b = (full_viewport.ymin + (cam->scissorY + cam->scissorH) * sy) * ys;
+    GXSetScissor((u32) l, (u32) t, (u32) (r - l), (u32) (b - t));
+    eye.x = cam->pos.x * MP4_SCALE + world_offset.x;
+    eye.y = cam->pos.y * MP4_SCALE + world_offset.y;
+    eye.z = cam->pos.z * MP4_SCALE + world_offset.z;
+    look.x = cam->target.x * MP4_SCALE + world_offset.x;
+    look.y = cam->target.y * MP4_SCALE + world_offset.y;
+    look.z = cam->target.z * MP4_SCALE + world_offset.z;
+    up.x = cam->up.x;
+    up.y = cam->up.y;
+    up.z = cam->up.z;
+    C_MTXLookAt(view, &eye, &up, &look);
+    MTXTrans(shift, world_offset.x, world_offset.y, world_offset.z);
+    MTXConcat(view, shift, view);
+    MTXConcat(view, scale, out);
 }
 
 /* Melee's cached GX state no longer holds after MP4's draws. */
@@ -237,8 +357,6 @@ static void gx_restore(void)
  * pass 0, with the pass 2 call marking the end of a frame. */
 static int draw_armed = 1;
 
-float mp4_fog_near = 1.0f;
-float mp4_fog_far = 16384.0f;
 
 /* mp4_view_begin: the next pass 0 draws again (a split screen draws once per view). */
 int mp4_draw_rearm(void)
@@ -261,6 +379,17 @@ static void draw(HSD_GObj* gobj, intptr_t pass)
         return;
     }
     draw_armed = 0;
+    if (!views_active) {
+        /* one view: the whole screen, following the camera the players are drawn with */
+        MP4View views[HU3D_CAM_MAX];
+        HSD_CObj* cobj = HSD_CObjGetCurrent();
+        view_list(views);
+        view_primary = views[0].primary;
+        mp4_view_cameras = -1;
+        full_viewport = cobj->viewport;
+        full_scissor = cobj->scissor;
+        full_aspect = HSD_CObjGetAspect(cobj);
+    }
     HSD_CObjGetViewingMtx(HSD_CObjGetCurrent(), view);
     /* GX fog maps the depth buffer back to eye space with the projection's near and far: the
      * match camera's, not the Hu3D camera's (hsfman.c scales MP4's fog distances only) */
@@ -463,11 +592,18 @@ int mp4_player_coins(int player)
     return player >= 0 && player < 4 ? GWPlayer[player].coin_win : 0;
 }
 
-/* MP4's camera (the first Hu3D camera) in Melee's world. */
+/* MP4's camera in Melee's world: the first that draws a player (the first camera before any
+ * player exists). */
 int mp4_camera(float eye[3], float look[3], float* fov)
 {
-    HU3DCAMERA* cam = &Hu3DCamera[0];
-    if (!match_running || cam->fov == -1.0f) {
+    MP4View views[HU3D_CAM_MAX];
+    HU3DCAMERA* cam;
+    if (!match_running) {
+        return 0;
+    }
+    view_list(views);
+    cam = &Hu3DCamera[views[0].primary];
+    if (cam->fov == -1.0f) {
         return 0;
     }
     eye[0] = cam->pos.x * MP4_SCALE + world_offset.x;

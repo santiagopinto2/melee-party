@@ -65,3 +65,16 @@ s32 HuAudFXPitchSet(int seNo, s16 pitch)
     (void) pitch;
     return 0;
 }
+
+/* streamed music by file name (m434) */
+s32 HuAudStreamPlay(char* name, BOOL flag)
+{
+    (void) name;
+    (void) flag;
+    return -1;
+}
+
+void HuAudStreamFadeOut(s32 streamNo)
+{
+    (void) streamNo;
+}
