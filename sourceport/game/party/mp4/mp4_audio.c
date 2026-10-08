@@ -38,3 +38,14 @@ s32 HuAudSStreamPlay(s16 streamId) { (void) streamId; return -1; }
 void HuAudDllSndGrpSet(u16 ovl) { (void) ovl; }
 void HuAudSndGrpSet(s16 grpId) { (void) grpId; }
 void HuAudSndCharGrpSet(s16 ovl) { (void) ovl; }
+
+void HuAudSeqAllStop(void) {}
+void HuAudSStreamAllStop(void) {}
+
+/* m441 at its end */
+void HuAudAllStop(void)
+{
+    HuAudSeqAllStop();
+    HuAudFXAllStop();
+    HuAudSStreamAllStop();
+}

@@ -706,6 +706,7 @@ static const struct {
     { "chomp-fever", "Dodge the Chain Chomps\nfor a minute. Stay on!" },
     { "blizzard-brigade", "Dodge the snowballs on\nthe ice for a minute." },
     { "booksquirm", "Find a cutout before the\npage lands on you." },
+    { "butterfly-blitz", "Net the butterflies.\nA swings high, B low." },
 };
 
 static const char* description_of(int menu_kind, int selection)

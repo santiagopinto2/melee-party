@@ -113,3 +113,9 @@ s32 _CheckFlag(u32 flag)
 }
 
 void HuPadRumbleAllStop(void) {}
+
+/* The frame rate divider (main.c): fixed here. Called by m441's unused debug display. */
+void HuSysVWaitSet(s16 vcount)
+{
+    (void) vcount;
+}

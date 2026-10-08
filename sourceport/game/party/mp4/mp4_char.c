@@ -192,6 +192,42 @@ s32 CharFXPlayPos(s16 charNo, s16 seId, Vec *pos)
     return -1;
 }
 
+/* chrman.c: a bound motion's number, for the eyes and voices there and for mp4_player_motion
+ * here (m441 names three of its own motions as the walk and the run). */
+void CharMotionNoSet(s16 charNo, HU3DMOTID motId, s32 motNo)
+{
+    u32 dir = (u32) motNo & 0xFFFF0000u;
+    s16 i;
+    if (charNo < 0 || charNo >= CHARNO_MAX || motId < 0 || motId >= HU3D_MOTION_MAX) {
+        return;
+    }
+    for (i = 0; i < CHARNO_MAX; i++) {
+        if (dir == (u32) charDirTbl[i][2]) {
+            break;
+        }
+    }
+    if (i != CHARNO_MAX || dir == 0) {
+        motNo = (motNo & 0xFFFF) | charDirTbl[charNo][2];
+    }
+    motion_data[motId] = motNo;
+}
+
+/* chrman.c: the bone an item hooks to (0 the right hand, 1 the left, 2 and 3 the feet, 4 the
+ * body), the same names for every character. m441 hooks the net to the hidden model's hand. */
+char* CharModelItemHookGet(s16 charNo, s16 model, s16 hookNo)
+{
+    static char* const names[5] = { "a-itemhook-r", "a-itemhook-l", "a-itemhook-fr", "a-itemhook-fl",
+                                    "a-itemhook-body" };
+    (void) charNo;
+    (void) model;
+    return names[hookNo >= 0 && hookNo < 5 ? hookNo : 0];
+}
+
+void CharModelLayerSetAll2(s16 layerNo)
+{
+    CharEffectLayerSet(layerNo);
+}
+
 void CharEffectLayerSet(s16 layerNo)
 {
     (void) layerNo;   /* no character effects here (chrman.c's) */

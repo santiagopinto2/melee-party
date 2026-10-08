@@ -36,36 +36,3 @@ void *HuAR_ARAMtoMRAMFileRead(u32 dir, u32 num, HeapID heap)
 }
 u8 fadeStat;
 
-/* Extended sprites (esprite.c): none. Booksquirm's one-player record counter asks for them
- * (lbl_1_bss_2, never set in the four-player game). */
-void espInit(void) {}
-s16 espEntry(unsigned int dataNum, s16 prio, s16 bank)
-{
-    (void) dataNum;
-    (void) prio;
-    (void) bank;
-    return -1;
-}
-void espPosSet(s16 espId, float posX, float posY)
-{
-    (void) espId;
-    (void) posX;
-    (void) posY;
-}
-void espTPLvlSet(s16 espId, float tpLvl)
-{
-    (void) espId;
-    (void) tpLvl;
-}
-void espColorSet(s16 espId, u8 r, u8 g, u8 b)
-{
-    (void) espId;
-    (void) r;
-    (void) g;
-    (void) b;
-}
-void espBankSet(s16 espId, s16 bank)
-{
-    (void) espId;
-    (void) bank;
-}
