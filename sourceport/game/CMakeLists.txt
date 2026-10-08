@@ -214,7 +214,10 @@ foreach(rel ${PARTY_MP4_RELS})
       message(FATAL_ERROR "tools/mp4_rel_names.py failed for ${rel}")
     endif()
     file(GLOB rel_sources CONFIGURE_DEPENDS "${rel}/*.c")
-    set_property(SOURCE ${rel_sources} APPEND_STRING PROPERTY COMPILE_FLAGS " -include ${rel_names}")
+    # -fdata-sections: a .data$<symbol> section per variable, so the minigame's variables sit
+    # together in the image and the runtime can reset them at every start (party/mp4/mp4_ovl.c).
+    set_property(SOURCE ${rel_sources} APPEND_STRING PROPERTY COMPILE_FLAGS
+      " -include ${rel_names} -fdata-sections")
   endif()
 endforeach()
 list(APPEND SHIM_SOURCES ${PARTY_MP4_SOURCES})

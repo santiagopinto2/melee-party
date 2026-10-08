@@ -39,8 +39,11 @@ void mp4_pad(int pad, u32 held, float stick_x, float stick_y, float substick_x, 
 /* Where a player's MP4 model stands, in Melee's world (with the offset), and its yaw in radians;
  * 0 if the player has no model yet. */
 int mp4_player_pose(int player, float* x, float* y, float* z, float* yaw);
-/* The player's current MP4 motion, a Hu3D motion id (-1: none). */
+/* The player's current MP4 motion (or the one blending in), as its MP4 data number: the archive
+ * in the top 16 bits, the file in the low 16 (-1: none). */
 s32 mp4_player_motion(int player);
+/* 1 while the game shows the player's model (0 once it hid it, as after a blast). */
+int mp4_player_shown(int player);
 /* The coins MP4 awarded the player (GWPlayerCoinWinSet). */
 int mp4_player_coins(int player);
 /* MP4's camera (the first Hu3D camera) in Melee's world; 0 if there is none yet. */
@@ -51,6 +54,8 @@ extern const int mp4_overlay_m440;
 
 /* mp4_char.c: the player's hidden model, a Hu3D model id or -1. */
 s16 mp4_char_model(int charNo);
+/* mp4_char.c: a character motion's MP4 data number, by Hu3D motion id (-1: none). */
+s32 mp4_char_motion_data(s16 motId);
 /* mp4_ovl.c: the boot overlay, the one a minigame returns to. */
 int mp4_boot_reached(void);
 void mp4_boot_reset(void);

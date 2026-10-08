@@ -174,6 +174,11 @@ void Hu3DPreProc(void) {
 
 #define HU3D_ATTR_CAMERA_UPDATE (HU3D_ATTR_CAMERA_MOTON|HU3D_ATTR_DISPOFF)
 
+/* Melee Party: models drawn by Melee instead (the players' characters, mp4_char.c). They keep
+ * their motions and HU3D_ATTR_DISPOFF stays the game's own, so a hidden-by-the-game model can be
+ * told apart from these. Cleared when the model goes. */
+u8 mp4_model_hidden[HU3D_MODEL_MAX];
+
 void Hu3DAdvance(void);
 void mp4_gx_draw_done(void);
 void mp4_gx_wait_draw_done(void);
@@ -253,7 +258,7 @@ void Hu3DExec(void) {
                                 if ((data->attr & HU3D_ATTR_CAMERA_UPDATE) == HU3D_ATTR_CAMERA_UPDATE && data->motId != -1) {
                                     Hu3DMotionExec(i, data->motId, data->motWork.time, 0);
                                 }
-                                if ((data->attr & (HU3D_ATTR_DISPOFF|HU3D_ATTR_MOTION_OFF)) == 0 && (data->cameraBit & cameraBit) != 0 && data->layerNo == j) {
+                                if ((data->attr & (HU3D_ATTR_DISPOFF|HU3D_ATTR_MOTION_OFF)) == 0 && !mp4_model_hidden[i] && (data->cameraBit & cameraBit) != 0 && data->layerNo == j) {
                                     if (((data->attr & HU3D_ATTR_MOT_EXEC) == 0 && (data->attr & HU3D_ATTR_MOT_SLOW) == 0) || ((data->attr & HU3D_ATTR_MOT_SLOW) != 0 && (data->tick & 1) != 0)) {
                                         var_r25 = 0;
                                         data->motAttr &= ~HU3D_MOTATTR;
@@ -606,6 +611,7 @@ void Hu3DModelKill(s16 arg0) {
 
     temp_r31 = &Hu3DData[arg0];
     var_r28 = temp_r31->hsf;
+    mp4_model_hidden[arg0] = 0;
     if (var_r28 != 0) {
         if ((temp_r31->attr & HU3D_ATTR_SHADOW) != 0) {
             Hu3DShadowCamBit -= 1;
@@ -696,6 +702,7 @@ void Hu3DModelAllKill(void) {
 
     modelKillAllF = 1;
     var_r30 = Hu3DData;
+    memset(mp4_model_hidden, 0, sizeof mp4_model_hidden);
 
     for (i = 0; i < HU3D_MODEL_MAX; i++, var_r30++) {
         if (var_r30->hsf != 0) {
@@ -1968,6 +1975,13 @@ void Hu3DFogClear(void) {
     GXSetFog(GX_FOG_NONE, 0.0f, 0.0f, 0.0f, 0.0f, BGColor);
 }
 
+/* Melee Party: the shadow-map pass is not drawn yet. It renders the scene from the light into a
+ * corner of the frame buffer and copies that out as a texture; here that corner stayed on screen
+ * and the pass cost more than the scene. Models keep their HU3D_ATTR_SHADOW flags, and with
+ * Hu3DShadowF off the receivers do not sample the (never written) map. Turning it on again is
+ * this one line. */
+static int mp4_shadow_pass_on;
+
 void Hu3DShadowCreate(f32 arg8, f32 arg9, f32 argA) {
     Hu3DShadowData.size = 0xC0;
     if (Hu3DShadowData.buf == 0) {
@@ -1986,7 +2000,7 @@ void Hu3DShadowCreate(f32 arg8, f32 arg9, f32 argA) {
     C_MTXLightPerspective(Hu3DShadowData.projMtx, arg8, HU_DISP_ASPECT, 0.5f, -0.5f, 0.5f, 0.5f);
     VECNormalize(&Hu3DShadowData.camUp, &Hu3DShadowData.camUp);
     Hu3DShadowData.alpha = 0x80;
-    Hu3DShadowF = 1;
+    Hu3DShadowF = mp4_shadow_pass_on;
 }
 
 void Hu3DShadowPosSet(Vec* camPos, Vec* camUp, Vec* camTarget) {
@@ -2006,12 +2020,6 @@ void Hu3DShadowSizeSet(u16 arg0) {
     }
     Hu3DShadowData.buf = HuMemDirectMalloc(HEAP_DATA, arg0 * arg0);
 }
-
-/* Melee Party: the shadow-map pass is not drawn yet. It renders the scene from the light into a
- * corner of the frame buffer and copies that out as a texture; here that corner stayed on screen
- * and the pass cost more than the scene. Models keep their HU3D_ATTR_SHADOW flags, so turning it
- * on again is this one line. */
-static int mp4_shadow_pass_on;
 
 void Hu3DShadowExec(void) {
     if (!mp4_shadow_pass_on) {
@@ -2048,7 +2056,7 @@ void Hu3DShadowExec(void) {
     GXSetFog(GX_FOG_NONE, 0.0f, 0.0f, 0.0f, 0.0f, BGColor);
 
     for (var_r30 = 0; var_r30 < HU3D_MODEL_MAX; var_r30++, var_r31++) {
-        if (var_r31->hsf != 0 && (var_r31->attr & HU3D_ATTR_SHADOW) != 0 && (var_r31->attr & HU3D_ATTR_DISPOFF) == 0 && (var_r31->attr & HU3D_ATTR_HOOK) == 0) {
+        if (var_r31->hsf != 0 && (var_r31->attr & HU3D_ATTR_SHADOW) != 0 && (var_r31->attr & HU3D_ATTR_DISPOFF) == 0 && !mp4_model_hidden[var_r30] && (var_r31->attr & HU3D_ATTR_HOOK) == 0) {
             if ((var_r31->attr & HU3D_ATTR_MOTION_OFF) != 0) {
                 test2 = 0;
                 if (var_r31->motId != -1) {

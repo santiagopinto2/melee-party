@@ -7,6 +7,8 @@
  * - the character sound effects (chrman.c) and the debug print (printfunc.c): nothing. */
 #include <dolphin/types.h>
 
+#include <string.h>
+
 #include "game/chrman.h"
 #include "game/flag.h"
 #include "game/gamework_data.h"
@@ -25,6 +27,22 @@ u8 HuPadTrigR[4];
 u8 HuPadDStk[4];
 u8 HuPadDStkRep[4];
 s8 HuPadErr[4];
+
+/* Melee Party: nothing held from the last match (a slot that was human then stays still). */
+void mp4_pad_reset(void)
+{
+    memset(HuPadBtn, 0, sizeof HuPadBtn);
+    memset(HuPadBtnDown, 0, sizeof HuPadBtnDown);
+    memset(HuPadBtnRep, 0, sizeof HuPadBtnRep);
+    memset(HuPadStkX, 0, sizeof HuPadStkX);
+    memset(HuPadStkY, 0, sizeof HuPadStkY);
+    memset(HuPadSubStkX, 0, sizeof HuPadSubStkX);
+    memset(HuPadSubStkY, 0, sizeof HuPadSubStkY);
+    memset(HuPadTrigL, 0, sizeof HuPadTrigL);
+    memset(HuPadTrigR, 0, sizeof HuPadTrigR);
+    memset(HuPadDStk, 0, sizeof HuPadDStk);
+    memset(HuPadDStkRep, 0, sizeof HuPadDStkRep);
+}
 
 PlayerConfig GWPlayerCfg[4];
 PlayerState GWPlayer[4];

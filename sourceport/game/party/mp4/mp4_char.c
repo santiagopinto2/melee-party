@@ -25,6 +25,11 @@ static const s32 charDirTbl[CHARNO_MAX][3] = {
 
 static s16 char_model[CHARNO_MAX];
 static int chars_open;
+/* Each motion's MP4 data number (archive and file), by Hu3D motion id: how the wrappers tell
+ * which motion a player is in. */
+static s32 motion_data[HU3D_MOTION_MAX];
+
+extern u8 mp4_model_hidden[HU3D_MODEL_MAX];
 
 static void chars_init(void)
 {
@@ -66,7 +71,7 @@ HU3DMODELID CharModelCreate(s16 charNo, s16 model)
     }
     modelId = Hu3DModelCreate(data);
     if (modelId != HU3D_MODELID_NONE) {
-        Hu3DModelAttrSet(modelId, HU3D_ATTR_DISPOFF);   /* the Melee fighter is drawn instead */
+        mp4_model_hidden[modelId] = 1;   /* the Melee fighter is drawn instead */
     }
     char_model[charNo] = modelId;
     return modelId;
@@ -76,11 +81,21 @@ HU3DMOTID CharMotionCreate(s16 charNo, s32 data_num)
 {
     void *data;
     (void) charNo;
+    HU3DMOTID motId;
     data = HuDataSelHeapReadNum(data_num, MEMORY_DEFAULT_NUM, HEAP_DATA);
     if (data == NULL) {
         return HU3D_MOTID_NONE;
     }
-    return Hu3DMotionCreate(data);
+    motId = Hu3DMotionCreate(data);
+    if (motId >= 0 && motId < HU3D_MOTION_MAX) {
+        motion_data[motId] = data_num;
+    }
+    return motId;
+}
+
+s32 mp4_char_motion_data(s16 motId)
+{
+    return motId >= 0 && motId < HU3D_MOTION_MAX && Hu3DMotion[motId].hsf != NULL ? motion_data[motId] : -1;
 }
 
 void CharMotionDataClose(s16 charNo)

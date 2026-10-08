@@ -48,6 +48,7 @@ char* getenv(const char* name);
 double atof(const char* s);
 void HSD_ClearVtxDesc(void);
 void mp4_gx_frame_begin(void);
+void mp4_pad_reset(void);
 extern MtxPtr mp4_camera_view;
 extern float mp4_camera_scale;
 extern s16 Hu3DAdvanceExternF;
@@ -127,13 +128,26 @@ static void gx_restore(void)
     HSD_ClearVtxDesc();
 }
 
+/* Melee's match camera renders GX link 6 five times a frame (fn_800301D0 in cm/camera.c: passes
+ * 0 and 1, then 0, 1 and 2). MP4 draws its whole scene in one go and its draw-time hooks step
+ * the minigame's effects (m440's debris fades in one), so it draws once a frame: on the first
+ * pass 0, with the pass 2 call marking the end of a frame. */
+static int draw_armed = 1;
+
 static void draw(HSD_GObj* gobj, intptr_t pass)
 {
     HU3DMODEL* model;
     Mtx view, shift;
     s16 i;
     (void) gobj;
-    (void) pass;
+    if (pass == 2) {
+        draw_armed = 1;
+        return;
+    }
+    if (pass != 0 || !draw_armed) {
+        return;
+    }
+    draw_armed = 0;
     HSD_CObjGetViewingMtx(HSD_CObjGetCurrent(), view);
     /* MP4's origin sits at the offset in Melee's world */
     MTXTrans(shift, world_offset.x, world_offset.y, world_offset.z);
@@ -190,7 +204,11 @@ void mp4_match_begin(int overlay, float offset_x, float offset_y, float offset_z
     memset(&GWSystem, 0, sizeof GWSystem);
     GWSystem.player_curr = (s8) (party.mover >= 0 && party.mover < PARTY_PLAYERS ? party.mover : 0);
     memset(pad_prev, 0, sizeof pad_prev);
+    mp4_pad_reset();
+    WipeInit(RenderMode);   /* a match that ended mid-wipe would block the next one's fade-in */
     mp4_boot_reset();
+    /* a match that ended by a quit left its overlay in the history: the new one returns to boot */
+    omovlhisidx = 0;
     omOvlCallEx((OMOVL) overlay, 1, 0, 0);
     match_running = 1;
     draw_gobj_create();
@@ -296,10 +314,19 @@ int mp4_player_pose(int player, float* x, float* y, float* z, float* yaw)
 s32 mp4_player_motion(int player)
 {
     s16 model = mp4_char_model(player);
+    HU3DMODEL* m;
     if (model < 0 || Hu3DData[model].hsf == NULL) {
         return -1;
     }
-    return Hu3DData[model].motId;
+    /* a motion being blended in (Hu3DMotionShiftSet) is the one the player is going into */
+    m = &Hu3DData[model];
+    return mp4_char_motion_data(m->motIdShift != HU3D_MOTID_NONE ? m->motIdShift : m->motId);
+}
+
+int mp4_player_shown(int player)
+{
+    s16 model = mp4_char_model(player);
+    return model >= 0 && Hu3DData[model].hsf != NULL && (Hu3DData[model].attr & HU3D_ATTR_DISPOFF) == 0;
 }
 
 int mp4_player_coins(int player)

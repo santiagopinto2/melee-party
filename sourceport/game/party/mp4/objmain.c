@@ -5,6 +5,7 @@
 #include "game/esprite.h"
 #include "game/flag.h"
 #include "game/hu3d.h"
+#include "game/gamework_data.h"
 #include "game/object.h"
 #include <game/sprite.h>
 #include "game/pad.h"
@@ -120,6 +121,11 @@ static void omWatchOverlayProc(void)
         else {
         watch_child:
             HuPrcChildWatch();
+            /* Melee Party: the boot overlay a minigame returns to runs no process of its own, so
+             * there is nothing to watch; without this the loop never yields and the frame hangs. */
+            if (HuPrcCurrentGet()->child == NULL) {
+                HuPrcVSleep();
+            }
         }
     }
 }
