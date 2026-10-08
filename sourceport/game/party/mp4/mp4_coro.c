@@ -13,6 +13,11 @@
 #include "game/process.h"
 #include "libco/libco.h"
 
+/* The C runtime's heap: GX never reads a stack, and neither MP4's heaps (its system heap is for the
+ * minigame's data) nor Melee's (reset between scenes, under a process that outlives a match) will do. */
+void* malloc(size_t size);
+void free(void* ptr);
+
 typedef struct Coro {
     void* sp;              /* the saved stack pointer, while switched out */
     void (*entry)(void);
@@ -136,7 +141,7 @@ cothread_t co_create(unsigned int size, void (*entry)(void))
 {
     /* MP4 asked for a console stack of 2 to 16 KB; the PC's frames are bigger. */
     u32 stack_size = size < 0x10000 ? 0x10000 : size;
-    u8* mem = HuMemDirectMalloc(HEAP_SYSTEM, sizeof(Coro) + stack_size + 16);
+    u8* mem = malloc(sizeof(Coro) + stack_size + 16);
     Coro* co;
     uintptr_t top;
     uintptr_t* frame;
@@ -160,7 +165,7 @@ cothread_t co_create(unsigned int size, void (*entry)(void))
 void co_delete(cothread_t thread)
 {
     if (thread != NULL && thread != &main_coro) {
-        HuMemDirectFree(thread);
+        free(thread);
     }
 }
 

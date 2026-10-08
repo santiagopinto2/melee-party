@@ -35,6 +35,7 @@
 #include "game/gamework_data.h"
 #include "game/hu3d.h"
 #include "game/init.h"
+#include "game/memory.h"
 #include "game/minigame_seq.h"
 #include "game/object.h"
 #include "game/pad.h"
@@ -236,6 +237,10 @@ static void frame_log(void)
     }
     party_log("mp4: frame %u ovl %d models %d seq %d exit %d", frames - 1, (int) omcurovl, models,
               (int) MGSeqDoneCheck(), (int) omSysExitReq);
+    if (((frames - 1) % 300) == 0) {
+        HuMemHeapDump(HuMemHeapPtrGet(HEAP_SYSTEM), 0);   /* the system heap, then the data heap */
+        HuMemHeapDump(HuMemHeapPtrGet(HEAP_DATA), 0);
+    }
     {
         float eye[3], look[3], fov;
         if (mp4_camera(eye, look, &fov)) {

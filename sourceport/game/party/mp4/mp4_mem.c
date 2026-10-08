@@ -18,11 +18,16 @@
  * loaded here, the DVD heap only holds an archive record while it is unpacked (a bigger one goes to
  * the data heap), and the data heap holds 64-bit structures beside the files. The image (about
  * 10 MB) and the pool together must end below 0x84000000; mp4_mem_fits checks. */
-static const u32 HeapSizeTbl[HEAP_MAX] = { 0x100000, 0x10000, 0x900000, 0x100000, 0x40000 };
-#define MP4_POOL_SIZE (0x100000 + 0x10000 + 0x900000 + 0x100000 + 0x40000)
+/* MP4's sizes, but the system heap doubled: its structures are bigger here (64-bit pointers),
+ * and m438 keeps two effects per Chain Chomp lane there, 48 lanes, which filled 1 MB. */
+static const u32 HeapSizeTbl[HEAP_MAX] = { 0x200000, 0x10000, 0x900000, 0x100000, 0x40000 };
+#define MP4_POOL_SIZE (0x200000 + 0x10000 + 0x900000 + 0x100000 + 0x40000)
 /* After the heaps, the frame's big-endian copies of vertex arrays (mp4_gx.c): all the float arrays
- * the frame's models draw with. As much as fits under 0x84000000 with the heaps above. */
-#define MP4_GX_SCRATCH_SIZE 0x280000
+ * the frame's models draw with. As much of this as still fits under 0x84000000 with the heaps
+ * above it (mp4_gx_scratch): every minigame linked in moves the pool up by its code's size, and
+ * the scratch is what gives. A frame that wants more than the scratch has says so in the log. */
+#define MP4_GX_SCRATCH_SIZE 0x180000   /* m438's frames want 283 KB, m440's less */
+#define MP4_GX_SCRATCH_MIN 0x100000
 static u8 mp4_pool[MP4_POOL_SIZE + MP4_GX_SCRATCH_SIZE] __attribute__((aligned(64)));
 static void *HeapTbl[HEAP_MAX];
 
@@ -53,14 +58,24 @@ void HuMemInitAll(void)
     }
 }
 
+/* The scratch that fits under the limit: all of it, or what is left above the heaps. */
+static u32 scratch_size(void)
+{
+    uintptr_t top = (uintptr_t) (mp4_pool + MP4_POOL_SIZE);
+    if (top >= 0x84000000u) {
+        return 0;
+    }
+    return 0x84000000u - top < MP4_GX_SCRATCH_SIZE ? (u32) (0x84000000u - top) : MP4_GX_SCRATCH_SIZE;
+}
+
 int mp4_mem_fits(void)
 {
-    return (uintptr_t) (mp4_pool + sizeof mp4_pool) <= 0x84000000u;
+    return scratch_size() >= MP4_GX_SCRATCH_MIN;
 }
 
 u8* mp4_gx_scratch(u32* size)
 {
-    *size = MP4_GX_SCRATCH_SIZE;
+    *size = scratch_size();
     return mp4_pool + MP4_POOL_SIZE;
 }
 
@@ -156,7 +171,7 @@ static void *HuMemMemoryAlloc2(void *heap_ptr, size_t size, uintptr_t num, uintp
         }
         block = block->next;
     } while (block != heap_ptr);
-    OSReport("[party] mp4: out of memory, %x bytes (%x)\n", (u32) size, (u32) num);
+    OSReport("[party] mp4: out of memory, %x bytes (%x) in heap %p\n", (u32) size, (u32) num, heap_ptr);
     return NULL;
 }
 
