@@ -4,6 +4,7 @@
 #include <melee/gm/gmvs.h>
 #include <melee/gr/forward.h>
 
+#include "mp4/mp4.h"
 #include "party.h"
 
 extern const PartyMinigame mg_volleyball;
@@ -91,8 +92,14 @@ static int pick_from_order(void)
 
 int minigame_pick(void)
 {
-    u32 all = COUNT >= 32 ? 0xFFFFFFFFu : (1u << COUNT) - 1;
-    int pick = pick_from_order();
+    /* the minigames that can be played: the MP4 ones only with an MP4 disc open */
+    u32 all = 0;
+    int i, pick = pick_from_order();
+    for (i = 0; i < COUNT; i++) {
+        if (!table[i]->needs_mp4 || mp4_available()) {
+            all |= 1u << i;
+        }
+    }
     if (pick >= 0) {
         return pick;
     }
@@ -101,7 +108,7 @@ int minigame_pick(void)
     }
     do {
         pick = party_rand(COUNT);
-    } while (party.mg_played & (1u << pick));
+    } while (!(all & (1u << pick)) || (party.mg_played & (1u << pick)));
     party.mg_played |= 1u << pick;
     return pick;
 }

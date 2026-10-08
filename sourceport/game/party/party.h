@@ -126,6 +126,8 @@ typedef struct PartyMinigame {
      * calling camera_view(i, cobj) before each to set that view's camera and viewport. */
     int (*camera_views)(void);
     void (*camera_view)(int view, struct HSD_CObj* cobj);
+    /* a Mario Party 4 minigame: only picked with an MP4 disc open (mp4_available) */
+    u8 needs_mp4;
 } PartyMinigame;
 
 int minigame_count(void);

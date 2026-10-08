@@ -239,5 +239,5 @@ static void bb_result(s8 place[PARTY_PLAYERS])
 
 const PartyMinigame mg_mp4_m440 = {
     "Bowser's Bigger Blast", "bigger-blast", bb_setup, bb_fighter_input, bb_result, 0, NULL,
-    St_Kind_Last, -1, bb_fighter_map, bb_fighter_drawn, bb_knockback, 1, NULL, NULL,
+    St_Kind_Last, -1, bb_fighter_map, bb_fighter_drawn, bb_knockback, 1, NULL, NULL, 1,
 };
