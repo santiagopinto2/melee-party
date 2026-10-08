@@ -44,6 +44,9 @@ int mp4_player_pose(int player, float* x, float* y, float* z, float* yaw);
 s32 mp4_player_motion(int player);
 /* 1 while the game shows the player's model (0 once it hid it, as after a blast). */
 int mp4_player_shown(int player);
+/* party_arena.c, for a minigame's own walking code: the speed its player walks at this frame, in
+ * MP4's units: the Melee fighter's while it drives the player, else the minigame's own. */
+float mp4_player_speed(int player, float speed);
 /* The coins MP4 awarded the player (GWPlayerCoinWinSet). */
 int mp4_player_coins(int player);
 /* MP4's camera (the first Hu3D camera) in Melee's world; 0 if there is none yet. */
@@ -51,6 +54,7 @@ int mp4_camera(float eye[3], float look[3], float* fov);
 
 /* mp4_ovl.c: the overlay numbers (OMOVL) of the minigames linked in. */
 extern const int mp4_overlay_m440;
+extern const int mp4_overlay_m438;
 
 /* mp4_char.c: the player's hidden model, a Hu3D model id or -1. */
 s16 mp4_char_model(int charNo);

@@ -114,7 +114,9 @@ menus to VS Mode, Party Minigames, its sixth row (Bowser's Bigger Blast with an 
 character select with two humans picking, START. Run it with `MELEE_FRESH_CARD=1` and 3200 frames
 (headless, about 70 seconds) when a change touches the menu, the character select or how a match
 starts: the knobs skip all of that. Without an MP4 disc the sixth row does not exist and the
-cursor stops on the fifth.
+cursor stops on the fifth. `party_minigame_menu_last.txt` is the same path to the list's last row
+(one press up from the first: the list wraps), the newest MP4 minigame with a disc and Dungeon Duos
+without one.
 
 ### Logic only: headless
 

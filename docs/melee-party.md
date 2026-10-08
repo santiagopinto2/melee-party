@@ -13,6 +13,11 @@ back to the CSS. **VS. Mode → Debug Boards** (the retail Custom Rules entry) l
 boards, but a party started there plays board turn after board turn with no minigames, for
 testing a board. After a party the menu opens on the list it was started from.
 
+With a Mario Party 4 (USA) disc as a plain `.iso` next to the Melee ISO, named `mp4.iso` (or
+given with `--mp4-iso <path>` or `MELEE_PARTY_MP4_ISO`), the party also plays MP4's own
+minigames, run from MP4's code and drawn from the disc (the table below says which). Without the
+disc they are left out of the list and the rotation, and the log says why.
+
 1. **Pick characters.** Choose your characters as in a VS match; any empty slots become CPUs
    with random characters. The VS character select only starts a match with at least two
    players, so add a CPU if you play alone.
@@ -47,6 +52,8 @@ testing a board. After a party the menu opens on the list it was started from.
 | Food Frenzy | Battlefield | Food rains for 30 s. Pick food up with A to eat it. The player who eats the most wins. |
 | Domination | Final Destination (a field over it) | After Mario Party 4's. Everyone holds a hammer; each A press is one swing at your Wobbuffet, and each swing drops a Snorlax into your lane. After 10 s the Snorlaxes fall over like dominoes while each lane counts up. The most Snorlaxes wins. The lanes start full of Snorlaxes that jump into the sky before the start; at the end a Snorlax holding a parasol comes out of the ground in each winner's lane, and the winners drop onto it from the sky and taunt. |
 | Dungeon Duos | Final Destination (a dungeon drawn away from it) | After Mario Party 4's, on a split screen with its camera. Random teams of 2 each run their own copy of the dungeon, and the first team out wins. Mash B at a switch to open your partner's gate; mash A at a crank to turn a bar over a pit, jump on and ride it across; find the hole that leads on (the others send you to another hole); then alternate L and R at the pump, and the team's strokes add up to 1000. The stick moves you in any direction with Melee's walk, dash and run, and X/Y jump and double jump. A player who falls into a pit comes back at the last checkpoint. Nobody wins after 5 minutes. |
+| Bowser's Bigger Blast | Final Destination (MP4's stage drawn away from it); needs the MP4 disc | Mario Party 4's own. Each player in turn pushes one of five plungers; one of them sets Bowser's bomb off, and the player who pushed it is out. The last one standing wins. The fighters only follow the game: nobody walks by the stick. |
+| Chain Chomp Fever | Final Destination (MP4's arena drawn away from it); needs the MP4 disc | Mario Party 4's own. Chain Chomps charge across a round arena ringed with fire for 60 seconds. The stick walks you with Melee's walk, dash and run (each fighter's own speed); a Chomp that runs into you flings you out, and so does the edge. The survivors win, placed by who lasted longest. No jumping. |
 
 ## Playing online
 
@@ -204,11 +211,19 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
   low half) read one file of a `data/*.bin` archive off the disc and unpack it: none, LZ, SLIDE,
   FSLIDE and RLE, types 0 to 5 (`mp4_dir.c`, `mp4_decode.c`). Only each archive's offset table
   stays in memory.
-- **Memory.** MP4's heaps (`HuMem`, `mp4_mem.c`) sit in one 11.7 MB pool in the game image, not in
-  Melee's main memory. GX reads the textures, vertex arrays and display lists of MP4 models in
-  place, and it can only address MEM1 and the image (below 0x84000000). The pool is zero-filled
-  `.bss` and costs nothing without an MP4 disc. Rollback snapshots leave it out, because the MP4
-  minigames are offline only for now.
+- **Memory.** MP4's heaps (`HuMem`, `mp4_mem.c`) sit in one pool in the game image, not in
+  Melee's main memory: MP4's own sizes (a 9 MB data heap for models and motions, a 1 MB DVD heap)
+  but a 2 MB system heap, twice MP4's, since the structures are bigger here and Chain Chomp Fever
+  keeps two effects per Chomp lane in it. GX reads the textures, vertex arrays and display lists of
+  MP4 models in place, and it can only address MEM1 and the image (below 0x84000000); after the
+  heaps comes the per-frame scratch for big-endian copies of vertex arrays, which takes whatever
+  still fits under that limit (1.5 MB at most, a frame of m438 uses 0.3 MB). Each minigame linked
+  in moves the pool up by its code's size; when less than 1 MB of scratch is left the MP4
+  minigames switch themselves off and the log says so. The pool is zero-filled `.bss` and costs
+  nothing without an MP4 disc. Rollback snapshots leave it out, because the MP4 minigames are
+  offline only for now. MP4's processes run on coroutines (`mp4_coro.c`) whose 64 KB stacks come
+  from the C runtime's heap: GX never reads them, and a process that outlives a match (the boot
+  overlay's watcher, the banners) outlives Melee's heap.
 - **Models.** `hsfload.c` (with `hsf_byteswap.c`), `hsfdraw.c`, `hsfman.c` (the Hu3D model,
   camera and light layer), `hsfmotion.c`, `EnvelopeExec.c`, `ShapeExec.c`, `ClusterExec.c` and
   `hsfex.c` are MP4's. They draw through Melee's GX, which now records display lists
@@ -216,8 +231,24 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
   vertex arrays in host order, so `mp4_gx.c` hands GX a big-endian copy of each array every
   frame. `mp4_party.c` draws the models from a GObj on the party's render link, with the match
   camera's view.
-- **Not yet** (`mp4_stubs.c`): sprites, texture animations, particles, processes (`omObj`,
-  `HuPrc`), and the reflection, toon and highlight maps MP4 keeps in its executable.
+- **A minigame.** MP4's minigames are overlays (REL files) its object manager loads by number;
+  here each one is linked in from `party/mp4/m4xx/` with its symbols prefixed by its name
+  (`tools/mp4_rel_names.py`, run by CMake) and its variables reset at every start (`mp4_ovl.c`).
+  `mp4_party.c` hosts it in a match: MP4's frame (pads, processes, banners, motions) runs from
+  the match's frame hook, and its draw from a GObj on the party's render link. The runtime fills
+  what the minigame reads of MP4's state: the pads from the fighters' inputs, the player table
+  (`GWPlayerCfg`: human or CPU, and MP4's four difficulties from Melee's levels), no save flags.
+- **The players** (`party_arena.c`, `mp4_char.c`). Each player's MP4 character model is loaded and
+  animated as in MP4 but never drawn: the Melee fighter stands where it stands and faces its way.
+  Every fighter collides on Final Destination on a lane of its own, with the MP4 world drawn 600
+  units to the side. While the minigame has a player walking by the stick, Melee's physics give
+  the fighter its speed and the MP4 player moves at that speed (`mp4_player_speed`, called from
+  the minigame's walk code in place of its own); the rest of the time (dropping in, hit, out,
+  won, lost) the minigame moves the player and the fighter follows, with the nearest Melee
+  animation. Each minigame's wrapper (`mg_mp4_<name>.c`) decides which is which from the player's
+  state.
+- **Not yet**: MP4's sound and music, its shadow pass, the reflection, toon and highlight maps
+  MP4 keeps in its executable, and its instruction screens.
 
 ### Adding a minigame
 
@@ -227,6 +258,13 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
    `Fighter_procMap` before collision, to place fighters off the 2D line (Domination uses it).
    Optional `camera_views` and `camera_view` split the screen (Dungeon Duos uses them).
 2. Add it to `table[]` in `minigames.c`.
+
+For a Mario Party 4 minigame: copy its sources from partyboard's `src/REL/m4xxDll/` into
+`party/mp4/m4xx/` with a credit header (and its `include/REL/m4xxDll.h`), add it to the table in
+`mp4_ovl.c` with `OVERLAY_MARKERS`, add any MP4 runtime calls it makes that are still missing,
+and write `mg_mp4_<name>.c` on `party_arena.h` (`mg_mp4_m438.c` is the walking example,
+`mg_mp4_m440.c` one where nobody walks). In its player code, call `mp4_player_speed` where it sets
+the walking speed. Set `needs_mp4` and add a line to `descriptions[]` in `party_menu.c`.
 
 ## Testing knobs
 
@@ -263,6 +301,9 @@ For example, to watch a whole three-turn party with CPUs:
 - The roulette has no Goomba bribe and no free-choice pockets: it picks one of its four ways at
   random.
 - The CPU scripts are simple, and the ball in Volleyball needs tuning in real play.
+- The MP4 minigames play offline only, without MP4's sound, music, shadows or instruction
+  screens. The fighters' animations approximate the MP4 motions (walk, run, crouch, taunt, hit,
+  flying), and the MP4 characters' voices and effects are not played.
 - Dungeon Duos draws its dungeon from MP4's collision map in flat colours, not MP4's textured
   models; the rescue hook and the winners' ride out of the dungeon are not drawn (a fallen
   player reappears at the checkpoint, and the winners taunt at the pump).

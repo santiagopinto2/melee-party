@@ -77,16 +77,34 @@ HU3DMODELID CharModelCreate(s16 charNo, s16 model)
     return modelId;
 }
 
+/* As chrman.c: a motion number with no archive, or with any character's motion archive, is a file
+ * of this character's own motion archive (m438 names its motions by file alone); any other is
+ * read as it is (m440's blast reactions). The motion is bound to the player's model
+ * (Hu3DJointMotion), as every character motion is. */
 HU3DMOTID CharMotionCreate(s16 charNo, s32 data_num)
 {
     void *data;
-    (void) charNo;
     HU3DMOTID motId;
-    data = HuDataSelHeapReadNum(data_num, MEMORY_DEFAULT_NUM, HEAP_DATA);
-    if (data == NULL) {
+    s16 model = mp4_char_model(charNo);
+    u32 dir = (u32) data_num & 0xFFFF0000u;
+    s16 i;
+    if (model == HU3D_MODELID_NONE) {
         return HU3D_MOTID_NONE;
     }
-    motId = Hu3DMotionCreate(data);
+    for (i = 0; i < CHARNO_MAX; i++) {
+        if (dir == (u32) charDirTbl[i][2]) {
+            break;
+        }
+    }
+    if (i != CHARNO_MAX || dir == 0) {
+        data_num = (data_num & 0xFFFF) | charDirTbl[charNo][2];
+    }
+    data = HuDataSelHeapReadNum(data_num, MEMORY_DEFAULT_NUM, HEAP_DATA);
+    if (data == NULL) {
+        OSReport("[party] mp4: no motion %x for character %d\n", (u32) data_num, charNo);
+        return HU3D_MOTID_NONE;
+    }
+    motId = Hu3DJointMotion(model, data);
     if (motId >= 0 && motId < HU3D_MOTION_MAX) {
         motion_data[motId] = data_num;
     }
@@ -125,6 +143,53 @@ void CharModelKill(s16 charNo)
             char_model[i] = HU3D_MODELID_NONE;
         }
     }
+}
+
+/* The motion calls a walking minigame makes on its players (m438): on the hidden model. */
+void CharMotionSet(s16 charNo, HU3DMOTID motId)
+{
+    s16 model = mp4_char_model(charNo);
+    if (model >= 0 && motId >= 0) {
+        Hu3DMotionSet(model, motId);
+    }
+}
+
+void CharMotionShiftSet(s16 charNo, HU3DMOTID motId, float start, float end, u32 attr)
+{
+    s16 model = mp4_char_model(charNo);
+    if (model >= 0 && motId >= 0) {
+        Hu3DMotionShiftSet(model, motId, start, end, attr);
+    }
+}
+
+s16 CharMotionShiftIDGet(s16 charNo)
+{
+    s16 model = mp4_char_model(charNo);
+    return model >= 0 ? Hu3DMotionShiftIDGet(model) : HU3D_MOTID_NONE;
+}
+
+s32 CharMotionEndCheck(s16 charNo)
+{
+    s16 model = mp4_char_model(charNo);
+    return model >= 0 ? Hu3DMotionEndCheck(model) : 1;
+}
+
+float CharMotionMaxTimeGet(s16 charNo)
+{
+    s16 model = mp4_char_model(charNo);
+    return model >= 0 ? Hu3DMotionMaxTimeGet(model) : 0.0f;
+}
+
+void CharModelStepFxSet(s16 charNo, s32 stepFx)
+{
+    (void) charNo;
+    (void) stepFx;
+}
+
+s32 CharFXPlayPos(s16 charNo, s16 seId, Vec *pos)
+{
+    (void) charNo; (void) seId; (void) pos;
+    return -1;
 }
 
 s16 mp4_char_model(int charNo)

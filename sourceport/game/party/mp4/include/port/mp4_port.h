@@ -42,6 +42,7 @@ static inline void OSf32tos16(f32* f, s16* out) { *out = (s16) *f; }
 float sinf(float);
 float cosf(float);
 float atan2f(float y, float x);
+double fmod(double, double);   /* the C runtime's (m438) */
 static inline double mp4_sin(double x) { return sinf((float) x); }
 static inline double mp4_cos(double x) { return cosf((float) x); }
 static inline double mp4_atan2(double y, double x) { return atan2f((float) y, (float) x); }

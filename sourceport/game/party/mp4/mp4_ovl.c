@@ -14,21 +14,25 @@
 #include <dolphin/os.h>
 #include <string.h>
 
-#include <sysdolphin/baselib/memory.h>
+
+void* malloc(size_t size);
 
 #include "game/gamework_data.h"
 #include "game/object.h"
 #include "mp4.h"
 
 void m440_ObjectSetup(void);
+void m438_ObjectSetup(void);
 
 const int mp4_overlay_m440 = DLL_m440Dll;
+const int mp4_overlay_m438 = DLL_m438Dll;
 
 /* The markers: a byte before and a byte after the overlay's variables (see above). */
 #define OVERLAY_MARKERS(name)                                                       \
     __attribute__((section(".data$" #name "_"))) static char name##_data_begin = 1; \
     __attribute__((section(".data$" #name "z"))) static char name##_data_end = 1;
 OVERLAY_MARKERS(m440)
+OVERLAY_MARKERS(m438)
 
 static int boot_reached;
 
@@ -45,6 +49,7 @@ static const struct {
 } overlays[] = {
     { DLL_bootDll, boot_ObjectSetup, NULL, NULL },
     { DLL_m440Dll, m440_ObjectSetup, &m440_data_begin, &m440_data_end },
+    { DLL_m438Dll, m438_ObjectSetup, &m438_data_begin, &m438_data_end },
 };
 #define OVERLAYS (sizeof overlays / sizeof overlays[0])
 
@@ -76,7 +81,7 @@ static void overlay_data_reset(u32 i)
     }
     size = (size_t) (overlays[i].data_end - begin);
     if (initial_data[i] == NULL) {
-        initial_data[i] = HSD_MemAlloc((u32) size);   /* Melee's heap: kept for the session */
+        initial_data[i] = malloc(size);   /* the C runtime's heap: kept for the session */
         if (initial_data[i] == NULL) {
             OSReport("[party] mp4: no memory to keep overlay %d's initial data (%u bytes)\n",
                      (int) overlays[i].overlay, (u32) size);

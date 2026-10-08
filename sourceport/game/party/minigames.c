@@ -13,6 +13,7 @@ extern const PartyMinigame mg_food;
 extern const PartyMinigame mg_domination;
 extern const PartyMinigame mg_dungeon;
 extern const PartyMinigame mg_mp4_m440;
+extern const PartyMinigame mg_mp4_m438;
 
 static const PartyMinigame* const table[] = {
     &mg_volleyball,
@@ -21,6 +22,7 @@ static const PartyMinigame* const table[] = {
     &mg_domination,
     &mg_dungeon,
     &mg_mp4_m440,
+    &mg_mp4_m438,
 };
 
 /* Set by the minigame being played; called from the party patch's food hook. */

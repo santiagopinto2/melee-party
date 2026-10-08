@@ -702,6 +702,8 @@ static const struct {
     { "food", "Eat the most of the food\nthat rains down." },
     { "domination", "Mash A to swing. Make the\nmost Snorlaxes." },
     { "dungeon", "Two against two. Mash B,\nA, then L and R: get out!" },
+    { "bigger-blast", "Push the plungers. One of\nthem sets Bowser off." },
+    { "chomp-fever", "Dodge the Chain Chomps\nfor a minute. Stay on!" },
 };
 
 static const char* description_of(int menu_kind, int selection)
