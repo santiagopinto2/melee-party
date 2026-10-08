@@ -42,13 +42,14 @@ static inline void OSf32tos16(f32* f, s16* out) { *out = (s16) *f; }
 float sinf(float);
 float cosf(float);
 float atan2f(float y, float x);
-double fmod(double, double);   /* the C runtime's (m438) */
-static inline double mp4_sin(double x) { return sinf((float) x); }
-static inline double mp4_cos(double x) { return cosf((float) x); }
-static inline double mp4_atan2(double y, double x) { return atan2f((float) y, (float) x); }
-#define sin mp4_sin
-#define cos mp4_cos
-#define atan2 mp4_atan2
+/* The C runtime's, in double as MP4's MSL had them. They were the float ones cast once, which
+ * cannot stand in: cosf(90 degrees) is a small negative number where cos(90 degrees) is a small
+ * positive one, and Booksquirm's landed page (rot.x = -120 * cosd(90)) came out tilted the wrong
+ * way, so its cutout test took it for a page still in the air and flattened everyone in a cutout. */
+double sin(double);
+double cos(double);
+double atan2(double y, double x);
+double fmod(double, double);   /* (m438) */
 
 /* GX reads vertex arrays big-endian, as the console did; the PC port keeps them in host order. Each
  * array goes to GX through a big-endian copy made for the frame (mp4_gx.c). */
