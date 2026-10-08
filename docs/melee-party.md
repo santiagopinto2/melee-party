@@ -224,6 +224,17 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
   offline only for now. MP4's processes run on coroutines (`mp4_coro.c`) whose 64 KB stacks come
   from the C runtime's heap: GX never reads them, and a process that outlives a match (the boot
   overlay's watcher, the banners) outlives Melee's heap.
+- **Where the 0x84000000 limit comes from.** The host (`port/app/source_host.cpp`,
+  `reserve_memory`) puts MEM1 at 0x80000000, 40 MB of it (the console's 24 MB grown for 8-byte
+  pointers), and links the game image right after it at 0x82800000, so that the game's statics
+  have an address the emulated GX texture and display-list registers can hold: 26 bits, the first
+  64 MB from 0x80000000. The game image is already 24 MB, so its last sections end past the
+  limit; the MP4 pool is placed by the linker like any other `.bss` and happens to end right at it
+  (`mp4_mem_fits`). Each MP4 minigame linked in adds about 70 KB of code, which moves everything
+  after it up by that much. Room, when it runs out: the DVD, music and misc heaps (1.3 MB) could
+  leave the pool, since GX never reads them (the system heap stays: sprite bitmaps and m438's
+  effect display lists live there); a smaller MEM1 would let the image start lower; or the port's
+  GX could decode wider addresses. None of this is done.
 - **Models.** `hsfload.c` (with `hsf_byteswap.c`), `hsfdraw.c`, `hsfman.c` (the Hu3D model,
   camera and light layer), `hsfmotion.c`, `EnvelopeExec.c`, `ShapeExec.c`, `ClusterExec.c` and
   `hsfex.c` are MP4's. They draw through Melee's GX, which now records display lists
