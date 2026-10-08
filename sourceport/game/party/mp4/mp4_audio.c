@@ -58,3 +58,10 @@ s32 msmSeSetParam(int seNo, MSM_SEPARAM* param)
     (void) param;
     return 0;
 }
+
+s32 HuAudFXPitchSet(int seNo, s16 pitch)
+{
+    (void) seNo;
+    (void) pitch;
+    return 0;
+}

@@ -709,6 +709,7 @@ static const struct {
     { "butterfly-blitz", "Net the butterflies.\nA swings high, B low." },
     { "trace-race", "Steer your brush along\nthe line. Closest wins." },
     { "candlelight-flight", "One carries the candle;\nthree blow at it with A." },
+    { "money-belts", "Grab the coins riding\nthe belts. One vs three." },
 };
 
 static const char* description_of(int menu_kind, int selection)

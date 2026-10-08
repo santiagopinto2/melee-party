@@ -232,6 +232,13 @@ void CharMotionSpeedSet(s16 charNo, float speed)
     }
 }
 
+/* chrman.c: the ring of sparks around a picked-up coin (m422). No character effects here. */
+void CharEffectCoinGlowCreate(s16 cameraBit, HuVecF* pos)
+{
+    (void) cameraBit;
+    (void) pos;
+}
+
 void CharModelLayerSetAll2(s16 layerNo)
 {
     CharEffectLayerSet(layerNo);
