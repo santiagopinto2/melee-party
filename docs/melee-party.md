@@ -327,7 +327,9 @@ For example, to watch a whole three-turn party with CPUs:
 - The CPU scripts are simple, and the ball in Volleyball needs tuning in real play.
 - The MP4 minigames play offline only, without MP4's sound, music, shadows or instruction
   screens. The fighters' animations approximate the MP4 motions (walk, run, crouch, taunt, hit,
-  flying), and the MP4 characters' voices and effects are not played.
+  flying), and the MP4 characters' voices and effects are not played. MP4's banners name the
+  slot's MP4 character (P1 is Mario, P2 Luigi, P3 Peach, P4 Yoshi), not the fighter: "MARIO
+  WON!" over whoever P1 picked.
 - Dungeon Duos draws its dungeon from MP4's collision map in flat colours, not MP4's textured
   models; the rescue hook and the winners' ride out of the dungeon are not drawn (a fallen
   player reappears at the checkpoint, and the winners taunt at the pump).
