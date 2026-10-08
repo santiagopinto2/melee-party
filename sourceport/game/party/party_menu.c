@@ -559,13 +559,14 @@ static int showing = PARTY_MENU_MINIGAMES;   /* what the Special Melee submenu l
 
 static int special_rows(void)
 {
-    int n = showing != PARTY_MENU_MINIGAMES ? board_count() : minigame_count();
+    int n = showing != PARTY_MENU_MINIGAMES ? board_count() : minigame_offered_count(0);
     return n > 10 ? 10 : n;
 }
 
 static const char* row_name(int i)
 {
-    return showing != PARTY_MENU_MINIGAMES ? board_name(i) : minigame_get(i)->name;
+    return showing != PARTY_MENU_MINIGAMES ? board_name(i)
+                                           : minigame_get(minigame_offered_at(i, 0))->name;
 }
 
 /* The submenu's header, rows and number of rows, for the list it shows. */
@@ -639,9 +640,9 @@ void mu_party_menu_loaded(void)
         if (tex_get(TEX_LIST, LIST_SPECIAL, &t)) {
             memset(t.data, 0, (size_t) (t.w * t.h / 2));
         }
-        for (i = 0; i < minigame_count() && i < 4; i++) {
-            draw_line(&list_style, TEX_LIST, LIST_SPECIAL, minigame_get(i)->name, four_lines[i][0],
-                      four_lines[i][1], four_lines[i][2], 124, 0);
+        for (i = 0; i < minigame_offered_count(0) && i < 4; i++) {
+            draw_line(&list_style, TEX_LIST, LIST_SPECIAL, minigame_get(minigame_offered_at(i, 0))->name,
+                      four_lines[i][0], four_lines[i][1], four_lines[i][2], 124, 0);
         }
         /* The Custom Rules list (now Debug Boards'): the boards, the same way. */
         if (tex_get(TEX_LIST, LIST_RULES, &t)) {
@@ -652,7 +653,8 @@ void mu_party_menu_loaded(void)
                       four_lines[i][1], four_lines[i][2], 124, 0);
         }
     }
-    party_log("menu: Vs. entries renamed, %d minigames, %d boards", minigame_count(), board_count());
+    party_log("menu: Vs. entries renamed, %d minigames, %d boards", minigame_offered_count(0),
+              board_count());
 }
 
 /* The descriptions under the menu, by minigame id. */
@@ -684,12 +686,13 @@ static const char* description_of(int menu_kind, int selection)
         return board_description(selection);
     }
     if (menu_kind == MENU_KIND_SPECIAL && selection < special_rows()) {
+        const PartyMinigame* mg = minigame_get(minigame_offered_at(selection, 0));
         for (i = 0; i < (int) (sizeof descriptions / sizeof descriptions[0]); i++) {
-            if (strcmp(descriptions[i].id, minigame_get(selection)->id) == 0) {
+            if (strcmp(descriptions[i].id, mg->id) == 0) {
                 return descriptions[i].text;
             }
         }
-        return minigame_get(selection)->name;
+        return mg->name;
     }
     return NULL;
 }
@@ -750,7 +753,7 @@ int mu_party_special_menu_mode(int selection)
     if (showing != PARTY_MENU_MINIGAMES) {
         party_board_pick(selection, showing == PARTY_MENU_DEBUG_BOARDS);
     } else {
-        party_menu_pick(selection);
+        party_menu_pick(minigame_offered_at(selection, 0));
     }
     return PARTY_MODE;
 }

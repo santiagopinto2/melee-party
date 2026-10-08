@@ -90,13 +90,62 @@ static int pick_from_order(void)
     }
 }
 
+/* The minigames a list offers. The MP4 ones need the MP4 disc, and play offline only: online
+ * play keeps no MP4 state in step, so they stay off every online list whatever the discs. */
+int minigame_offered(int index, int online)
+{
+    const PartyMinigame* mg = minigame_get(index);
+    return !mg->needs_mp4 || (!online && mp4_available());
+}
+
+int minigame_offered_count(int online)
+{
+    int i, n = 0;
+    for (i = 0; i < COUNT; i++) {
+        n += minigame_offered(i, online);
+    }
+    return n;
+}
+
+/* The index of the minigame on a list's row; the list's first for a row it does not have. */
+int minigame_offered_at(int row, int online)
+{
+    int i, n = 0, first = 0;
+    for (i = 0; i < COUNT; i++) {
+        if (!minigame_offered(i, online)) {
+            continue;
+        }
+        if (n == 0) {
+            first = i;
+        }
+        if (n++ == row) {
+            return i;
+        }
+    }
+    return first;
+}
+
+/* The row a minigame sits on in a list; 0 for one the list does not offer. */
+int minigame_offered_row(int index, int online)
+{
+    int i, n = 0;
+    for (i = 0; i < COUNT; i++) {
+        if (i == index) {
+            return minigame_offered(i, online) ? n : 0;
+        }
+        n += minigame_offered(i, online);
+    }
+    return 0;
+}
+
 int minigame_pick(void)
 {
-    /* the minigames that can be played: the MP4 ones only with an MP4 disc open */
+    /* the minigames a board party can play: the MP4 ones only offline, with an MP4 disc */
     u32 all = 0;
+    int online = party_online_running();
     int i, pick = pick_from_order();
     for (i = 0; i < COUNT; i++) {
-        if (!table[i]->needs_mp4 || mp4_available()) {
+        if (minigame_offered(i, online)) {
             all |= 1u << i;
         }
     }

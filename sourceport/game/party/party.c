@@ -539,7 +539,7 @@ int mu_party_menu_enter(int previous_mode, unsigned char* menu_kind, unsigned ch
     *menu_kind = MENU_KIND_SPECIAL;
     if (menu_minigame >= 0) {
         party_menu_show(PARTY_MENU_MINIGAMES);
-        *hovered = (unsigned char) menu_minigame;
+        *hovered = (unsigned char) minigame_offered_row(menu_minigame, 0);
     } else {
         party_menu_show(menu_debug ? PARTY_MENU_DEBUG_BOARDS : PARTY_MENU_BOARDS);
         *hovered = (unsigned char) menu_board;

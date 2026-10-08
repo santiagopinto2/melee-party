@@ -134,6 +134,11 @@ int minigame_count(void);
 const PartyMinigame* minigame_get(int index);
 int minigame_find(const char* id);             /* -1 if none */
 int minigame_pick(void);                       /* random, no repeat until all were played */
+/* The lists (the Party Minigames menu offline, the online lobby) and their rows. */
+int minigame_offered(int index, int online);
+int minigame_offered_count(int online);
+int minigame_offered_at(int row, int online);
+int minigame_offered_row(int index, int online);
 void minigame_setup(StartMeleeData* start);    /* the chosen one, party.minigame */
 int minigame_round_end(void);                  /* 1 if the minigame has another round */
 void minigame_finish(void);                    /* placements into coins */

@@ -100,7 +100,9 @@ static void bb_frame(void)
 {
     mp4_frame();
     camera_frame();
-    if (!bb.ended && mp4_match_over()) {
+    /* over when MP4 returns to its boot overlay; at once without a disc (MELEE_PARTY_MINIGAME
+     * can still name this minigame then: the lists do not) */
+    if (!bb.ended && (mp4_match_over() || !mp4_available())) {
         int i;
         bb.ended = 1;
         for (i = 0; i < PARTY_PLAYERS; i++) {

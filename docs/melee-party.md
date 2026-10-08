@@ -197,7 +197,9 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
   and hands the game reads of it (host API 17, `mp4_disc_read`). The game checks the header
   and reads the file system table (`mp4_disc.c`, `mp4_format.c`). Without such a disc, or with
   `--party off`, everything MP4 stays off and the log says why
-  (`[party] mp4: ...: the MP4 minigames are off`).
+  (`[party] mp4: ...: the MP4 minigames are off`): the Party Minigames menu does not list the MP4
+  minigames and a board party never picks one (`minigame_offered`). The online lobby never lists
+  them, disc or not: online play keeps no MP4 state in step.
 - **Archives.** MP4 data numbers (`DATADIR_*`, an archive in the high half and a file in the
   low half) read one file of a `data/*.bin` archive off the disc and unpack it: none, LZ, SLIDE,
   FSLIDE and RLE, types 0 to 5 (`mp4_dir.c`, `mp4_decode.c`). Only each archive's offset table
