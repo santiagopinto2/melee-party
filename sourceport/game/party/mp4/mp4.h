@@ -56,6 +56,7 @@ int mp4_camera(float eye[3], float look[3], float* fov);
 extern const int mp4_overlay_m440;
 extern const int mp4_overlay_m438;
 extern const int mp4_overlay_m412;
+extern const int mp4_overlay_m403;
 
 /* mp4_char.c: the player's hidden model, a Hu3D model id or -1. */
 s16 mp4_char_model(int charNo);

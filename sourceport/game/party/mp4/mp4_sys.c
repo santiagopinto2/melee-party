@@ -49,6 +49,18 @@ PlayerState GWPlayer[4];
 SystemState GWSystem;
 GameStat GWGameStat;
 
+/* The minigame records (gamework.c), kept for the session: a one-player Booksquirm compares its
+ * page count with them. */
+void GWMGRecordSet(s32 index, u32 value)
+{
+    GWGameStat.mg_record[index] = value;
+}
+
+u32 GWMGRecordGet(s32 index)
+{
+    return GWGameStat.mg_record[index];
+}
+
 u32 GlobalCounter;
 extern u32 minimumVcount;
 
