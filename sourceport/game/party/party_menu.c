@@ -8,7 +8,7 @@
  * for the slanted styles), the letters are laid out, squeezed sideways when too wide as the
  * game's own long labels are, and written over the old label. The outlined labels get their black
  * outline drawn again around the new letters. Three letters are in no label: F is E without its
- * bottom bar, and z and the apostrophe are drawn.
+ * bottom bar, and z, w and the apostrophe are drawn.
  *
  * Tournament Melee becomes Melee Party, whose submenu lists the boards. Both submenus are Special
  * Melee's: its rows are written again with the boards' or the minigames' names each time one of
@@ -321,6 +321,38 @@ static int draw_z(const Style* st, int x)
     return w;
 }
 
+/* w: four strokes over the x-height, from its top down to two feet and back up, as wide as z
+ * and a half. */
+static int draw_w(const Style* st, int x)
+{
+    int xh = st->xh, w = round_i((float) xh * 1.3f);
+    float q = (float) (w - 1) / 4.0f, r = (float) xh * 0.15f;
+    int dy, u;
+    r = r < 1.0f ? 1.0f : r;
+    for (dy = -xh + 1; dy <= 0; dy++) {
+        float t = (float) (dy + xh - 1) / (float) (xh > 1 ? xh - 1 : 1);   /* 0 at the top, 1 at the baseline */
+        for (u = 0; u < w && x + u < STRIP_W; u++) {
+            /* the strokes' centres on this row: the outer pair lean inwards going down to the
+             * feet at a quarter and three quarters of the width, the inner pair outwards */
+            float cx[4], d = 1e9f;
+            int i, v;
+            cx[0] = q * t;
+            cx[1] = 2.0f * q - q * t;
+            cx[2] = 2.0f * q + q * t;
+            cx[3] = 4.0f * q - q * t;
+            for (i = 0; i < 4; i++) {
+                float e = fabsf((float) u - cx[i]);
+                d = e < d ? e : d;
+            }
+            v = d < r ? 255 : d < r + 0.7f ? 128 : 0;
+            if (v > strip[dy - DY_MIN][x + u]) {
+                strip[dy - DY_MIN][x + u] = (u8) v;
+            }
+        }
+    }
+    return w;
+}
+
 /* ': a short stroke at the top of the capitals, narrowing at its foot. */
 static int draw_apostrophe(const Style* st, int x)
 {
@@ -379,6 +411,9 @@ static int draw_glyph(const Style* st, char ch, int x)
     }
     if (ch == '\'') {
         return draw_apostrophe(st, x);
+    }
+    if (ch == 'w') {
+        return draw_w(st, x);
     }
     if ((g = find(st, ch)) != NULL) {
         return draw_rows(st, g, x, DY_MIN, DY_MIN + DY_ROWS);
