@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "name": "melee-party-mp4",
+  "repo": "https://github.com/santiagopinto2/melee-party.git",
+  "commit": "COMMIT",
+  "submodules": true,
+  "image": "ghcr.io/santiagopinto2/melee-party-tools:latest",
+  "command": "MELEE_ISO_DIR=ISO_MOUNT tools/fleet/job.sh && tar czf fleet-out.tar.gz fleet-out",
+  "gpu": true,
+  "mem": "16G",
+  "time_limit_s": 7200,
+  "outputs": ["fleet-out", "build-sourceport-gcc/melee_game.dll", "build-sourceport-gcc/melee_game.snapexcl", "build-clangcl/port/melee_source.exe"]
+}
