@@ -28,6 +28,11 @@ void mp4_debug_setup(struct StartMeleeData* start);
 /* From the wrapper's on_match_start: MP4's runtime is up, and the overlay (an OMOVL, game/object.h)
  * starts next frame. offset: where MP4's origin sits in Melee's world, clear of the stage. */
 void mp4_match_begin(int overlay, float offset_x, float offset_y, float offset_z);
+/* The players' groups for the next match, as MP4's GWPlayerCfg.group: 0 for everyone in a
+ * four-player game (the default, restored after each match); the solo player 0 and the three 1
+ * in a one-versus-three game; a pair 0 and a pair 1 in a two-versus-two game. The wrapper sets
+ * them before the match begins. */
+void mp4_match_groups(const s8 groups[4]);
 /* From the wrapper's on_frame_start: MP4's processes run a frame (the minigame's objects, its
  * banners), and MP4's camera goes to the Melee match camera. */
 void mp4_frame(void);
@@ -59,6 +64,7 @@ extern const int mp4_overlay_m412;
 extern const int mp4_overlay_m403;
 extern const int mp4_overlay_m441;
 extern const int mp4_overlay_m404;
+extern const int mp4_overlay_m416;
 
 /* mp4_char.c: the player's hidden model, a Hu3D model id or -1. */
 s16 mp4_char_model(int charNo);

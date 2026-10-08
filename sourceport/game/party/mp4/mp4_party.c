@@ -181,6 +181,13 @@ static void draw_gobj_create(void)
 
 /* ---- a minigame ---- */
 
+static s8 match_groups[PARTY_PLAYERS];
+
+void mp4_match_groups(const s8 groups[4])
+{
+    memcpy(match_groups, groups, sizeof match_groups);
+}
+
 void mp4_match_begin(int overlay, float offset_x, float offset_y, float offset_z)
 {
     int i;
@@ -199,9 +206,10 @@ void mp4_match_begin(int overlay, float offset_x, float offset_y, float offset_z
         cfg->iscom = party.p[i].slot_type == Gm_PKind_Cpu;
         /* MP4's easy, normal, hard, very hard from Melee's levels 1-9 */
         cfg->diff = (s16) (level >= 9 ? 3 : level >= 6 ? 2 : level >= 3 ? 1 : 0);
-        cfg->group = 0;
+        cfg->group = match_groups[i];   /* mp4_match_groups, 0 unless the wrapper set them */
         memset(&GWPlayer[i], 0, sizeof GWPlayer[i]);
     }
+    memset(match_groups, 0, sizeof match_groups);   /* the next match is four-player unless told */
     memset(&GWSystem, 0, sizeof GWSystem);
     GWSystem.player_curr = (s8) (party.mover >= 0 && party.mover < PARTY_PLAYERS ? party.mover : 0);
     memset(pad_prev, 0, sizeof pad_prev);

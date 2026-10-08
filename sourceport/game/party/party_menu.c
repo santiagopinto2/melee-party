@@ -708,6 +708,7 @@ static const struct {
     { "booksquirm", "Find a cutout before the\npage lands on you." },
     { "butterfly-blitz", "Net the butterflies.\nA swings high, B low." },
     { "trace-race", "Steer your brush along\nthe line. Closest wins." },
+    { "candlelight-flight", "One carries the candle;\nthree blow at it with A." },
 };
 
 static const char* description_of(int menu_kind, int selection)

@@ -51,6 +51,9 @@ double cos(double);
 double atan2(double y, double x);
 double fmod(double, double);   /* (m438) */
 
+/* The SDK's rotation by degrees (m416's map code). */
+#define MTXRotDeg(m, axis, deg) MTXRotRad((m), (axis), MTXDegToRad(deg))
+
 /* GX reads vertex arrays big-endian, as the console did; the PC port keeps them in host order. Each
  * array goes to GX through a big-endian copy made for the frame (mp4_gx.c). */
 void mp4_gx_set_array(int attr, const void* data, unsigned int size, unsigned char stride, int host_order);
