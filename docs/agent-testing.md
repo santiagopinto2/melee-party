@@ -121,12 +121,13 @@ without one.
 ### Logic only: headless
 
 No renderer, about 23 game frames a second: a whole one-turn party with CPUs, board, minigame,
-podium and back to the menu in about 4 minutes.
+podium and back to the menu in about 4 minutes; with a Mario Party 4 disc the random pick can be
+a 60 or 90 second minigame, so give it 9000 frames.
 
 ```sh
 MELEE_PARTY_BOOT=1 MELEE_PARTY_SKIP_CSS=1 MELEE_PARTY_ALL_CPU=1 MELEE_PARTY_TURNS=1 \
 MELEE_PARTY_SEED=1 MELEE_PARTY_AUTO_ROLL=1 MELEE_FRESH_CARD=1 \
-  tools/wine_party.sh --headless --frames 6000 --script "$PWD/port/scripts/party_boot.txt"
+  tools/wine_party.sh --headless --frames 9000 --script "$PWD/port/scripts/party_boot.txt"
 grep '\[party\]' build-clangcl/port/melee_port.log | grep -v reaches
 ```
 
