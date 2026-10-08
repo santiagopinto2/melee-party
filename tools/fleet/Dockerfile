@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git xz-utils unzip cabextract \
       python3 cmake ninja-build make \
       gcc-mingw-w64-x86-64-posix g++-mingw-w64-x86-64-posix binutils-mingw-w64-x86-64 \
-      clang-19 lld-19 llvm-19 \
+      clang-19 clang-tools-19 lld-19 llvm-19 \
       wine wine64 \
       mesa-vulkan-drivers libgl1-mesa-dri libglx-mesa0 libegl-mesa0 libvulkan1 mesa-utils vulkan-tools \
       xvfb xauth \
