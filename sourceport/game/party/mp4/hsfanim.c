@@ -698,6 +698,22 @@ static void particleFunc(HU3DMODEL *arg0, Mtx arg1)
     if (HmfInverseMtxF3X3(arg1, mtxInv) == 0) {
         MTXIdentity(mtxInv);
     }
+    /* Melee Party: the inverse turns the particle quads to face the camera by undoing the
+     * modelview's rotation. Here the modelview also carries MP4's units into Melee's
+     * (mp4_camera_scale, 0.1), and undoing that too left every quad ten times too big against
+     * the scene: hundreds of sparkles saturated into one glow. Put the scale back (it is 1 on
+     * the GameCube). */
+    {
+        float s = sqrtf(arg1[0][0] * arg1[0][0] + arg1[1][0] * arg1[1][0] + arg1[2][0] * arg1[2][0]);
+        if (s > 0.0f) {
+            s32 r, c;
+            for (r = 0; r < 3; r++) {
+                for (c = 0; c < 3; c++) {
+                    mtxInv[r][c] *= s;
+                }
+            }
+        }
+    }
     MTXReorder(mtxInv, basePosMtx);
     if ((Hu3DPauseF == 0 || (arg0->attr & HU3D_ATTR_NOPAUSE)) && particleP->hook && particleP->prevCounter != GlobalCounter) {
         HU3DPARTICLEHOOK hook = particleP->hook;
