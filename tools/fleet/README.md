@@ -23,10 +23,11 @@ read-only, at a path arhum gives.
   `/private/mp4.iso` (sent once with `fleet-job private-upload`); nothing under `/private` may
   come back, so the outputs are the checkout's `fleet-out` and the built binaries.
 - `compile.json`: the same checkout built and nothing run (`FLEET_BUILD_ONLY=1`), as a CPU-only job
-  with `"mem": "3G"` so the OptiPlexes and Amal's PC can take it (the fleet still prefers arhum's PC
-  when it is free). Santi's choice (2026-10-09): his PC is the least reliable, so compile checks,
+  with `"mem": "3G"` so Amal's PC and the GPU OptiPlex can take it (the fleet still prefers arhum's
+  PC when it is free). Santi's choice (2026-10-09): his PC is the least reliable, so compile checks,
   symbol checks and disc-free tests go to the others; only the game runs need his PC, where the
-  discs are. The report says how long the builds
+  discs are. arhum's rule (2026-10-09): jobs go only to the three PCs with GPUs, never the SSD
+  OptiPlex, and nothing at all compiles or runs on Santi's VM. The report says how long the builds
   took and `fleet-out/build-*.log` has the errors. If 3G is too little for the host link, raise
   `mem` to `8G` (Amal's PC).
 
