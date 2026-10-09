@@ -8,8 +8,8 @@
  * physics and the player moves at the fighter's speed; when the game moves the player (a stamp
  * landing on it, the end) the fighter follows. The match ends when the minigame returns to MP4's
  * boot overlay; MP4 gives the top stampers 10 coins and the rest nothing, so they share first
- * place and the rest last. The stamp's print is the shadow map's bytes, which the port does not
- * read back yet: it stays blank until then. */
+ * place and the rest last. The stamp's print is the shadow map's bytes, which the renderer writes
+ * back to guest memory on the game's request (mu_gx_copy_readback). */
 #include <string.h>
 
 #include <melee/ft/fighter.h>

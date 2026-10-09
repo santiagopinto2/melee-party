@@ -1430,6 +1430,8 @@ void h_disc_read(uint32_t offset, void* dst, uint32_t size, MuDiscDone done, voi
 }
 int32_t h_disc_status() { return 0; }
 uint32_t h_disc_id(void* out, uint32_t size) { const uint32_t n = std::min<uint32_t>(size, 0x20); std::memcpy(out, (void*)MEM1_BASE, n); return n; }
+void h_gx_copy_readback(uint32_t addr, int32_t on) { gx::set_copy_readback(addr, on != 0); }
+
 uint32_t h_mp4_disc_read(uint32_t offset, void* dst, uint32_t size) {
   std::lock_guard<std::mutex> lock(g_mp4_mutex);
   if (!g_mp4_disc || _fseeki64(g_mp4_disc, offset, SEEK_SET) != 0) return 0;
@@ -2153,6 +2155,7 @@ MuHostApi make_host() {
   h.hud_player = h_hud_player;
   h.vi_idle_step = h_vi_idle_step;
   h.mp4_disc_read = h_mp4_disc_read;
+  h.gx_copy_readback = h_gx_copy_readback;
   return h;
 }
 

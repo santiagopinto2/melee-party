@@ -11,6 +11,8 @@
 #include <atomic>
 #include <cmath>
 #include <cstring>
+#include <mutex>
+#include <vector>
 #include <unordered_map>
 
 namespace gx {
@@ -793,6 +795,51 @@ static void drain_fifo() {
   }
   if (g_buf_pos == g_buf.size()) { g_buf.clear(); g_buf_pos = 0; }
   else if (g_buf_pos >= 1 << 16) { g_buf.erase(g_buf.begin(), g_buf.begin() + g_buf_pos); g_buf_pos = 0; }
+}
+
+static std::mutex g_readback_mutex;
+static std::vector<uint32_t> g_readback_addrs;
+
+void set_copy_readback(uint32_t addr, bool on) {
+  std::lock_guard<std::mutex> lock(g_readback_mutex);
+  auto it = std::find(g_readback_addrs.begin(), g_readback_addrs.end(), addr);
+  if (on && it == g_readback_addrs.end()) g_readback_addrs.push_back(addr);
+  if (!on && it != g_readback_addrs.end()) g_readback_addrs.erase(it);
+}
+
+bool copy_readback_wanted(uint32_t addr) {
+  std::lock_guard<std::mutex> lock(g_readback_mutex);
+  return std::find(g_readback_addrs.begin(), g_readback_addrs.end(), addr) != g_readback_addrs.end();
+}
+
+void write_copy_readback(const EfbCopy& c, const uint8_t* rgba, size_t pitch, uint32_t scale) {
+  uint32_t w = c.src_w, h = c.src_h;
+  if (c.half_scale) { w = std::max(1u, w / 2); h = std::max(1u, h / 2); }
+  // Dolphin's EFBCopyFormat numbering (tp_realFormat): R4 0, RA4 2, RA8 3, RGB565 4, RGB5A3 5,
+  // RGBA8 6, A8 7, R8 8, G8 9, B8 10, RG8 11, GB8 12. One byte a texel in 8 x 4 tiles for the 8-bit
+  // ones; the rest are not read back (logged once).
+  int channel = -1;
+  switch (c.format) { case 7: channel = 3; break; case 8: channel = 0; break; case 9: channel = 1; break; case 10: channel = 2; break; default: break; }
+  if (channel < 0 && !c.intensity) {
+    static bool logged = false;
+    if (!logged) { host::log("efb copy readback: format %u at %08X is not an 8-bit format, not read back", c.format, c.dest_addr); logged = true; }
+    return;
+  }
+  if ((w & 7) || (h & 3)) return;
+  const uint32_t bytes = w * h;
+  uint8_t* dst = host::try_ptr(c.dest_addr, bytes);
+  if (!dst) return;
+  std::vector<uint8_t> out(bytes);
+  const uint32_t tiles_per_row = w / 8;
+  for (uint32_t y = 0; y < h; ++y) {
+    const uint8_t* row = rgba + (size_t)y * scale * pitch;
+    for (uint32_t x = 0; x < w; ++x) {
+      const uint8_t* p = row + (size_t)x * scale * 4;
+      uint8_t v = c.intensity ? (uint8_t)((p[0] * 77 + p[1] * 150 + p[2] * 29) >> 8) : p[channel];
+      out[((y >> 2) * tiles_per_row + (x >> 3)) * 32 + (y & 3) * 8 + (x & 7)] = v;
+    }
+  }
+  std::memcpy(dst, out.data(), bytes);
 }
 
 void stats(uint64_t* commands, uint64_t* draws, uint64_t* vertices, uint32_t* efb_copies) {

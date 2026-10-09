@@ -104,6 +104,9 @@ void ObjectSetup(void)
         var_r29->work[1] = var_r31;
     }
     Hu3DShadowCreate(30.0f, 100.0f, 25000.0f);
+    /* Melee Party: the stamps copy the shadow map's bytes out of its buffer (below), which the
+     * port's copies keep on the host: ask the renderer to write this one back (mu_native.h) */
+    mu_gx_copy_readback(Hu3DShadowData.buf, 1);
     Hu3DShadowTPLvlSet(0.4f);
     Hu3DShadowPosSet(&lbl_1_data_1C, &lbl_1_data_28, &lbl_1_data_34);
     omGameSysInit(temp_r30);
@@ -349,6 +352,7 @@ void fn_1_14C0(omObjData *object)
         MGSeqKill(lbl_1_bss_348);
         MGSeqKillAll();
         HuAudFadeOut(1);
+        mu_gx_copy_readback(Hu3DShadowData.buf, 0);   /* Melee Party */
         omOvlReturnEx(1, 1);
     }
 }
@@ -434,8 +438,8 @@ void fn_1_1960(omObjData *object)
             GXDrawDone();
             temp_r3 = fn_1_9734(object->model[2]);
             temp_r29 = Hu3DShadowData.size * Hu3DShadowData.size;
-            /* Melee Party: the shadow map's bytes; the port's copies do not write them back to guest
-             * memory yet, so the stamp is blank until a readback */
+            /* Melee Party: the shadow map's bytes, which the renderer writes back here on request
+             * (mu_gx_copy_readback in ObjectSetup), a frame late at most */
             memcpy((*temp_r3)->bmp->data, OSCachedToUncached(Hu3DShadowData.buf), temp_r29);
             DCStoreRangeNoSync((*temp_r3)->bmp->data, temp_r29);
             break;

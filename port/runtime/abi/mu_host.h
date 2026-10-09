@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define MU_HOST_API_VERSION 17
+#define MU_HOST_API_VERSION 18
 #define MU_GAME_API_VERSION 6
 #define MU_SLIPPI_RESPONSE_CAPACITY 4096u
 
@@ -343,6 +343,12 @@ typedef struct MuHostApi {
      * there is no such disc (--mp4-iso, MELEE_PARTY_MP4_ISO, or mp4.iso beside the Melee ISO).
      * Synchronous. The game checks the disc's header itself. */
     uint32_t (*mp4_disc_read)(uint32_t offset, void* dst, uint32_t size);
+
+    /* Version 18. A GX copy the game reads back: with `on`, the renderer writes the texels it
+     * copies to that address into guest memory there, in the copy's GX format and tiling (8-bit
+     * formats), once it has rendered them (a frame late at most). Mario Party 4's Stamp Out!
+     * prints the shadow map's bytes. */
+    void (*gx_copy_readback)(uint32_t addr, int32_t on);
 } MuHostApi;
 
 #define MU_MOD_ASSETS_PRESENT 0x1u
