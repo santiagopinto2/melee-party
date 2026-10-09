@@ -64,7 +64,7 @@ if [ ! -f "$cache/xwin/.done" ]; then
   : > "$out/xwin.log"
   for try in 1 2 3; do
     rm -rf "$cache/xwin" "$cache/xwin-dl/unpack"   # a splat moves files out of unpack: only the downloads are kept
-    /tmp/xwin-0.10.0-x86_64-unknown-linux-musl/xwin --accept-license --http-retries 5 --cache-dir "$cache/xwin-dl" --arch x86_64 \
+    /tmp/xwin-0.10.0-x86_64-unknown-linux-musl/xwin --accept-license --http-retry 5 --cache-dir "$cache/xwin-dl" --arch x86_64 \
       splat --output "$cache/xwin" >> "$out/xwin.log" 2>&1 && touch "$cache/xwin/.done" && break
   done
   if [ -f "$cache/xwin/.done" ]; then rm -rf "$cache/xwin-dl"; else say "xwin failed (see xwin.log)"; fail=1; fi
