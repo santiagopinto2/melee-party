@@ -694,7 +694,17 @@ void h_log(const char* text) {
   if (!line.empty()) host::log("[game] %s", line.c_str());
 }
 void h_panic(const char* file, int32_t line, const char* message) {
-  host::log("game panic at %s:%d", file ? file : "?", line);
+  // The rest of this can hang (under Wine nothing after the first log line came out of Stamp Out!'s
+  // XFB assertion, and the run sat there until its time limit): the process ends anyway.
+  CreateThread(nullptr, 0, [](LPVOID) -> DWORD {
+    Sleep(10000);
+    std::fprintf(stderr, "\nFATAL: the game's panic did not exit within 10 s\n");
+    std::fflush(stderr);
+    TerminateProcess(GetCurrentProcess(), 3);
+    return 0;
+  }, nullptr, 0, nullptr);
+  host::log("game panic at %s:%d: %s", file ? file : "?", line, message ? message : "");
+  host::log_flush();
   void* frames[32];
   const USHORT count = CaptureStackBackTrace(0, 32, frames, nullptr);
   for (USHORT i = 0; i < count; ++i) {
