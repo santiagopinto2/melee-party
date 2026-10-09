@@ -344,6 +344,18 @@ void fn_1_7D8(omObjData *object)
 }
 
 #ifdef TARGET_PC
+/* Melee Party: experiments for the prints that never showed (fleet jobs, MELEE_PARTY_M415_EXP):
+ * "noshadowmap" leaves the canvas out of the shadow map, "red" paints the whole canvas red at the
+ * first stamp. hsfanim.c reports on the canvas's texture animation. */
+char *getenv(const char *name);
+extern s16 mp4_anim_watch;
+extern s32 mp4_anim_watch_calls;
+static int m415_exp(const char *name)
+{
+    const char *v = getenv("MELEE_PARTY_M415_EXP");
+    return v != NULL && strcmp(v, name) == 0;
+}
+
 static ANIMBMP *m415_shadow_bmp;
 static void *m415_shadow_bmp_data;   /* Melee Party: fn_1_66AC */
 #endif
@@ -414,6 +426,10 @@ void fn_1_15D0(omObjData *object)
     Hu3DModelPosSetV(var_r31, &sp14);
     Hu3DModelRotSetV(var_r31, &sp8);
     lbl_1_bss_338 = Hu3DAnimCreate(HuDataReadNum(DATA_MAKE_NUM(DATADIR_M415, 0x0A), MEMORY_DEFAULT_NUM), var_r31, "dummy");
+#ifdef TARGET_PC
+    mp4_anim_watch = lbl_1_bss_338;   /* Melee Party: see m415_exp */
+    mp4_anim_watch_calls = 0;
+#endif
     var_r28 = 0x57E40;
     lbl_1_bss_334 = HuMemDirectMallocNum(HEAP_DATA, var_r28, MEMORY_DEFAULT_NUM);
     memset(lbl_1_bss_334, 0, var_r28);
@@ -456,6 +472,10 @@ void fn_1_1960(omObjData *object)
             DCStoreRangeNoSync((*temp_r3)->bmp->data, temp_r29);
             break;
         case 2:
+#ifdef TARGET_PC
+            OSReport("[party] m415: play starts, canvas anim drawn %d times so far\n", (int) mp4_anim_watch_calls);
+            if (!m415_exp("noshadowmap"))
+#endif
             Hu3DModelShadowMapObjSet(object->model[0], "kyanbasu");
             Hu3DModelShadowReset(object->model[0]);
             Hu3DModelShadowReset(object->model[3]);
@@ -517,6 +537,23 @@ void fn_1_1A60(unkStruct3 *arg0)
     sp12 = 0.5f * (600.0f + sp1C.z);
     canvas_bmp = fn_1_668C(lbl_1_bss_338);
     canvas_bmp_data = (u16 *)canvas_bmp->data;
+#ifdef TARGET_PC
+    {
+        static int stamps;
+        if (stamps++ % 50 == 0) {
+            OSReport("[party] m415: stamp %d by P%d at %d %d: canvas %p %dx%d format %d, texture made %d, anim drawn %d times\n",
+                     stamps, (int) temp_r28 + 1, (int) sp14, (int) sp12, canvas_bmp_data, (int) canvas_bmp->sizeX,
+                     (int) canvas_bmp->sizeY, (int) canvas_bmp->dataFmt, (int) canvas_bmp->texData[0].tex_initialized,
+                     (int) mp4_anim_watch_calls);
+        }
+        if (stamps == 1 && m415_exp("red")) {
+            for (var_r31 = 0; var_r31 < 600 * 600; var_r31++) {
+                canvas_bmp_data[var_r31] = 0xFC00;   /* RGB5A3, opaque red */
+                byteswap_u16(&canvas_bmp_data[var_r31]);
+            }
+        }
+    }
+#endif
     var_r27 = 0x32;
     var_r30 = var_r27 >> 1;
     spC = 0x96;

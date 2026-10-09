@@ -240,6 +240,11 @@ void Hu3DAnmNoSet(HU3DANIMID animId, u16 anmNo)
     texAnimP->time = 0.0f;
 }
 
+/* Melee Party: one texture animation to report on (Stamp Out!'s canvas, m415): its draws so far
+ * and the first that found no pattern */
+s16 mp4_anim_watch = -1;
+s32 mp4_anim_watch_calls;
+
 s32 Hu3DAnimSet(HU3DMODEL *modelP, HSFATTRIBUTE *attrP, s16 texSlotNo) {
     HU3DATTRANIM *attrAnimP;
     HU3DTEXANIM *texAnimP;
@@ -255,6 +260,15 @@ s32 Hu3DAnimSet(HU3DMODEL *modelP, HSFATTRIBUTE *attrP, s16 texSlotNo) {
     texAnimP = &Hu3DTexAnimData[attrAnimP->animId];
     anim = texAnimP->anim;
     patNo = anim->bank[texAnimP->bank].frame[texAnimP->anmNo].pat;
+    if (attrAnimP->animId == mp4_anim_watch) {
+        static int no_pat_logged;
+        if (mp4_anim_watch_calls++ == 0 || (patNo == -1 && !no_pat_logged)) {
+            no_pat_logged |= patNo == -1;
+            OSReport("[party] mp4: anim %d drawn: bank %d frame %d pattern %d, slot %d, attr %x\n",
+                     (int) attrAnimP->animId, (int) texAnimP->bank, (int) texAnimP->anmNo, (int) patNo,
+                     (int) texSlotNo, (unsigned) texAnimP->attr);
+        }
+    }
     if (patNo == -1) {
         return FALSE;
     }
