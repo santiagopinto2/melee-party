@@ -252,6 +252,9 @@ unsigned int mu_mod_flags(void);
 #define MU_MOD_ASSETS_PRESENT 0x1u
 #endif
 unsigned int mu_music_volume(void);   /* MuHostApi.music_volume, 0-100 */
+/* MuHostApi.gx_copy_readback: the renderer keeps the GX copies to this address readable in guest
+ * memory (Mario Party 4's Stamp Out! reads the shadow map's bytes). */
+void mu_gx_copy_readback(const void* addr, int on);
 
 /* Legacy runs Slippi's "General Codes" and "Lagless FoD" on every boot; the native game carries the
  * same behavior as C at each patched site (shim/mu_gecko.c holds the shared parts). Nonzero unless

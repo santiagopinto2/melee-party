@@ -28,10 +28,42 @@ index 9699e7da9..acd1029e1 100644
      u32 ov;
      u32 reg;
 diff --git a/src/melee/cm/camera.c b/src/melee/cm/camera.c
-index 83f2d6ead..5506f97a9 100644
+index 83f2d6ead..143b830b1 100644
 --- a/src/melee/cm/camera.c
 +++ b/src/melee/cm/camera.c
-@@ -4151,6 +4151,37 @@ void Camera_800304E0(HSD_GObj* gobj)
+@@ -4046,6 +4046,13 @@ static inline void render_gxlink_pass(HSD_GObj* gobj, int pass, int gxlink)
+     HSD_GObj_80390ED0(gobj, gxlink);
+ }
+ 
++#ifdef MU_NATIVE
++/* Melee Party: the split-screen view this pass draws (-1: the whole screen), and whether it
++ * renders the fighters' shadows (mu_camera_draw_views) */
++static int mu_camera_view = -1;
++static bool mu_camera_shadow_pass = true;
++#endif
++
+ static void fn_800301D0(HSD_GObj* gobj, intptr_t arg1)
+ {
+     s64 prio8_a;
+@@ -4055,7 +4062,17 @@ static void fn_800301D0(HSD_GObj* gobj, intptr_t arg1)
+     cobj = gobj->hsd_obj;
+     lbRefract_8002247C(cobj);
+     Camera_8002A4AC(gobj);
++#ifdef MU_NATIVE
++    /* after the match camera's eye, interest and fov, which every pass sets again */
++    if (mu_camera_view >= 0) {
++        mu_party_camera_view(mu_camera_view, cobj);
++    }
++    if (mu_camera_shadow_pass) {
++        lbShadow_8000F38C(game_camera.x399_b7);
++    }
++#else
+     lbShadow_8000F38C(game_camera.x399_b7);
++#endif
+     if (HSD_CObjSetCurrent(cobj) != 0) {
+         if (!game_camera.x398_b5) {
+             HSD_SetEraseColor(game_camera.background_color.r,
+@@ -4151,6 +4168,41 @@ void Camera_800304E0(HSD_GObj* gobj)
      }
  }
  
@@ -54,12 +86,16 @@ index 83f2d6ead..5506f97a9 100644
 +    viewport = cobj->viewport;
 +    scissor = cobj->scissor;
 +    aspect = HSD_CObjGetAspect(cobj);
-+    /* Last view first: every pass renders its shadows in the top-left corner of the frame before
-+     * drawing, which only the first view (the left one) covers again. */
++    /* The shadows render in the top-left corner of the frame, each pass's before its erase: only
++     * the first pass renders them (the textures serve every view), so no later pass draws over a
++     * view already drawn. The minigame orders the views (mu_party_camera_view). */
 +    for (i = views - 1; i >= 0; i--) {
-+        mu_party_camera_view(i, cobj);
++        mu_camera_view = i;
++        mu_camera_shadow_pass = i == views - 1;
 +        fn_800301D0(gobj, arg1);
 +    }
++    mu_camera_view = -1;
++    mu_camera_shadow_pass = true;
 +    cobj->viewport = viewport;
 +    cobj->scissor = scissor;
 +    HSD_CObjSetAspect(cobj, aspect);
@@ -69,7 +105,7 @@ index 83f2d6ead..5506f97a9 100644
  void Camera_Create(void)
  {
      HSD_GObj* gobj;
-@@ -4166,7 +4197,11 @@ void Camera_Create(void)
+@@ -4166,7 +4218,11 @@ void Camera_Create(void)
          HSD_GObjObject_80390A70(gobj, HSD_GObj_CameraKind, c);
      }
  

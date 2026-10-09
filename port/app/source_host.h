@@ -44,6 +44,10 @@ void set_slippi_menus(bool on);
 // --party on|off (default on): Melee Party on the Vs. menu's Tournament Melee entry
 // (sourceport/game/party). Never set during replay playback.
 void set_party(bool on);
+// --mp4-iso <path>: the Mario Party 4 (USA) disc Melee Party's MP4 minigames load from. Without
+// it, MELEE_PARTY_MP4_ISO, else mp4.iso beside the Melee ISO. Opened by open_mp4_disc (party on).
+void set_mp4_iso(const char* path);
+void open_mp4_disc(const std::string& melee_iso);
 // Runs an isolated native card round-trip without booting an ISO. Intended for the M10 acceptance
 // test; the caller must provide a new scratch directory.
 bool card_self_test(const char* directory);

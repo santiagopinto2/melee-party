@@ -146,6 +146,25 @@ set_target_properties(mu_card_endian_test PROPERTIES C_STANDARD 11 C_EXTENSIONS 
 target_link_libraries(mu_card_endian_test PRIVATE game_flags)
 add_test(NAME native_card_endian COMMAND mu_card_endian_test)
 
+# Melee Party's Mario Party 4 archives: the disc header, file system and archive tables and the
+# six decoders, on bytes the test makes itself (no disc data).
+add_executable(mu_mp4_data_test tests/mp4_data.c party/mp4/mp4_format.c party/mp4/mp4_decode.c)
+set_target_properties(mu_mp4_data_test PROPERTIES C_STANDARD 11 C_EXTENSIONS ON)
+target_link_libraries(mu_mp4_data_test PRIVATE game_flags)
+target_include_directories(mu_mp4_data_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4")
+add_test(NAME native_mp4_data COMMAND mu_mp4_data_test)
+# And MP4's HSF model loader with its 64-bit structures, on a model the test writes byte by byte.
+add_executable(mu_mp4_hsf_test tests/mp4_hsf.c party/mp4/hsfload.c party/mp4/hsf_byteswap.c
+  party/mp4/mp4_mem.c party/mp4/EnvelopeExec.c party/mp4/mp4_math.c $<TARGET_OBJECTS:sdk_math>
+  "${SDK}/mtx/mtx.c" "${SDK}/mtx/mtxvec.c")
+set_target_properties(mu_mp4_hsf_test PROPERTIES C_STANDARD 11 C_EXTENSIONS ON)
+target_link_libraries(mu_mp4_hsf_test PRIVATE game_flags)
+target_include_directories(mu_mp4_hsf_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4"
+  "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/include")
+target_compile_options(mu_mp4_hsf_test PRIVATE
+  "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/include/port/mp4_port.h")
+add_test(NAME native_mp4_hsf COMMAND mu_mp4_hsf_test)
+
 # Every annotated DISC_STRUCT field sits at its console offset in the host layout (tools/disc_offset_audit.py).
 # An 8-byte pointer field in a disc struct shifted Link's attributes from +0x94 and went unnoticed.
 add_test(NAME native_disc_offsets COMMAND "${MELEE_PYTHON}" "${REPO}/tools/disc_offset_audit.py")
@@ -175,6 +194,33 @@ list(APPEND SHIM_SOURCES ${GXNATIVE_SOURCES})
 # Melee Party: the board mode and its minigames (party/party.h).
 file(GLOB PARTY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/party/*.c")
 list(APPEND SHIM_SOURCES ${PARTY_SOURCES})
+# Its Mario Party 4 runtime (party/mp4/mp4.h): MP4's own code from the MP4 decompilation, which
+# includes its headers as "game/..." from party/mp4/include.
+file(GLOB_RECURSE PARTY_MP4_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/*.c")
+set_property(SOURCE ${PARTY_MP4_SOURCES} APPEND PROPERTY INCLUDE_DIRECTORIES
+  "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4" "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/include")
+set_property(SOURCE ${PARTY_MP4_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS
+  " -include ${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/include/port/mp4_port.h")
+# Each MP4 minigame (party/mp4/m4xx) keeps the decompilation's symbol names, which repeat from one
+# minigame to the next: a generated header prefixes them with the minigame's name.
+file(GLOB PARTY_MP4_RELS LIST_DIRECTORIES true CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/party/mp4/m4*")
+foreach(rel ${PARTY_MP4_RELS})
+  if(IS_DIRECTORY "${rel}")
+    get_filename_component(rel_name "${rel}" NAME)
+    set(rel_names "${CMAKE_CURRENT_BINARY_DIR}/mp4_rel/${rel_name}_names.h")
+    execute_process(COMMAND "${MELEE_PYTHON}" "${REPO}/tools/mp4_rel_names.py" "${rel}" "${rel_names}"
+      RESULT_VARIABLE rel_names_result)
+    if(NOT rel_names_result EQUAL 0)
+      message(FATAL_ERROR "tools/mp4_rel_names.py failed for ${rel}")
+    endif()
+    file(GLOB rel_sources CONFIGURE_DEPENDS "${rel}/*.c")
+    # -fdata-sections: a .data$<symbol> section per variable, so the minigame's variables sit
+    # together in the image and the runtime can reset them at every start (party/mp4/mp4_ovl.c).
+    set_property(SOURCE ${rel_sources} APPEND_STRING PROPERTY COMPILE_FLAGS
+      " -include ${rel_names} -fdata-sections")
+  endif()
+endforeach()
+list(APPEND SHIM_SOURCES ${PARTY_MP4_SOURCES})
 # Akaneia's added fighters, native (akaneia/INTEGRATION.md): the registry and each fighter's own C.
 # The fighters themselves are work in progress: they build only with -DMU_AKANEIA_FIGHTERS=ON, so a
 # release never carries an unfinished fighter (the registry alone keeps every added fighter locked).

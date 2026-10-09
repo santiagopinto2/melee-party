@@ -33,11 +33,11 @@ ninja -C build-clangcl -j2 melee_source
 cp build-sourceport-gcc/melee_game.dll build-sourceport-gcc/melee_game.snapexcl build-clangcl/port/
 
 if [ "${SKIP_SMOKE:-0}" != 1 ]; then
-  echo "== smoke: one-turn CPU party, headless, under Wine (about 4 minutes)"
+  echo "== smoke: one-turn CPU party, headless, under Wine (about 6 minutes)"
   log="$repo/build-clangcl/port/melee_port.log"
   MELEE_PARTY_BOOT=1 MELEE_PARTY_SKIP_CSS=1 MELEE_PARTY_ALL_CPU=1 MELEE_PARTY_TURNS=1 \
   MELEE_PARTY_SEED=1 MELEE_PARTY_AUTO_ROLL=1 MELEE_FRESH_CARD=1 \
-    timeout 900 tools/wine_party.sh --hidden --headless --fast --frames 6000 \
+    timeout 1200 tools/wine_party.sh --hidden --headless --fast --frames 9000 \
       --script "$repo/port/scripts/party_boot.txt" > /dev/null 2>&1 || true
   if ! grep -q "\[party\] party over" "$log"; then
     grep -E "\[party\]|crash|CRASH" "$log" | tail -20 >&2 || true

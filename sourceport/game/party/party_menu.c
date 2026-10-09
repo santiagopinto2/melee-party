@@ -8,7 +8,7 @@
  * for the slanted styles), the letters are laid out, squeezed sideways when too wide as the
  * game's own long labels are, and written over the old label. The outlined labels get their black
  * outline drawn again around the new letters. Three letters are in no label: F is E without its
- * bottom bar, and z and the apostrophe are drawn.
+ * bottom bar, and z, w and the apostrophe are drawn.
  *
  * Tournament Melee becomes Melee Party, whose submenu lists the boards. Both submenus are Special
  * Melee's: its rows are written again with the boards' or the minigames' names each time one of
@@ -321,6 +321,38 @@ static int draw_z(const Style* st, int x)
     return w;
 }
 
+/* w: four strokes over the x-height, from its top down to two feet and back up, as wide as z
+ * and a half. */
+static int draw_w(const Style* st, int x)
+{
+    int xh = st->xh, w = round_i((float) xh * 1.3f);
+    float q = (float) (w - 1) / 4.0f, r = (float) xh * 0.15f;
+    int dy, u;
+    r = r < 1.0f ? 1.0f : r;
+    for (dy = -xh + 1; dy <= 0; dy++) {
+        float t = (float) (dy + xh - 1) / (float) (xh > 1 ? xh - 1 : 1);   /* 0 at the top, 1 at the baseline */
+        for (u = 0; u < w && x + u < STRIP_W; u++) {
+            /* the strokes' centres on this row: the outer pair lean inwards going down to the
+             * feet at a quarter and three quarters of the width, the inner pair outwards */
+            float cx[4], d = 1e9f;
+            int i, v;
+            cx[0] = q * t;
+            cx[1] = 2.0f * q - q * t;
+            cx[2] = 2.0f * q + q * t;
+            cx[3] = 4.0f * q - q * t;
+            for (i = 0; i < 4; i++) {
+                float e = fabsf((float) u - cx[i]);
+                d = e < d ? e : d;
+            }
+            v = d < r ? 255 : d < r + 0.7f ? 128 : 0;
+            if (v > strip[dy - DY_MIN][x + u]) {
+                strip[dy - DY_MIN][x + u] = (u8) v;
+            }
+        }
+    }
+    return w;
+}
+
 /* ': a short stroke at the top of the capitals, narrowing at its foot. */
 static int draw_apostrophe(const Style* st, int x)
 {
@@ -379,6 +411,9 @@ static int draw_glyph(const Style* st, char ch, int x)
     }
     if (ch == '\'') {
         return draw_apostrophe(st, x);
+    }
+    if (ch == 'w') {
+        return draw_w(st, x);
     }
     if ((g = find(st, ch)) != NULL) {
         return draw_rows(st, g, x, DY_MIN, DY_MIN + DY_ROWS);
@@ -559,13 +594,14 @@ static int showing = PARTY_MENU_MINIGAMES;   /* what the Special Melee submenu l
 
 static int special_rows(void)
 {
-    int n = showing != PARTY_MENU_MINIGAMES ? board_count() : minigame_count();
+    int n = showing != PARTY_MENU_MINIGAMES ? board_count() : minigame_offered_count(0);
     return n > 10 ? 10 : n;
 }
 
 static const char* row_name(int i)
 {
-    return showing != PARTY_MENU_MINIGAMES ? board_name(i) : minigame_get(i)->name;
+    return showing != PARTY_MENU_MINIGAMES ? board_name(i)
+                                           : minigame_get(minigame_offered_at(i, 0))->name;
 }
 
 /* The submenu's header, rows and number of rows, for the list it shows. */
@@ -639,9 +675,9 @@ void mu_party_menu_loaded(void)
         if (tex_get(TEX_LIST, LIST_SPECIAL, &t)) {
             memset(t.data, 0, (size_t) (t.w * t.h / 2));
         }
-        for (i = 0; i < minigame_count() && i < 4; i++) {
-            draw_line(&list_style, TEX_LIST, LIST_SPECIAL, minigame_get(i)->name, four_lines[i][0],
-                      four_lines[i][1], four_lines[i][2], 124, 0);
+        for (i = 0; i < minigame_offered_count(0) && i < 4; i++) {
+            draw_line(&list_style, TEX_LIST, LIST_SPECIAL, minigame_get(minigame_offered_at(i, 0))->name,
+                      four_lines[i][0], four_lines[i][1], four_lines[i][2], 124, 0);
         }
         /* The Custom Rules list (now Debug Boards'): the boards, the same way. */
         if (tex_get(TEX_LIST, LIST_RULES, &t)) {
@@ -652,7 +688,8 @@ void mu_party_menu_loaded(void)
                       four_lines[i][1], four_lines[i][2], 124, 0);
         }
     }
-    party_log("menu: Vs. entries renamed, %d minigames, %d boards", minigame_count(), board_count());
+    party_log("menu: Vs. entries renamed, %d minigames, %d boards", minigame_offered_count(0),
+              board_count());
 }
 
 /* The descriptions under the menu, by minigame id. */
@@ -665,6 +702,20 @@ static const struct {
     { "food", "Eat the most of the food\nthat rains down." },
     { "domination", "Mash A to swing. Make the\nmost Snorlaxes." },
     { "dungeon", "Two against two. Mash B,\nA, then L and R: get out!" },
+    { "bigger-blast", "Push the plungers. One of\nthem sets Bowser off." },
+    { "chomp-fever", "Dodge the Chain Chomps\nfor a minute. Stay on!" },
+    { "blizzard-brigade", "Dodge the snowballs on\nthe ice for a minute." },
+    { "booksquirm", "Find a cutout before the\npage lands on you." },
+    { "butterfly-blitz", "Net the butterflies.\nA swings high, B low." },
+    { "trace-race", "Steer your brush along\nthe line. Closest wins." },
+    { "candlelight-flight", "One carries the candle;\nthree blow at it with A." },
+    { "money-belts", "Grab the coins riding\nthe belts. One vs three." },
+    { "hop-or-pop", "Pop the balloons, or hop\nclear of the ball. 1 vs 3." },
+    { "cheep-cheep-sweep", "Sweep Cheep Cheeps into\nyour net with A. Two vs two." },
+    { "team-treasure-trek", "Find the key and the chest\nwith your partner." },
+    { "challenge-booksquirm", "The pages keep coming.\nThe last one in plays on." },
+    { "paths-of-peril", "Walk the narrow path to\nthe end. First pair wins." },
+    { "stamp-out", "Get under the stamps to\nprint tiles. Most tiles wins." },
 };
 
 static const char* description_of(int menu_kind, int selection)
@@ -684,12 +735,13 @@ static const char* description_of(int menu_kind, int selection)
         return board_description(selection);
     }
     if (menu_kind == MENU_KIND_SPECIAL && selection < special_rows()) {
+        const PartyMinigame* mg = minigame_get(minigame_offered_at(selection, 0));
         for (i = 0; i < (int) (sizeof descriptions / sizeof descriptions[0]); i++) {
-            if (strcmp(descriptions[i].id, minigame_get(selection)->id) == 0) {
+            if (strcmp(descriptions[i].id, mg->id) == 0) {
                 return descriptions[i].text;
             }
         }
-        return minigame_get(selection)->name;
+        return mg->name;
     }
     return NULL;
 }
@@ -750,7 +802,7 @@ int mu_party_special_menu_mode(int selection)
     if (showing != PARTY_MENU_MINIGAMES) {
         party_board_pick(selection, showing == PARTY_MENU_DEBUG_BOARDS);
     } else {
-        party_menu_pick(selection);
+        party_menu_pick(minigame_offered_at(selection, 0));
     }
     return PARTY_MODE;
 }

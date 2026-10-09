@@ -857,13 +857,14 @@ static void sections(int team)
     }
 }
 
-/* cm/camera.c, before each view is drawn: the team's dungeon in its half of the screen (m432
- * Hu3DCameraCreate: 318 by 480 each, 4 apart; fov 20). */
+/* cm/camera.c, in each view's pass after Melee has set the match camera up: the team's dungeon
+ * in its half of the screen (m432 Hu3DCameraCreate: 318 by 480 each, 4 apart; fov 20). */
 static void dg_camera_view(int view, HSD_CObj* cobj)
 {
     HSD_RectF32 vp;
     float w, half, gap;
     Vec3f look, eye;
+    Vec3 v;
     if (view == 1) {   /* drawn first */
         dg.full_viewport = cobj->viewport;
         dg.full_scissor = cobj->scissor;
@@ -884,13 +885,15 @@ static void dg_camera_view(int view, HSD_CObj* cobj)
                          dg.full_scissor.bottom);
     HSD_CObjSetAspect(cobj, dg.full_aspect * (318.0f / 640.0f));
     team_camera(view, &look, &eye);
-    cm_80453004.free_int_pos.x = look.x;
-    cm_80453004.free_int_pos.y = look.y;
-    cm_80453004.free_int_pos.z = look.z;
-    cm_80453004.free_eye_pos.x = eye.x;
-    cm_80453004.free_eye_pos.y = eye.y;
-    cm_80453004.free_eye_pos.z = eye.z;
-    cm_80453004.free_fov = 20.0f;
+    v.x = look.x;
+    v.y = look.y;
+    v.z = look.z;
+    HSD_CObjSetInterest(cobj, &v);
+    v.x = eye.x;
+    v.y = eye.y;
+    v.z = eye.z;
+    HSD_CObjSetEyePosition(cobj, &v);
+    HSD_CObjSetFov(cobj, 20.0f);
 }
 
 static int dg_camera_views(void)

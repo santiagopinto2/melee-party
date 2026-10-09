@@ -1,9 +1,11 @@
 /* Melee Party: the minigame table, the choice of the next one, and its rewards. */
+#include <dolphin/vi.h>
 #include <string.h>
 
 #include <melee/gm/gmvs.h>
 #include <melee/gr/forward.h>
 
+#include "mp4/mp4.h"
 #include "party.h"
 
 extern const PartyMinigame mg_volleyball;
@@ -11,6 +13,20 @@ extern const PartyMinigame mg_sandbag;
 extern const PartyMinigame mg_food;
 extern const PartyMinigame mg_domination;
 extern const PartyMinigame mg_dungeon;
+extern const PartyMinigame mg_mp4_m440;
+extern const PartyMinigame mg_mp4_m438;
+extern const PartyMinigame mg_mp4_m412;
+extern const PartyMinigame mg_mp4_m403;
+extern const PartyMinigame mg_mp4_m441;
+extern const PartyMinigame mg_mp4_m404;
+extern const PartyMinigame mg_mp4_m416;
+extern const PartyMinigame mg_mp4_m422;
+extern const PartyMinigame mg_mp4_m421;
+extern const PartyMinigame mg_mp4_m434;
+extern const PartyMinigame mg_mp4_m429;
+extern const PartyMinigame mg_mp4_m453;
+extern const PartyMinigame mg_mp4_m439;
+extern const PartyMinigame mg_mp4_m415;
 
 static const PartyMinigame* const table[] = {
     &mg_volleyball,
@@ -18,6 +34,20 @@ static const PartyMinigame* const table[] = {
     &mg_food,
     &mg_domination,
     &mg_dungeon,
+    &mg_mp4_m440,
+    &mg_mp4_m438,
+    &mg_mp4_m412,
+    &mg_mp4_m403,
+    &mg_mp4_m441,
+    &mg_mp4_m404,
+    &mg_mp4_m416,
+    &mg_mp4_m422,
+    &mg_mp4_m421,
+    &mg_mp4_m434,
+    &mg_mp4_m429,
+    &mg_mp4_m453,
+    &mg_mp4_m439,
+    &mg_mp4_m415,
 };
 
 /* Set by the minigame being played; called from the party patch's food hook. */
@@ -87,10 +117,65 @@ static int pick_from_order(void)
     }
 }
 
+/* The minigames a list offers. The MP4 ones need the MP4 disc, and play offline only: online
+ * play keeps no MP4 state in step, so they stay off every online list whatever the discs. */
+int minigame_offered(int index, int online)
+{
+    const PartyMinigame* mg = minigame_get(index);
+    return !mg->needs_mp4 || (!online && mp4_available());
+}
+
+int minigame_offered_count(int online)
+{
+    int i, n = 0;
+    for (i = 0; i < COUNT; i++) {
+        n += minigame_offered(i, online);
+    }
+    return n;
+}
+
+/* The index of the minigame on a list's row; the list's first for a row it does not have. */
+int minigame_offered_at(int row, int online)
+{
+    int i, n = 0, first = 0;
+    for (i = 0; i < COUNT; i++) {
+        if (!minigame_offered(i, online)) {
+            continue;
+        }
+        if (n == 0) {
+            first = i;
+        }
+        if (n++ == row) {
+            return i;
+        }
+    }
+    return first;
+}
+
+/* The row a minigame sits on in a list; 0 for one the list does not offer. */
+int minigame_offered_row(int index, int online)
+{
+    int i, n = 0;
+    for (i = 0; i < COUNT; i++) {
+        if (i == index) {
+            return minigame_offered(i, online) ? n : 0;
+        }
+        n += minigame_offered(i, online);
+    }
+    return 0;
+}
+
 int minigame_pick(void)
 {
-    u32 all = COUNT >= 32 ? 0xFFFFFFFFu : (1u << COUNT) - 1;
-    int pick = pick_from_order();
+    /* the minigames a board party can play: the MP4 ones only offline, with an MP4 disc */
+    u32 all = 0;
+    int online = party_online_running();
+    int i, pick = pick_from_order();
+    for (i = 0; i < COUNT; i++) {
+        if (minigame_offered(i, online)) {
+            all |= 1u << i;
+        }
+    }
     if (pick >= 0) {
         return pick;
     }
@@ -99,10 +184,14 @@ int minigame_pick(void)
     }
     do {
         pick = party_rand(COUNT);
-    } while (party.mg_played & (1u << pick));
+    } while (!(all & (1u << pick)) || (party.mg_played & (1u << pick)));
     party.mg_played |= 1u << pick;
     return pick;
 }
+
+/* The retrace count at the last minigame's setup: its length in frames goes in the result's log
+ * line, so a run's log shows whether a minigame played its real length. */
+static u32 setup_retrace;
 
 void minigame_setup(StartMeleeData* start)
 {
@@ -113,6 +202,7 @@ void minigame_setup(StartMeleeData* start)
     mg->setup(start);
     party_log("turn %d/%d: minigame %s (round %d)", party.turn, party.max_turns, mg->name,
               party.round + 1);
+    setup_retrace = VIGetRetraceCount();
 }
 
 int minigame_round_end(void)
@@ -145,7 +235,7 @@ void minigame_finish(void)
         party.p[i].place = (s8) p;
         party.p[i].coins = (s16) (party.p[i].coins + reward[p]);
     }
-    party_log("minigame %s: places %d %d %d %d, coins %d %d %d %d", minigame_get(party.minigame)->name,
+    party_log("minigame %s: places %d %d %d %d, coins %d %d %d %d, %u frames", minigame_get(party.minigame)->name,
               place[0], place[1], place[2], place[3], party.p[0].coins, party.p[1].coins,
-              party.p[2].coins, party.p[3].coins);
+              party.p[2].coins, party.p[3].coins, (unsigned) (VIGetRetraceCount() - setup_retrace));
 }
