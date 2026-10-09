@@ -12,7 +12,7 @@ FROM debian:trixie-slim
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git xz-utils unzip cabextract \
-      python3 cmake ninja-build make \
+      python3 cmake ninja-build make ccache \
       gcc-mingw-w64-x86-64-posix g++-mingw-w64-x86-64-posix binutils-mingw-w64-x86-64 \
       clang-19 clang-tools-19 lld-19 llvm-19 \
       wine wine64 \

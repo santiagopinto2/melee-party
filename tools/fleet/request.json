@@ -4,15 +4,12 @@
   "repo": "https://github.com/santiagopinto2/melee-party.git",
   "commit": "COMMIT",
   "submodules": true,
-  "command": "MELEE_ISO_DIR=/private tools/fleet/job.sh",
+  "command": "MELEE_ISO_DIR=/private FLEET_TIME_LIMIT=7200 tools/fleet/job.sh bigger-blast cheep-cheep-sweep team-treasure-trek challenge-booksquirm paths-of-peril stamp-out",
   "gpu": true,
-  "mem": "16G",
+  "gpu_kind": "opengl",
+  "prefer": ["gpu-optiplex"],
+  "mem": "3G",
   "time_limit_s": 7200,
-  "outputs": [
-    "fleet-out",
-    "build-sourceport-gcc/melee_game.dll",
-    "build-sourceport-gcc/melee_game.snapexcl",
-    "build-clangcl/port/melee_source.exe"
-  ],
+  "outputs": ["fleet-out"],
   "private_files": true
 }
