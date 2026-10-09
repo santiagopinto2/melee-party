@@ -1,4 +1,5 @@
 /* Melee Party: the minigame table, the choice of the next one, and its rewards. */
+#include <dolphin/vi.h>
 #include <string.h>
 
 #include <melee/gm/gmvs.h>
@@ -188,6 +189,10 @@ int minigame_pick(void)
     return pick;
 }
 
+/* The retrace count at the last minigame's setup: its length in frames goes in the result's log
+ * line, so a run's log shows whether a minigame played its real length. */
+static u32 setup_retrace;
+
 void minigame_setup(StartMeleeData* start)
 {
     const PartyMinigame* mg = minigame_get(party.minigame);
@@ -197,6 +202,7 @@ void minigame_setup(StartMeleeData* start)
     mg->setup(start);
     party_log("turn %d/%d: minigame %s (round %d)", party.turn, party.max_turns, mg->name,
               party.round + 1);
+    setup_retrace = VIGetRetraceCount();
 }
 
 int minigame_round_end(void)
@@ -229,7 +235,7 @@ void minigame_finish(void)
         party.p[i].place = (s8) p;
         party.p[i].coins = (s16) (party.p[i].coins + reward[p]);
     }
-    party_log("minigame %s: places %d %d %d %d, coins %d %d %d %d", minigame_get(party.minigame)->name,
+    party_log("minigame %s: places %d %d %d %d, coins %d %d %d %d, %u frames", minigame_get(party.minigame)->name,
               place[0], place[1], place[2], place[3], party.p[0].coins, party.p[1].coins,
-              party.p[2].coins, party.p[3].coins);
+              party.p[2].coins, party.p[3].coins, (unsigned) (VIGetRetraceCount() - setup_retrace));
 }

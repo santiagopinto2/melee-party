@@ -41,8 +41,7 @@ int mp4_disc_open(void)
     if (disc_status != MP4_DISC_OK) {
         return disc_status;
     }
-    if (!mp4_mem_fits()) {
-        OSReport("[party] mp4: the heaps leave less than 1 MB under what GX can read\n");
+    if (!mp4_mem_fits()) {   /* it says why in the log */
         disc_status = MP4_DISC_NONE;
         return disc_status;
     }

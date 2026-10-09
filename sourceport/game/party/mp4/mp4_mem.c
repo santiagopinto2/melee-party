@@ -24,18 +24,22 @@
  * of the pool. Those three never hold anything GX reads (a compressed record while it unpacks, a
  * sound, a scrap), so they live on the C runtime's heap instead, outside the pool. Each loaded
  * model keeps its unpacked file and the 64-bit structures made from it, so a minigame that loads
- * four characters twice (m412: a player and its reflection on the ice) needs the room. */
-static const u32 HeapSizeTbl[HEAP_MAX] = { 0x200000, 0x10000, 0xAD0000, 0x100000, 0x40000 };
-#define MP4_POOL_SIZE (0x200000 + 0xAD0000)   /* the system and data heaps: what GX reads */
+ * four characters twice (m412: a player and its reflection on the ice) needs the room. The data
+ * heap's entry is what it gets at most: see data_heap_size. */
+static u32 HeapSizeTbl[HEAP_MAX] = { 0x200000, 0x10000, 0xAD0000, 0x100000, 0x40000 };
+#define MP4_SYSTEM_SIZE 0x200000
+#define MP4_DATA_SIZE 0xAD0000
+#define MP4_POOL_SIZE (MP4_SYSTEM_SIZE + MP4_DATA_SIZE)   /* the system and data heaps: what GX reads */
 /* After the heaps, the frame's big-endian copies of vertex arrays (mp4_gx.c): all the float arrays
- * the frame's models draw with. As much of this as still fits under 0x84000000 with the heaps
- * above it (mp4_gx_scratch): every minigame linked in moves the pool up by its code's size, and
- * the scratch is what gives. A frame that wants more than the scratch has says so in the log. */
+ * the frame's models draw with. A frame that wants more than the scratch has says so in the log. */
 #define MP4_GX_SCRATCH_SIZE 0x100000   /* a frame of m438 wants 283 KB, of m440 less */
-#define MP4_GX_SCRATCH_MIN 0x80000
+#define GX_LIMIT 0x84000000u
+/* The least data heap MP4 runs with: m412, the biggest measured, peaks at 8.6 MB. */
+#define MP4_DATA_HEAP_MIN 0x900000
 static u8 mp4_pool[MP4_POOL_SIZE + MP4_GX_SCRATCH_SIZE] __attribute__((aligned(64)));
 void* malloc(size_t size);
 static void *HeapTbl[HEAP_MAX];
+static u32 data_used, data_peak;   /* the data heap's blocks in use, and the most so far */
 
 #define MEM_ALLOC_SIZE(size) ((((size) - 1) / 32 + 1) * 32 + 64)
 #define DATA_GET_BLOCK(ptr) ((struct memory_block *) (((char *) (ptr)) - 64))
@@ -55,12 +59,28 @@ struct memory_block {
 static void *HuMemMemoryAlloc2(void *heap_ptr, size_t size, uintptr_t num, uintptr_t retaddr);
 size_t HuMemUsedMemorySizeGet(void *heap_ptr);
 
+/* The pool is placed by the linker like any other .bss, so it moves up with every byte of code
+ * linked before it, and its end can pass GX_LIMIT. The data heap gives way: it is MP4_DATA_SIZE,
+ * or what is left between the system heap and a full scratch below the limit. */
+static u32 data_heap_size(void)
+{
+    uintptr_t data = (uintptr_t) mp4_pool + MP4_SYSTEM_SIZE;
+    uintptr_t end = GX_LIMIT - MP4_GX_SCRATCH_SIZE;
+    if (end <= data) {
+        return 0;
+    }
+    return end - data < MP4_DATA_SIZE ? (u32) ((end - data) & ~0xFFFu) : MP4_DATA_SIZE;
+}
+
 void HuMemInitAll(void)
 {
     u8 *ptr = mp4_pool;
     s32 i;
     for (i = 0; i < HEAP_MAX; i++) {
         if (i == HEAP_SYSTEM || i == HEAP_DATA) {
+            if (i == HEAP_DATA) {
+                HeapSizeTbl[i] = data_heap_size();
+            }
             HeapTbl[i] = HuMemInit(ptr, HeapSizeTbl[i]);
             ptr += HeapSizeTbl[i];
         } else {
@@ -70,25 +90,25 @@ void HuMemInitAll(void)
     }
 }
 
-/* The scratch that fits under the limit: all of it, or what is left above the heaps. */
-static u32 scratch_size(void)
-{
-    uintptr_t top = (uintptr_t) (mp4_pool + MP4_POOL_SIZE);
-    if (top >= 0x84000000u) {
-        return 0;
-    }
-    return 0x84000000u - top < MP4_GX_SCRATCH_SIZE ? (u32) (0x84000000u - top) : MP4_GX_SCRATCH_SIZE;
-}
-
 int mp4_mem_fits(void)
 {
-    return scratch_size() >= MP4_GX_SCRATCH_MIN;
+    u32 data = data_heap_size();
+    if (data < MP4_DATA_HEAP_MIN) {
+        OSReport("[party] mp4: the game image leaves the data heap %u KB under what GX can read, "
+                 "%u KB short\n", data >> 10, (MP4_DATA_HEAP_MIN - data) >> 10);
+        return 0;
+    }
+    OSReport("[party] mp4: heaps at %p: system %u KB, data %u KB of %u, GX scratch %u KB\n",
+             (void*) mp4_pool, MP4_SYSTEM_SIZE >> 10, data >> 10, MP4_DATA_SIZE >> 10,
+             MP4_GX_SCRATCH_SIZE >> 10);
+    return 1;
 }
 
+/* The scratch, right after the data heap: below the limit whatever the pool's place. */
 u8* mp4_gx_scratch(u32* size)
 {
-    *size = scratch_size();
-    return mp4_pool + MP4_POOL_SIZE;
+    *size = MP4_GX_SCRATCH_SIZE;
+    return mp4_pool + MP4_SYSTEM_SIZE + data_heap_size();
 }
 
 int mp4_mem_ready(void)
@@ -179,6 +199,14 @@ static void *HuMemMemoryAlloc2(void *heap_ptr, size_t size, uintptr_t num, uintp
             block->magic = 165;
             block->num = num;
             block->retaddr = retaddr;
+            if (heap_ptr == HeapTbl[HEAP_DATA]) {
+                data_used += (u32) block->size;
+                if (data_used >= data_peak + 0x80000) {
+                    data_peak = data_used;
+                    OSReport("[party] mp4: data heap peak %u KB of %u KB\n", data_peak >> 10,
+                             HeapSizeTbl[HEAP_DATA] >> 10);
+                }
+            }
             return BLOCK_GET_DATA(block);
         }
         block = block->next;
@@ -213,6 +241,9 @@ void HuMemMemoryFree(void *ptr, uintptr_t retaddr)
     if (block->magic != 165) {
         OSReport("[party] mp4: bad free %p\n", ptr);
         return;
+    }
+    if ((u8*) block >= (u8*) HeapTbl[HEAP_DATA] && (u8*) block < (u8*) HeapTbl[HEAP_DATA] + HeapSizeTbl[HEAP_DATA]) {
+        data_used -= (u32) block->size;
     }
     if (block->prev < block && !block->prev->flag) {
         block->flag = 0;

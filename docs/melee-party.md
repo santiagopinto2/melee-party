@@ -232,10 +232,11 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
   Blizzard's Brigade: a player and its reflection) needs most of the data heap. GX reads the
   textures, vertex arrays and display lists of MP4 models in place, and it can only address MEM1
   and the image (below 0x84000000); after the heaps comes the per-frame scratch for big-endian
-  copies of vertex arrays, which takes whatever still fits under that limit (1 MB at most, a
-  frame of m438 uses 0.3 MB). Each minigame linked
-  in moves the pool up by its code's size; when less than 1 MB of scratch is left the MP4
-  minigames switch themselves off and the log says so. The pool is zero-filled `.bss` and costs
+  copies of vertex arrays (1 MB; a frame of m438 uses 0.3 MB). Each minigame linked in moves the
+  pool up by its code's size, so the data heap gives way: it is 10.8 MB, or what is left between
+  the system heap and the scratch below the limit (10.3 MB with all fourteen minigames). Under
+  9 MB (Mr. Blizzard's Brigade peaks at 8.6 MB) the MP4 minigames switch themselves off. The log
+  gives the heaps' sizes when the disc opens and the data heap's peak in 512 KB steps. The pool is zero-filled `.bss` and costs
   nothing without an MP4 disc. Rollback snapshots leave it out, because the MP4 minigames are
   offline only for now. MP4's processes run on coroutines (`mp4_coro.c`) whose 64 KB stacks come
   from the C runtime's heap: GX never reads them, and a process that outlives a match (the boot
@@ -245,9 +246,10 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
   pointers), and links the game image right after it at 0x82800000, so that the game's statics
   have an address the emulated GX texture and display-list registers can hold: 26 bits, the first
   64 MB from 0x80000000. The game image is already 24 MB, so its last sections end past the
-  limit; the MP4 pool is placed by the linker like any other `.bss` and happens to end right at it
-  (`mp4_mem_fits`). Each MP4 minigame linked in adds about 70 KB of code, which moves everything
-  after it up by that much. Room, when it runs out: the DVD, music and misc heaps (1.3 MB) could
+  limit; the MP4 pool is placed by the linker like any other `.bss` and ends past it now: the
+  data heap is cut to fit (`data_heap_size` in `mp4_mem.c`). Each MP4 minigame linked in adds
+  about 70 KB of code, which moves everything after it up by that much. More room, when the data
+  heap gets too small: the DVD, music and misc heaps (1.3 MB) could
   leave the pool, since GX never reads them (the system heap stays: sprite bitmaps and m438's
   effect display lists live there); a smaller MEM1 would let the image start lower; or the port's
   GX could decode wider addresses. None of this is done.

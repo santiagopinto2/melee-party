@@ -12,7 +12,7 @@
 /* Opens the disc and the heaps once (the first call); 1 when MP4 data can be loaded. */
 int mp4_available(void);
 int mp4_mem_ready(void);
-int mp4_mem_fits(void);                 /* the heaps are where GX can read them */
+int mp4_mem_fits(void);                 /* the heaps are where GX can read them (logs their sizes) */
 
 /* An archive's data number (DATADIR_* << 16) by its name ("m440", "data/m440.bin"), or -1. */
 s32 mp4_data_dir(const char* name);
