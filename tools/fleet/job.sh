@@ -6,7 +6,9 @@
 #   tools/fleet/job.sh [game id ...]        (default: every MP4 minigame in the list below)
 #
 # Environment:
-#   MELEE_ISO_DIR   where the discs are (melee.iso and mp4.iso); without it, no game runs
+#   MELEE_ISO_DIR   where the discs are (melee.iso and mp4.iso; /private on the PC, mounted read-only
+#                   by the request's "private_files"); without it, no game runs. Nothing under it
+#                   may come back: the outputs are the checkout's fleet-out alone
 #   FLEET_JOBS      build parallelism (default: nproc)
 #   FLEET_FRAMES    frames per headless game (default 9000) and per capture (default 1300)
 #   FLEET_CAPTURE_EVERY  capture every N game frames (default 50); FLEET_NO_CAPTURE=1 skips them
@@ -19,7 +21,7 @@ report="$out/report.md"
 jobs="${FLEET_JOBS:-$(nproc)}"
 iso_dir="${MELEE_ISO_DIR:-}"
 games=("$@")
-[ ${#games[@]} -gt 0 ] || games=(bigger-blast chomp-fever blizzard-brigade booksquirm butterfly-blitz trace-race candlelight-flight money-belts hop-or-pop cheep-cheep-sweep team-treasure-trek)
+[ ${#games[@]} -gt 0 ] || games=(bigger-blast chomp-fever blizzard-brigade booksquirm butterfly-blitz trace-race candlelight-flight money-belts hop-or-pop cheep-cheep-sweep team-treasure-trek challenge-booksquirm paths-of-peril)
 t0=$(date +%s)
 say() { printf '%s\n' "$*" | tee -a "$report"; }
 step() { say ""; say "## $* ($(( $(date +%s) - t0 )) s)"; }

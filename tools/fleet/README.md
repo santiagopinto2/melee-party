@@ -16,7 +16,9 @@ read-only, at a path arhum gives.
   port's GPU test, then each MP4 minigame named on the command line (default: all) headless to
   the end and captured every 50 frames. `fleet-out/report.md` sums it up; the montages and
   logs sit beside it.
-- `request.json`: the request, with `COMMIT` (the full hash) and `ISO_MOUNT` (the discs'
-  path on the PC) to fill in: `fleet-job submit request.json`.
+- `request.json`: the request, with `COMMIT` (the full hash) to fill in: `fleet-job submit
+  request.json`. Its `private_files` mounts Santi's discs read-only at `/private/melee.iso` and
+  `/private/mp4.iso` (sent once with `fleet-job private-upload`); nothing under `/private` may
+  come back, so the outputs are the checkout's `fleet-out` and the built binaries.
 
 A job only starts while arhum is away from his PC, so results come in the evening or at night.
