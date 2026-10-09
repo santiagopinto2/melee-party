@@ -713,6 +713,7 @@ static const struct {
     { "hop-or-pop", "Pop the balloons, or hop\nclear of the ball. 1 vs 3." },
     { "cheep-cheep-sweep", "Sweep Cheep Cheeps into\nyour net with A. Two vs two." },
     { "team-treasure-trek", "Find the key and the chest\nwith your partner." },
+    { "challenge-booksquirm", "The pages keep coming.\nThe last one in plays on." },
 };
 
 static const char* description_of(int menu_kind, int selection)
