@@ -1636,34 +1636,10 @@ static void SetShadowTex(void) {
 #endif
 }
 
-/* Melee Party, temporary: Stamp Out!'s shadow-map receiver experiments (m415_recv_exp). 1 skips
- * the stage's texture (passes CPREV on), 2 uses the mesh's UVs instead of the projection, 3
- * samples texture map 0 instead of the shadow map, 4 outputs the shadow map's colour as is */
-s32 mp4_shadow_recv_exp = -1;
-
 static void SetShadow(HU3DDRAWOBJ *drawObj, s16 tevStage, s16 texCoord)
 {
-    if (mp4_shadow_recv_exp == 2) {
-        GXSetTexCoordGen2(texCoord, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY, GX_FALSE, GX_PTIDENTITY);
-    } else {
-        GXSetTexCoordGen2(texCoord, GX_TG_MTX3x4, GX_TG_POS, GX_TEXMTX9, GX_FALSE, GX_PTIDENTITY);
-    }
-    if (mp4_shadow_recv_exp == 1) {
-        GXSetTevOrder(tevStage, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
-        GXSetTevColorIn(tevStage, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO, GX_CC_CPREV);
-        GXSetTevColorOp(tevStage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
-        GXSetTevAlphaIn(tevStage, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
-        GXSetTevAlphaOp(tevStage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_FALSE, GX_TEVPREV);
-        return;
-    }
-    GXSetTevOrder(tevStage, texCoord, mp4_shadow_recv_exp == 3 ? GX_TEXMAP0 : shadowMapNo, GX_COLOR0A0);
-    if (mp4_shadow_recv_exp == 4) {
-        GXSetTevColorIn(tevStage, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO, GX_CC_TEXC);
-        GXSetTevColorOp(tevStage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
-        GXSetTevAlphaIn(tevStage, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
-        GXSetTevAlphaOp(tevStage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_FALSE, GX_TEVPREV);
-        return;
-    }
+    GXSetTexCoordGen2(texCoord, GX_TG_MTX3x4, GX_TG_POS, GX_TEXMTX9, GX_FALSE, GX_PTIDENTITY);
+    GXSetTevOrder(tevStage, texCoord, shadowMapNo, GX_COLOR0A0);
     GXSetTevColorIn(tevStage, GX_CC_CPREV, GX_CC_ZERO, GX_CC_TEXC, GX_CC_ZERO);
     GXSetTevColorOp(tevStage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
     GXSetTevAlphaIn(tevStage, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);

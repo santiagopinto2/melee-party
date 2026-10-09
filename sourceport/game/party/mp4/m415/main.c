@@ -346,23 +346,6 @@ void fn_1_7D8(omObjData *object)
 #ifdef TARGET_PC
 static ANIMBMP *m415_shadow_bmp;
 static void *m415_shadow_bmp_data;   /* Melee Party: fn_1_66AC */
-
-/* Melee Party, temporary (fleet jobs, MELEE_PARTY_M415_EXP): "recv-<variant>" makes the canvas a
- * shadow-map receiver again with one part of hsfdraw.c's SetShadow changed (mp4_shadow_recv_exp) */
-char *getenv(const char *name);
-extern s32 mp4_shadow_recv_exp;
-static int m415_recv_exp(void)
-{
-    static const char *names[] = { "recv", "recv-nostage", "recv-uvgen", "recv-canvasmap", "recv-passtex" };
-    const char *v = getenv("MELEE_PARTY_M415_EXP");
-    int i;
-    for (i = 0; v != NULL && i < (int) (sizeof names / sizeof names[0]); i++) {
-        if (strcmp(v, names[i]) == 0) {
-            return i + 1;
-        }
-    }
-    return 0;
-}
 #endif
 
 void fn_1_14C0(omObjData *object)
@@ -476,10 +459,9 @@ void fn_1_1960(omObjData *object)
 #ifdef TARGET_PC
             /* Melee Party: the canvas stays out of the shadow map. As a receiver the port draws
              * nothing of it, prints included, and the toy room's floor shows through */
-            mp4_shadow_recv_exp = m415_recv_exp() - 1;
-            if (mp4_shadow_recv_exp >= 0)
-#endif
+#else
             Hu3DModelShadowMapObjSet(object->model[0], "kyanbasu");
+#endif
             Hu3DModelShadowReset(object->model[0]);
             Hu3DModelShadowReset(object->model[3]);
             break;
