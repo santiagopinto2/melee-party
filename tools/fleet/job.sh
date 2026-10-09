@@ -56,10 +56,13 @@ say "host: ${FLEET_MACHINE:-?}, $(nproc) cores, $(free -g | awk '/Mem:/{print $2
 say "setup: $(tail -1 "$out/setup.log" 2>/dev/null) ($(( $(date +%s) - t0 )) s)"
 
 step "downloads"
-if [ ! -d "$cache/xwin/crt" ]; then
+# xwin moves its downloads into place, so they go on the same file system as the output; .done
+# marks a whole splat (an interrupted one is started again)
+if [ ! -f "$cache/xwin/.done" ]; then
+  rm -rf "$cache/xwin" "$cache/xwin-dl"
   ( cd /tmp && curl -sL https://github.com/Jake-Shadle/xwin/releases/download/0.10.0/xwin-0.10.0-x86_64-unknown-linux-musl.tar.gz | tar xz \
-    && ./xwin-0.10.0-x86_64-unknown-linux-musl/xwin --accept-license --cache-dir /tmp/xwin-dl --arch x86_64 splat --output "$cache/xwin" > "$out/xwin.log" 2>&1 \
-    && rm -rf /tmp/xwin-dl /tmp/xwin-0.10.0-* ) || { say "xwin failed (see xwin.log)"; fail=1; }
+    && ./xwin-0.10.0-x86_64-unknown-linux-musl/xwin --accept-license --cache-dir "$cache/xwin-dl" --arch x86_64 splat --output "$cache/xwin" > "$out/xwin.log" 2>&1 \
+    && touch "$cache/xwin/.done" && rm -rf "$cache/xwin-dl" /tmp/xwin-0.10.0-* ) || { say "xwin failed (see xwin.log)"; fail=1; }
 fi
 if [ ! -x "$cache/dxc/bin/dxc" ]; then
   mkdir -p "$cache/dxc" && curl -sL https://github.com/microsoft/DirectXShaderCompiler/releases/download/v1.9.2609/linux_dxc_2026_09_28.x86_x64.tar.gz | tar xz -C "$cache/dxc" || { say "dxc download failed"; fail=1; }
