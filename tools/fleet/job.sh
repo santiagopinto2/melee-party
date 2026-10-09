@@ -174,7 +174,7 @@ summary() {
 declare -A first_end
 for g in "${games[@]}"; do
   step "$g headless"
-  run_game "$g" "--headless --fast" "${FLEET_FRAMES:-9000}" 600 "$out/$g-headless.out"; rc=$?
+  run_game "$g" "--headless --fast" "${FLEET_FRAMES:-9000}" 420 "$out/$g-headless.out"; rc=$?
   cp "$log" "$out/$g-headless.log" 2>/dev/null
   summary "$out/$g-headless.log" "$out/$g-headless.out" | tee -a "$report"
   [ $rc = 0 ] || say "(exit $rc$([ $rc = 124 ] && echo ': timed out'))"
@@ -230,7 +230,9 @@ if [ "${FLEET_NO_CAPTURE:-0}" != 1 ]; then
       every=$(( frames / 24 )); [ $every -ge 10 ] || every=10
       window=640x480; [ "$render" = wined3d ] && window=320x240
       mkdir -p "$out/cap-$g"; rm -f "$out/cap-$g"/*
-      run_game "$g" "--hidden --fast --window $window --scale 1" "$frames" "$(( budget + 60 ))" "$out/$g-capture.out" \
+      # its own bound: a hung game stops here, not at the job's limit with the other games' time
+      secs=$(awk -v f="$frames" -v s="$spf" -v b="$budget" 'BEGIN { t = int(f * s * 1.5) + 120; if (t > b + 60) t = b + 60; print t }')
+      run_game "$g" "--hidden --fast --window $window --scale 1" "$frames" "$secs" "$out/$g-capture.out" \
         --capture "$out/cap-$g/f.ppm" --capture-every "$every"; rc=$?
       cp "$log" "$out/$g-capture.log" 2>/dev/null
       summary "$out/$g-capture.log" "$out/$g-capture.out" | grep -v 'mp4: heaps at' | tee -a "$report"
