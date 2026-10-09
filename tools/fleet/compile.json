@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "name": "melee-party-compile",
+  "repo": "https://github.com/santiagopinto2/melee-party.git",
+  "commit": "COMMIT",
+  "submodules": true,
+  "command": "FLEET_BUILD_ONLY=1 FLEET_JOBS=2 tools/fleet/job.sh",
+  "gpu": false,
+  "mem": "3G",
+  "time_limit_s": 5400,
+  "outputs": [
+    "fleet-out"
+  ]
+}

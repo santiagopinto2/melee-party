@@ -22,5 +22,12 @@ read-only, at a path arhum gives.
   request.json`. Its `private_files` mounts Santi's discs read-only at `/private/melee.iso` and
   `/private/mp4.iso` (sent once with `fleet-job private-upload`); nothing under `/private` may
   come back, so the outputs are the checkout's `fleet-out` and the built binaries.
+- `compile.json`: the same checkout built and nothing run (`FLEET_BUILD_ONLY=1`), as a CPU-only job
+  with `"mem": "3G"` so the OptiPlexes and Amal's PC can take it (the fleet still prefers arhum's PC
+  when it is free). Santi's choice (2026-10-09): his PC is the least reliable, so compile checks,
+  symbol checks and disc-free tests go to the others; only the game runs need his PC, where the
+  discs are. The report says how long the builds
+  took and `fleet-out/build-*.log` has the errors. If 3G is too little for the host link, raise
+  `mem` to `8G` (Amal's PC).
 
 A job only starts while arhum is away from his PC, so results come in the evening or at night.

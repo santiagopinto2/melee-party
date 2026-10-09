@@ -13,6 +13,7 @@
 #   FLEET_FRAMES    frames per headless game (default 9000) and per capture (default 1300)
 #   FLEET_CAPTURE_EVERY  capture every N game frames (default 50); FLEET_NO_CAPTURE=1 skips them
 #   FLEET_GPU=0     keep Wine's own D3D11 on OpenGL instead of DXVK on Vulkan
+#   FLEET_BUILD_ONLY=1  stop after the two builds (a compile check on a CPU-only machine; see compile.json)
 set -uo pipefail
 repo="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$repo"
@@ -69,6 +70,9 @@ else
 fi
 cp build-sourceport-gcc/melee_game.dll build-sourceport-gcc/melee_game.snapexcl build-clangcl/port/ 2>/dev/null
 [ $fail = 0 ] || { say ""; say "stopped after the build failures"; exit 1; }
+if [ "${FLEET_BUILD_ONLY:-0}" = 1 ]; then
+  say ""; say "build only: done in $(( $(date +%s) - t0 )) s"; exit 0
+fi
 
 step "wine prefix"
 export WINEPREFIX="$HOME/.cache/wine-melee" WINEDEBUG=-all WINEARCH=win64
