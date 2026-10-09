@@ -435,7 +435,7 @@ void fn_1_1960(omObjData *object)
         case 0:
             break;
         case 1:
-            GXDrawDone();
+            mp4_gx_draw_done();   /* Melee Party: see mp4.h */
             temp_r3 = fn_1_9734(object->model[2]);
             temp_r29 = Hu3DShadowData.size * Hu3DShadowData.size;
             /* Melee Party: the shadow map's bytes, which the renderer writes back here on request

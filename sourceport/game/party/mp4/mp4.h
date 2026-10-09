@@ -57,6 +57,10 @@ int mp4_player_coins(int player);
 /* MP4's camera (the first Hu3D camera) in Melee's world; 0 if there is none yet. */
 int mp4_camera(float eye[3], float look[3], float* fov);
 
+/* GXDrawDone in MP4 code: nothing (mp4_gx.c). The real one fires Melee's draw-done callback, whose
+ * XFB check then asserts (video.c:313) */
+void mp4_gx_draw_done(void);
+
 /* mp4_party.c: a split screen. The viewports the players' models are drawn in are the views (1
  * when there is one or none); mp4_view_begin sets the match camera up for one of them, before it
  * draws. A camera drawing no player is a render pass inside the frame, with its own setup. */
