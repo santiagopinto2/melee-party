@@ -715,6 +715,7 @@ static const struct {
     { "team-treasure-trek", "Find the key and the chest\nwith your partner." },
     { "challenge-booksquirm", "The pages keep coming.\nThe last one in plays on." },
     { "paths-of-peril", "Walk the narrow path to\nthe end. First pair wins." },
+    { "stamp-out", "Get under the stamps to\nprint tiles. Most tiles wins." },
 };
 
 static const char* description_of(int menu_kind, int selection)
