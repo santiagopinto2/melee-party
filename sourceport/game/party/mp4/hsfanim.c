@@ -535,6 +535,10 @@ s16 Hu3DParticleCreate(ANIMDATA *anim, s16 maxCnt)
     dlBuf = HuMemDirectMallocNum(HEAP_DATA, maxCnt * 0x60 + 0x80, modelP->mallocNo);
     particleP->dlBuf = dlBuf;
     DCInvalidateRange(dlBuf, maxCnt * 0x60 + 0x80);
+    /* Melee Party: Melee's XF flush workaround off while the list is recorded, as in hsfdraw.c's
+     * Hu3DModelCreate: its dummy primitive, sized by the vertex layout of the moment, threw the
+     * decoder off when the list played (Challenge Booksquirm's crash at a read past 0x84000000) */
+    GXSetMisc(GX_MT_XF_FLUSH, 0);
     GXBeginDisplayList(dlBuf, 0x20000);
     GXBegin(GX_QUADS, GX_VTXFMT0, maxCnt * 4);
     for (i = 0; i < maxCnt; i++) {
@@ -553,6 +557,7 @@ s16 Hu3DParticleCreate(ANIMDATA *anim, s16 maxCnt)
     }
     GXEnd();
     particleP->dlSize = GXEndDisplayList();
+    GXSetMisc(GX_MT_XF_FLUSH, 8);
     return modelId;
 }
 
