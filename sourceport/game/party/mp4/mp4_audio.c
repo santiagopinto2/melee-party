@@ -78,3 +78,10 @@ void HuAudStreamFadeOut(s32 streamNo)
 {
     (void) streamNo;
 }
+
+/* whether a sound effect still plays (m439): nothing plays here */
+s32 HuAudFXStatusGet(int seNo)
+{
+    (void) seNo;
+    return 0;
+}

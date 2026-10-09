@@ -210,6 +210,11 @@ static int view_list(MP4View out[HU3D_CAM_MAX])
 
 float mp4_fog_near = 1.0f;     /* the match camera's projection depths, for the fog and the passes */
 float mp4_fog_far = 16384.0f;
+static f32 clip_max(f32 v, f32 limit)
+{
+    return v < limit ? v : limit;
+}
+
 static s16 view_primary;   /* this draw's: Hu3DCameraSet follows it (mp4_camera_set) */
 
 int mp4_views(void)
@@ -268,10 +273,11 @@ void mp4_view_begin(int view, HSD_CObj* cobj)
     vp.ymin = full_viewport.ymin + v->y * sy;
     vp.ymax = vp.ymin + v->h * sy;
     HSD_CObjSetViewportfx4(cobj, vp.xmin, vp.xmax, vp.ymin, vp.ymax);
+    /* clamped to the screen: Paths of Peril sets quarter scissors 640 wide (the hardware clamps) */
     HSD_CObjSetScissorx4(cobj, (u16) (full_viewport.xmin + cam->scissorX * sx),
-                         (u16) (full_viewport.xmin + (cam->scissorX + cam->scissorW) * sx),
+                         (u16) clip_max(full_viewport.xmin + (cam->scissorX + cam->scissorW) * sx, full_viewport.xmax),
                          (u16) (full_viewport.ymin + cam->scissorY * sy),
-                         (u16) (full_viewport.ymin + (cam->scissorY + cam->scissorH) * sy));
+                         (u16) clip_max(full_viewport.ymin + (cam->scissorY + cam->scissorH) * sy, full_viewport.ymax));
     HSD_CObjSetAspect(cobj, full_aspect * (v->w / 640.0f) / (v->h / 480.0f));
     eye.x = cam->pos.x * MP4_SCALE + world_offset.x;
     eye.y = cam->pos.y * MP4_SCALE + world_offset.y;
@@ -320,9 +326,9 @@ void mp4_camera_set(s32 camNo, Mtx out)
     b = (full_viewport.ymin + (cam->viewportY + cam->viewportH) * sy) * ys;
     GXSetViewport(l, t, r - l, b - t, cam->viewportNear, cam->viewportFar);
     l = (full_viewport.xmin + cam->scissorX * sx) * xs;
-    r = (full_viewport.xmin + (cam->scissorX + cam->scissorW) * sx) * xs;
+    r = clip_max(full_viewport.xmin + (cam->scissorX + cam->scissorW) * sx, full_viewport.xmax) * xs;
     t = (full_viewport.ymin + cam->scissorY * sy) * ys;
-    b = (full_viewport.ymin + (cam->scissorY + cam->scissorH) * sy) * ys;
+    b = clip_max(full_viewport.ymin + (cam->scissorY + cam->scissorH) * sy, full_viewport.ymax) * ys;
     GXSetScissor((u32) l, (u32) t, (u32) (r - l), (u32) (b - t));
     eye.x = cam->pos.x * MP4_SCALE + world_offset.x;
     eye.y = cam->pos.y * MP4_SCALE + world_offset.y;

@@ -1989,12 +1989,23 @@ void Hu3DFogClear(void) {
     GXSetFog(GX_FOG_NONE, 0.0f, 0.0f, 0.0f, 0.0f, BGColor);
 }
 
-/* Melee Party: the shadow-map pass is not drawn yet. It renders the scene from the light into a
- * corner of the frame buffer and copies that out as a texture; here that corner stayed on screen
- * and the pass cost more than the scene. Models keep their HU3D_ATTR_SHADOW flags, and with
- * Hu3DShadowF off the receivers do not sample the (never written) map. Turning it on again is
- * this one line. */
-static int mp4_shadow_pass_on;
+/* Melee Party: the shadow-map pass renders the casters from the light into a corner of the frame
+ * buffer and copies that out as a texture the receivers sample. It was off while the games ran
+ * in software on the VM (the pass cost more than the scene and its corner stayed on screen); it
+ * is on now, for the PC's GPU, with MELEE_PARTY_MP4_SHADOWS=0 to turn it off again. With it off
+ * the models keep their HU3D_ATTR_SHADOW flags and, with Hu3DShadowF off, the receivers do not
+ * sample the never-written map. Stamp Out! (m415) also reads the map's bytes back, which the
+ * host's copies do not write to guest memory: that game waits on a readback. */
+char* getenv(const char* name);
+static int mp4_shadow_pass_on = -1;
+static int shadow_pass_on(void)
+{
+    if (mp4_shadow_pass_on < 0) {
+        const char* v = getenv("MELEE_PARTY_MP4_SHADOWS");
+        mp4_shadow_pass_on = v == NULL || *v == 0 || *v != '0';
+    }
+    return mp4_shadow_pass_on;
+}
 
 void Hu3DShadowCreate(f32 arg8, f32 arg9, f32 argA) {
     Hu3DShadowData.size = 0xC0;
@@ -2014,7 +2025,7 @@ void Hu3DShadowCreate(f32 arg8, f32 arg9, f32 argA) {
     C_MTXLightPerspective(Hu3DShadowData.projMtx, arg8, HU_DISP_ASPECT, 0.5f, -0.5f, 0.5f, 0.5f);
     VECNormalize(&Hu3DShadowData.camUp, &Hu3DShadowData.camUp);
     Hu3DShadowData.alpha = 0x80;
-    Hu3DShadowF = mp4_shadow_pass_on;
+    Hu3DShadowF = shadow_pass_on();
 }
 
 void Hu3DShadowPosSet(Vec* camPos, Vec* camUp, Vec* camTarget) {
@@ -2036,7 +2047,7 @@ void Hu3DShadowSizeSet(u16 arg0) {
 }
 
 void Hu3DShadowExec(void) {
-    if (!mp4_shadow_pass_on) {
+    if (!shadow_pass_on()) {
         return;
     }
     HU3DMODEL* var_r31;
