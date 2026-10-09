@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <cstdio>
 #include <cstring>
 #include <mutex>
 #include <vector>
@@ -718,7 +719,18 @@ size_t parse_command(const uint8_t* d, size_t len) {
     return need;
   }
   static int reported = 0;
-  if (reported++ < 10) host::log("gx: unknown opcode %02X (list %08X, data %p, vcd %08X/%08X)", op, g_dl_addr, d, g_cp.reg[0x50], g_cp.reg[0x60]);
+  if (reported++ < 10) {
+    host::log("gx: unknown opcode %02X (list %08X, data %p, vcd %08X/%08X)", op, g_dl_addr, d, g_cp.reg[0x50], g_cp.reg[0x60]);
+    // the first time, the list's start: what came before the parse went astray
+    static bool dumped = false;
+    const uint8_t* list = g_dl_addr && !dumped ? host::try_ptr(g_dl_addr, 64) : nullptr;
+    if (list) {
+      dumped = true;
+      char hex[64 * 3 + 1];
+      for (int i = 0; i < 64; ++i) std::snprintf(hex + i * 3, 4, "%02X ", list[i]);
+      host::log("gx: list %08X starts %s", g_dl_addr, hex);
+    }
+  }
   return 1;
 }
 

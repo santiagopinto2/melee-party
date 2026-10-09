@@ -98,6 +98,7 @@ static void match_view_save(void)
  * aspect, saved when the first view of a frame is set up, for the HUD and for carving the
  * views out of it. */
 static int views_active;
+static int views_log;   /* MELEE_PARTY_MP4_LOG: frame_log asks for the next frame's views */
 static HSD_RectF32 full_viewport;
 static Scissor full_scissor;
 static f32 full_aspect;
@@ -288,6 +289,16 @@ void mp4_view_begin(int view, HSD_CObj* cobj)
     HSD_CObjSetEyePosition(cobj, &eye);
     HSD_CObjSetInterest(cobj, &look);
     HSD_CObjSetFov(cobj, cam->fov);
+    if (views_log) {
+        party_log("mp4:   view %d of %d: camera %d (cameras %04X) at %.0f %.0f %.0f x %.0f, viewport %.0f-%.0f %.0f-%.0f "
+                  "scissor %d-%d %d-%d, eye %.1f %.1f %.1f look %.1f %.1f %.1f fov %.1f", view, n, (int) v->primary,
+                  (int) (u16) v->cameras, v->x, v->y, v->w, v->h, vp.xmin, vp.xmax, vp.ymin, vp.ymax,
+                  (int) cobj->scissor.left, (int) cobj->scissor.right, (int) cobj->scissor.top,
+                  (int) cobj->scissor.bottom, eye.x, eye.y, eye.z, look.x, look.y, look.z, cam->fov);
+        if (view == 0) {
+            views_log = 0;
+        }
+    }
 }
 
 /* hsfman.c, Hu3DCameraSet, while MP4 draws in the match: a camera's GX setup and view matrix.
@@ -506,6 +517,15 @@ static void frame_log(void)
             party_log("mp4:   camera eye %.1f %.1f %.1f look %.1f %.1f %.1f fov %.1f near %.1f far %.1f",
                       eye[0], eye[1], eye[2], look[0], look[1], look[2], fov, Hu3DCamera[0].nnear,
                       Hu3DCamera[0].ffar);
+        }
+    }
+    if (((frames - 1) % 300) == 0) {
+        views_log = 1;
+        for (p = 0; p < 4; p++) {
+            s16 model = mp4_char_model(p);
+            if (model >= 0 && Hu3DData[model].hsf != NULL) {
+                party_log("mp4:   P%d model %d cameras %04X", p + 1, (int) model, (int) (u16) Hu3DData[model].cameraBit);
+            }
         }
     }
     for (p = 0; p < 4; p++) {
