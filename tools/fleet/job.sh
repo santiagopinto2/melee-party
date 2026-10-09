@@ -162,11 +162,14 @@ run_game() { # id mode frames seconds out extra...
     timeout "$secs" tools/wine_party.sh $mode --frames "$frames" --script "$PWD/port/scripts/party_boot.txt" --mp4-iso "$iso_dir/mp4.iso" "$@" > "$o" 2>&1
   local rc=$?
   WINEPREFIX="$WINEPREFIX" wineserver -k 2>/dev/null; sleep 2
+  # the game's own crash report, beside the run's output
+  [ -f build-clangcl/port/melee_port_crash.txt ] && mv build-clangcl/port/melee_port_crash.txt "${o%.out}-crash.txt"
+  rm -f build-clangcl/port/melee_port_crash.dmp
   return $rc
 }
 # what a run's log says about the minigames (placements and their length, the MP4 heaps, crashes)
 summary() {
-  grep -aE 'places|game crash|panic|CRASH|out of memory|mp4: heaps at|leaves the data heap|data heap peak|Mario Party 4 disc|MP4 minigames are off|too many vertex arrays|bad free|Unhandled|exception' "$@" \
+  grep -aE 'places|m439: player|game crash|panic|CRASH|FATAL|called from melee_game|out of memory|mp4: heaps at|leaves the data heap|Mario Party 4 disc|MP4 minigames are off|too many vertex arrays|bad free|Unhandled|exception' "$@" \
     | grep -v 'Mario Party 4 disc Z:' | awk '!seen[$0]++' | cut -c1-200 | head -40
 }
 
@@ -218,6 +221,27 @@ if [ "${FLEET_NO_CAPTURE:-0}" != 1 ]; then
     say "no way of rendering captured a frame: no captures"; fail=1
   else
     say "captures render with $render, about $spf s a frame"
+    window=640x480; [ "$render" = wined3d ] && window=320x240
+    # Experiments: short captures of a game with one setting changed, before the full ones
+    # (FLEET_EXPERIMENTS="game:VARIABLE=value ...", FLEET_EXPERIMENT_FRAMES frames each)
+    k=0
+    for x in ${FLEET_EXPERIMENTS:-}; do
+      k=$((k + 1)); g=${x%%:*}; setting=${x#*:}
+      step "experiment $k: $g with $setting"
+      frames=${FLEET_EXPERIMENT_FRAMES:-1500}
+      secs=$(awk -v f="$frames" -v s="$spf" 'BEGIN { print int(f * s * 1.5) + 120 }')
+      mkdir -p "$out/cap-exp$k"; rm -f "$out/cap-exp$k"/*
+      ( export "$setting"; run_game "$g" "--hidden --fast --window $window --scale 1" "$frames" "$secs" "$out/exp$k.out" \
+          --capture "$out/cap-exp$k/f.ppm" --capture-every 100 ); rc=$?
+      cp "$log" "$out/exp$k.log" 2>/dev/null
+      n=$(ls "$out/cap-exp$k"/f_*.ppm 2>/dev/null | wc -l)
+      if [ "$n" -gt 0 ]; then
+        ( cd "$out/cap-exp$k" && montage -label '%t' f_*.ppm -tile 6x -geometry 320x240+4+4 "../exp$k-montage.png" && rm -f f_*.ppm )
+        say "experiment $k: $n frames (exit $rc), montage exp$k-montage.png"
+      else
+        say "experiment $k: no frames captured (exit $rc; exp$k.out)"
+      fi
+    done
     i=0
     for g in "${games[@]}"; do
       left=$(( ${#games[@]} - i )); i=$((i + 1))
@@ -228,7 +252,6 @@ if [ "${FLEET_NO_CAPTURE:-0}" != 1 ]; then
       frames=$(awk -v b="$budget" -v s="$spf" -v w="$want" 'BEGIN { f = int(b / s); if (f > w) f = w; print f }')
       if [ "$frames" -lt 300 ]; then say "$g: no time left for a capture"; fail=1; continue; fi
       every=$(( frames / 24 )); [ $every -ge 10 ] || every=10
-      window=640x480; [ "$render" = wined3d ] && window=320x240
       mkdir -p "$out/cap-$g"; rm -f "$out/cap-$g"/*
       # its own bound: a hung game stops here, not at the job's limit with the other games' time
       secs=$(awk -v f="$frames" -v s="$spf" -v b="$budget" 'BEGIN { t = int(f * s * 1.5) + 120; if (t > b + 60) t = b + 60; print t }')
