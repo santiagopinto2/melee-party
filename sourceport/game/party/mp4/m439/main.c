@@ -893,6 +893,10 @@ void fn_1_2C84(omObjData *object)
                         temp_r31->unk0_field8 = 1;
                     }
                     lbl_1_bss_132[lbl_1_bss_13A++] = temp_r31->unk2;
+                    /* Melee Party: who finishes, for the draws the fleet runs showed */
+                    OSReport("[party] m439: player %d (object %p) at the end, %d before it, %d this frame, at %.0f %.0f, game state %d\n",
+                             (int) temp_r31->unk2, (void*) object, (int) lbl_1_bss_130, (int) lbl_1_bss_13A - 1,
+                             object->trans.x, object->trans.z, (int) fn_1_374());
                     object->func = fn_1_3C1C;
                     return;
                 }

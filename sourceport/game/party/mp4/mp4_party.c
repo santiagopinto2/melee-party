@@ -242,19 +242,40 @@ int mp4_views(void)
  * first): the match camera takes the primary camera's eye, target and fov, and the view's
  * viewport and scissor carved out of the whole screen's; the MP4 draw renders the view's cameras
  * alone, once per view, and the HUD once a frame, on the view drawn last. */
-void mp4_view_begin(int view, HSD_CObj* cobj)
+/* Experiments for the split screen's black views (fleet jobs): MELEE_PARTY_VIEW_ORDER=forward
+ * draws view 0 first instead of last; MELEE_PARTY_VIEW_ONLY=<k> squeezes every other view into
+ * one pixel in its corner, so view k is the only one drawn. */
+static int view_experiment(const char* name, int fallback)
 {
+    const char* v = getenv(name);
+    if (v == NULL || *v == 0) {
+        return fallback;
+    }
+    return strcmp(v, "forward") == 0 ? 1 : atoi(v);
+}
+
+void mp4_view_begin(int call, HSD_CObj* cobj)
+{
+    static int forward = -1, only = -2;
     MP4View views[HU3D_CAM_MAX];
     int n = view_list(views);
+    int view = call;   /* the camera loop counts down: call n - 1 is drawn first, call 0 last */
     MP4View* v;
     HU3DCAMERA* cam;
     HSD_RectF32 vp;
     Vec3 eye, look;
     f32 sx, sy;
-    if (n <= 1 || view < 0 || view >= n) {
+    if (forward < 0) {
+        forward = view_experiment("MELEE_PARTY_VIEW_ORDER", 0);
+        only = view_experiment("MELEE_PARTY_VIEW_ONLY", -1);
+    }
+    if (n <= 1 || call < 0 || call >= n) {
         return;
     }
-    if (view == n - 1) {
+    if (forward) {
+        view = n - 1 - call;
+    }
+    if (call == n - 1) {
         views_active = 1;
         full_viewport = cobj->viewport;
         full_scissor = cobj->scissor;
@@ -264,7 +285,7 @@ void mp4_view_begin(int view, HSD_CObj* cobj)
     cam = &Hu3DCamera[v->primary];
     view_primary = v->primary;
     mp4_view_cameras = v->cameras;
-    mp4_hud_pass = view == 0;
+    mp4_hud_pass = call == 0;
     mp4_draw_rearm();
     /* MP4 lays its cameras out on a 640 x 480 screen */
     sx = (full_viewport.xmax - full_viewport.xmin) / 640.0f;
@@ -273,6 +294,16 @@ void mp4_view_begin(int view, HSD_CObj* cobj)
     vp.xmax = vp.xmin + v->w * sx;
     vp.ymin = full_viewport.ymin + v->y * sy;
     vp.ymax = vp.ymin + v->h * sy;
+    if (only >= 0 && view != only) {
+        vp.xmax = vp.xmin + 1.0f;
+        vp.ymax = vp.ymin + 1.0f;
+        HSD_CObjSetViewportfx4(cobj, vp.xmin, vp.xmax, vp.ymin, vp.ymax);
+        HSD_CObjSetScissorx4(cobj, (u16) vp.xmin, (u16) vp.xmax, (u16) vp.ymin, (u16) vp.ymax);
+        if (call == 0) {
+            views_log = 0;
+        }
+        return;
+    }
     HSD_CObjSetViewportfx4(cobj, vp.xmin, vp.xmax, vp.ymin, vp.ymax);
     /* clamped to the screen: Paths of Peril sets quarter scissors 640 wide (the hardware clamps) */
     HSD_CObjSetScissorx4(cobj, (u16) (full_viewport.xmin + cam->scissorX * sx),
@@ -295,7 +326,7 @@ void mp4_view_begin(int view, HSD_CObj* cobj)
                   (int) (u16) v->cameras, v->x, v->y, v->w, v->h, vp.xmin, vp.xmax, vp.ymin, vp.ymax,
                   (int) cobj->scissor.left, (int) cobj->scissor.right, (int) cobj->scissor.top,
                   (int) cobj->scissor.bottom, eye.x, eye.y, eye.z, look.x, look.y, look.z, cam->fov);
-        if (view == 0) {
+        if (call == 0) {
             views_log = 0;
         }
     }
