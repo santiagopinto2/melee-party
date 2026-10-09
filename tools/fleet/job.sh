@@ -23,6 +23,10 @@ iso_dir="${MELEE_ISO_DIR:-}"
 games=("$@")
 [ ${#games[@]} -gt 0 ] || games=(bigger-blast chomp-fever blizzard-brigade booksquirm butterfly-blitz trace-race candlelight-flight money-belts hop-or-pop cheep-cheep-sweep team-treasure-trek challenge-booksquirm paths-of-peril stamp-out)
 t0=$(date +%s)
+# on the fleet's plain Debian image: the toolchain first (tools/fleet/setup.sh, a no-op on the built image)
+if ! command -v x86_64-w64-mingw32-gcc > /dev/null 2>&1; then
+  "$repo/tools/fleet/setup.sh" > "$out/setup.log" 2>&1 || { echo "toolchain setup failed (fleet-out/setup.log)"; tail -20 "$out/setup.log"; exit 1; }
+fi
 say() { printf '%s\n' "$*" | tee -a "$report"; }
 step() { say ""; say "## $* ($(( $(date +%s) - t0 )) s)"; }
 fail=0
@@ -68,6 +72,7 @@ cp build-sourceport-gcc/melee_game.dll build-sourceport-gcc/melee_game.snapexcl 
 
 step "wine prefix"
 export WINEPREFIX="$HOME/.cache/wine-melee" WINEDEBUG=-all WINEARCH=win64
+export WINEDLLOVERRIDES="d3dcompiler_47=n"
 xvfb-run -a wineboot -i > "$out/wine.log" 2>&1
 curl -sL -o /tmp/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && chmod +x /tmp/winetricks
 xvfb-run -a /tmp/winetricks -q d3dcompiler_47 >> "$out/wine.log" 2>&1 || say "winetricks d3dcompiler_47 failed (wine.log)"

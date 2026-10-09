@@ -4,7 +4,6 @@
   "repo": "https://github.com/santiagopinto2/melee-party.git",
   "commit": "COMMIT",
   "submodules": true,
-  "image": "ghcr.io/santiagopinto2/melee-party-tools:latest",
   "command": "MELEE_ISO_DIR=/private tools/fleet/job.sh",
   "gpu": true,
   "mem": "16G",
