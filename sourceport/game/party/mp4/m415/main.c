@@ -343,10 +343,21 @@ void fn_1_7D8(omObjData *object)
     }
 }
 
+#ifdef TARGET_PC
+static ANIMBMP *m415_shadow_bmp;
+static void *m415_shadow_bmp_data;   /* Melee Party: fn_1_66AC */
+#endif
+
 void fn_1_14C0(omObjData *object)
 {
     if (WipeStatGet() == 0) {
         CharModelKill(-1);
+#ifdef TARGET_PC
+        if (m415_shadow_bmp != NULL) {   /* Melee Party: see fn_1_66AC */
+            m415_shadow_bmp->data = m415_shadow_bmp_data;
+            m415_shadow_bmp = NULL;
+        }
+#endif
         fn_1_B634();
         fn_1_64DC();
         MGSeqKill(lbl_1_bss_348);
@@ -1597,7 +1608,10 @@ s16 fn_1_66AC(void)
 #ifdef TARGET_PC
     // Hu3DShadowData was copied by GXCopyTex and Aurora doesn't actually copy it there
     // it just holds a reference to the pointer
-    // TODO PC does this fix cause issues?
+    /* Melee Party: the bitmap's own block goes back before the bitmap is killed (fn_1_14C0):
+     * HuSprAnimKill frees bmp->data, and Hu3D frees the shadow buffer again on the way out */
+    m415_shadow_bmp = temp_r31;
+    m415_shadow_bmp_data = temp_r31->data;
     temp_r31->data = Hu3DShadowData.buf;
 #else
     memcpy(temp_r31->data, Hu3DShadowData.buf, var_r28);
