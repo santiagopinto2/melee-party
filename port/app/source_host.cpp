@@ -2190,7 +2190,29 @@ LONG CALLBACK on_game_exception(EXCEPTION_POINTERS* info) {
         called_by_game = caller >= base && caller < end;
       } __except (EXCEPTION_EXECUTE_HANDLER) { }
     }
-    if (!called_by_game) return EXCEPTION_CONTINUE_SEARCH;
+    if (!called_by_game) {
+      // A fault in a library function the game called (memcpy reading a bad pointer): its return
+      // address into the game is near the top of the stack. Logged, as a first-chance exception
+      // (one a handler may still take), because a fault on an MP4 coroutine's stack never reaches
+      // the crash filter: Stamp Out! died there with exit 5 and nothing in the log.
+      for (int i = 0; i < 16; ++i) {
+        uint64_t v = 0;
+        __try { v = ((const uint64_t*)info->ContextRecord->Rsp)[i]; } __except (EXCEPTION_EXECUTE_HANDLER) { break; }
+        if (v >= base && v < end) {
+          static volatile LONG logged = 0;
+          if (!InterlockedExchange(&logged, 1)) {
+            host::log("exception %08lX at %016llX, called from melee_game.dll+0x%llX", code, (unsigned long long)rip,
+                      (unsigned long long)(v - 1 - base));
+            if (code == EXCEPTION_ACCESS_VIOLATION && info->ExceptionRecord->NumberParameters >= 2)
+              host::log("  %s address %016llX", info->ExceptionRecord->ExceptionInformation[0] ? "writing" : "reading",
+                        (unsigned long long)info->ExceptionRecord->ExceptionInformation[1]);
+            host::log_flush();
+          }
+          break;
+        }
+      }
+      return EXCEPTION_CONTINUE_SEARCH;
+    }
   }
   write_replay_recording();   // a --replay run keeps what it played up to the crash
   if (in_game)
