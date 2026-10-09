@@ -439,8 +439,9 @@ void fn_1_1960(omObjData *object)
             temp_r3 = fn_1_9734(object->model[2]);
             temp_r29 = Hu3DShadowData.size * Hu3DShadowData.size;
             /* Melee Party: the shadow map's bytes, which the renderer writes back here on request
-             * (mu_gx_copy_readback in ObjectSetup), a frame late at most */
-            memcpy((*temp_r3)->bmp->data, OSCachedToUncached(Hu3DShadowData.buf), temp_r29);
+             * (mu_gx_copy_readback in ObjectSetup), a frame late at most. Read at its own
+             * address: the PC has no uncached mirror (0xC...), where the read crashed */
+            memcpy((*temp_r3)->bmp->data, Hu3DShadowData.buf, temp_r29);
             DCStoreRangeNoSync((*temp_r3)->bmp->data, temp_r29);
             break;
         case 2:
