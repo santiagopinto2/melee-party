@@ -21,7 +21,7 @@ report="$out/report.md"
 jobs="${FLEET_JOBS:-$(nproc)}"
 iso_dir="${MELEE_ISO_DIR:-}"
 games=("$@")
-[ ${#games[@]} -gt 0 ] || games=(bigger-blast chomp-fever blizzard-brigade booksquirm butterfly-blitz trace-race candlelight-flight money-belts hop-or-pop cheep-cheep-sweep team-treasure-trek challenge-booksquirm paths-of-peril)
+[ ${#games[@]} -gt 0 ] || games=(bigger-blast chomp-fever blizzard-brigade booksquirm butterfly-blitz trace-race candlelight-flight money-belts hop-or-pop cheep-cheep-sweep team-treasure-trek challenge-booksquirm paths-of-peril stamp-out)
 t0=$(date +%s)
 say() { printf '%s\n' "$*" | tee -a "$report"; }
 step() { say ""; say "## $* ($(( $(date +%s) - t0 )) s)"; }
