@@ -34,11 +34,12 @@ enum { ST_PATH = 0, ST_BACK = 1, ST_FALLEN = 2 };
 
 int mp4_m439_player(int player, s32* state, s16* stick_x, s16* stick_y, int* finished, s32* pair,
                     int* order, int* playing);
+int mp4_m439_finishers(s16 who[4]);
 
 static struct {
     int ended;
     s8 groups[PARTY_PLAYERS];
-    int order[PARTY_PLAYERS];   /* how many reached the end before each (-1: not there) */
+    int first;   /* the first player to reach the end, read from m439 when it ends (-1: nobody) */
 } pp;
 
 static void pp_start(void)
@@ -54,11 +55,13 @@ static void pp_frame(void)
     /* over when MP4 returns to its boot overlay; at once without a disc (MELEE_PARTY_MINIGAME
      * can still name this minigame then: the lists do not) */
     if (!pp.ended && (mp4_match_over() || !mp4_available())) {
-        int i;
+        s16 who[4];
+        int n = mp4_available() ? mp4_m439_finishers(who) : 0;
         pp.ended = 1;
-        for (i = 0; i < PARTY_PLAYERS; i++) {
-            party_log("m439: P%d pair %d order %d", i + 1, pp.groups[i], pp.order[i]);
-        }
+        pp.first = n > 0 && who[0] >= 0 && who[0] < PARTY_PLAYERS ? who[0] : -1;
+        party_log("m439: pairs %d %d %d %d, %d reached the end, first P%d (pair %d)", pp.groups[0],
+                  pp.groups[1], pp.groups[2], pp.groups[3], n, pp.first + 1,
+                  pp.first < 0 ? -1 : pp.groups[pp.first]);
         gm_8016B328();
     }
 }
@@ -68,6 +71,7 @@ static void pp_setup(StartMeleeData* start)
     int order[PARTY_PLAYERS] = { 0, 1, 2, 3 };
     int i;
     memset(&pp, 0, sizeof pp);
+    pp.first = -1;
     /* random pairs, as Dungeon Duos pairs its teams */
     for (i = PARTY_PLAYERS - 1; i > 0; i--) {
         int j = party_rand(i + 1);
@@ -100,7 +104,6 @@ static void pp_fighter_input(Fighter* fp)
     if (!mp4_m439_player(slot, &state, &sx, &sy, &finished, &pair, &order, &playing)) {
         return;
     }
-    pp.order[slot] = order;
     if (playing && state == ST_PATH && !finished) {
         party_arena_walk(fp, sx, sy);
         return;
@@ -115,19 +118,13 @@ static float pp_knockback(Fighter* fp, float kb)
     return 0.0f;
 }
 
-/* MP4 gives each winner 10 coins and the others nothing; nobody when it is a draw. */
 /* The pair of the first player to reach the end wins (MP4 pays the finishers); nobody loses if
  * nobody got there. */
 static void pp_result(s8 place[PARTY_PLAYERS])
 {
-    int i, first = -1;
+    int i;
     for (i = 0; i < PARTY_PLAYERS; i++) {
-        if (pp.order[i] == 0) {
-            first = i;
-        }
-    }
-    for (i = 0; i < PARTY_PLAYERS; i++) {
-        place[i] = (s8) (first < 0 || pp.groups[i] == pp.groups[first] ? 0 : 3);
+        place[i] = (s8) (pp.first < 0 || pp.groups[i] == pp.groups[pp.first] ? 0 : 3);
     }
 }
 

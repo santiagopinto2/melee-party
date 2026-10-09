@@ -288,13 +288,26 @@ void fn_1_408(omObjData *object)
 void fn_1_B20(void);
 void fn_1_5CAC(void);
 
+#ifdef TARGET_PC
+/* Melee Party: Hu3D's own shadow buffer. The layer hook points Hu3DShadowData.buf at the
+ * players' maps for cameras 1-3 (fn_1_7578); camera 0 and Hu3D's free on the way out want this. */
+static void *m439_shadow_buf;
+#endif
+
 void fn_1_9BC(omObjData *object)
 {
     if (!WipeStatGet()) {
+#ifdef TARGET_PC
+        if (m439_shadow_buf != NULL) {
+            Hu3DShadowData.buf = m439_shadow_buf;
+            m439_shadow_buf = NULL;
+        }
+#endif
         fn_1_B20();
         fn_1_5CAC();
         MGSeqKillAll();
         HuAudFadeOut(1);
+        lbl_1_bss_128 = NULL;   /* Melee Party: its objects go with the overlay (mp4_m439_player) */
         omOvlReturnEx(1, 1);
         OSReport("******* M439Exit *********\n");
     }
@@ -1741,6 +1754,9 @@ void fn_1_73F4(Process *objman)
     s32 i;
     s32 dataSize = Hu3DShadowData.size * Hu3DShadowData.size;
     lbl_1_bss_128 = objman;
+#ifdef TARGET_PC
+    m439_shadow_buf = Hu3DShadowData.buf;
+#endif
     for (i = 0; i < 3; i++) {
         lbl_1_bss_11C[i] = HuMemDirectMallocNum(HEAP_SYSTEM, dataSize, MEMORY_DEFAULT_NUM);
         memset(lbl_1_bss_11C[i], 0, dataSize);
@@ -1766,6 +1782,9 @@ void fn_1_7578(s16 layer)
     }
     if (Hu3DCameraNo == 0) {
         WorkD0C *playerWork;
+#ifdef TARGET_PC
+        Hu3DShadowData.buf = m439_shadow_buf;
+#endif
         mp4_gx_draw_done();   /* Melee Party: see mp4.h */
         playerList = omGetGroupMemberListEx(lbl_1_bss_128, 0);
         if (Hu3DData[playerList[0]->model[0]].attr & 0x4) {
@@ -1960,4 +1979,16 @@ int mp4_m439_player(int player, s32* state, s16* stick_x, s16* stick_y, int* fin
     }
     *playing = fn_1_374() >= 5 && fn_1_374() < 7;
     return 1;
+}
+
+/* Melee Party: the players who reached the end, in the order they got there (MP4 player
+ * numbers); returns how many. Still valid once the minigame has returned to the boot overlay,
+ * until the next m439 starts. */
+int mp4_m439_finishers(s16 who[4])
+{
+    int i, n = lbl_1_bss_130 < 4 ? lbl_1_bss_130 : 4;
+    for (i = 0; i < n; i++) {
+        who[i] = lbl_1_bss_132[i];
+    }
+    return n;
 }
