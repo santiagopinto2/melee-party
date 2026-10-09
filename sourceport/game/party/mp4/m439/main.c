@@ -1762,7 +1762,7 @@ void fn_1_7578(s16 layer)
     }
     if (Hu3DCameraNo == 0) {
         WorkD0C *playerWork;
-        GXDrawDone();
+        mp4_gx_draw_done();   /* Melee Party: see mp4.h */
         playerList = omGetGroupMemberListEx(lbl_1_bss_128, 0);
         if (Hu3DData[playerList[0]->model[0]].attr & 0x4) {
             Hu3DModelShadowReset(playerList[0]->model[0]);
@@ -1773,7 +1773,7 @@ void fn_1_7578(s16 layer)
                 Hu3DModelShadowSet(playerList[i + 1]->model[0]);
             }
             fn_1_77E4(i);
-            GXDrawDone();
+            mp4_gx_draw_done();   /* Melee Party: see mp4.h */
             DCFlushRangeNoSync(lbl_1_bss_11C[i], dataSize);
             if (playerWork->unk0_field3) {
                 Hu3DModelShadowReset(playerList[i + 1]->model[0]);
@@ -1930,10 +1930,16 @@ void fn_1_77E4(s32 shadowNo)
 int mp4_m439_player(int player, s32* state, s16* stick_x, s16* stick_y, int* finished, s32* pair,
                     int* order, int* playing)
 {
-    omObjData** list = omGetGroupMemberListEx(HuPrcCurrentGet(), 0);
+    /* the objman ObjectSetup kept: Melee's fighter procs run outside any MP4 process, where
+     * HuPrcCurrentGet() is NULL (the crash at frame 0 of overlay 47) */
+    omObjData** list;
     WorkD0C* w;
     int i;
-    if (player < 0 || player >= 4 || list == NULL || list[player] == NULL || list[player]->data == NULL) {
+    if (player < 0 || player >= 4 || lbl_1_bss_128 == NULL) {
+        return 0;
+    }
+    list = omGetGroupMemberListEx(lbl_1_bss_128, 0);
+    if (list == NULL || list[player] == NULL || list[player]->data == NULL) {
         return 0;
     }
     w = list[player]->data;
