@@ -4,7 +4,12 @@
 # of the job instead, so no image has to be published. A few minutes a job. Idempotent: does
 # nothing when the cross compiler is already there (the image from the Dockerfile). With
 # FLEET_CACHE set (job.sh: /keep/melee-party), the downloaded packages stay there for the next job.
+# The fleet may empty /keep at any time (a full disk), so every cache here is rebuilt when missing.
 set -eu
+# the fleet deletes a /keep entry nothing has changed in for 30 days: a cache in use stays fresh
+if [ -n "${FLEET_CACHE:-}" ]; then
+  mkdir -p "$FLEET_CACHE" && touch "$FLEET_CACHE" "$FLEET_CACHE/.last-used"
+fi
 if command -v x86_64-w64-mingw32-gcc > /dev/null 2>&1 && [ -x /usr/lib/llvm-19/bin/clang-cl ]; then
   echo "toolchain present"; exit 0
 fi

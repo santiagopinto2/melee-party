@@ -70,8 +70,8 @@ if [ ! -f "$cache/xwin/.done" ]; then
   if [ -f "$cache/xwin/.done" ]; then rm -rf "$cache/xwin-dl"; else say "xwin failed (see xwin.log)"; fail=1; fi
   rm -rf /tmp/xwin-0.10.0-*
 fi
-if [ ! -x "$cache/dxc/bin/dxc" ]; then
-  mkdir -p "$cache/dxc" && curl -sL https://github.com/microsoft/DirectXShaderCompiler/releases/download/v1.9.2609/linux_dxc_2026_09_28.x86_x64.tar.gz | tar xz -C "$cache/dxc" || { say "dxc download failed"; fail=1; }
+if ! "$cache/dxc/bin/dxc" --version > /dev/null 2>&1; then   # missing, or cut off mid-unpack
+  rm -rf "$cache/dxc"; mkdir -p "$cache/dxc" && curl -sL https://github.com/microsoft/DirectXShaderCompiler/releases/download/v1.9.2609/linux_dxc_2026_09_28.x86_x64.tar.gz | tar xz -C "$cache/dxc" || { say "dxc download failed"; fail=1; }
 fi
 say "xwin: $(du -sh "$cache/xwin" 2>/dev/null | cut -f1), dxc: $("$cache/dxc/bin/dxc" --version 2>/dev/null | head -1)"
 
@@ -126,6 +126,7 @@ if [ ! -f "$sys32/d3dcompiler_47.dll" ]; then
 fi
 [ -f "$sys32/d3dcompiler_47.dll" ] && say "d3dcompiler_47: in the prefix" || { say "d3dcompiler_47: missing (wine.log)"; fail=1; }
 dxvk_dir=$(ls -d "$cache"/dxvk-*/ 2>/dev/null | tail -1)
+if [ -n "$dxvk_dir" ] && [ ! -f "$dxvk_dir/x64/d3d11.dll" ]; then rm -rf "$dxvk_dir"; dxvk_dir=""; fi   # cut off mid-unpack
 if [ -z "$dxvk_dir" ]; then
   url=$(curl -s https://api.github.com/repos/doitsujin/dxvk/releases/latest | grep -o 'https://[^"]*dxvk-[0-9.]*\.tar\.gz' | head -1)
   [ -n "$url" ] && curl -sL "$url" | tar xz -C "$cache" && dxvk_dir=$(ls -d "$cache"/dxvk-*/ 2>/dev/null | tail -1)
