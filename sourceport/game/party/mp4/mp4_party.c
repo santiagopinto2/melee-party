@@ -238,8 +238,8 @@ int mp4_views(void)
     return n;
 }
 
-/* One view of a split screen, before the match camera draws it: the match camera takes the
- * primary camera's eye, target and fov, and the view's viewport and scissor carved out of the
+/* One view of a split screen, in the match camera's pass for it, after Melee has set the match
+ * camera up (fn_800301D0): the match camera takes the primary camera's eye, target and fov, and the view's viewport and scissor carved out of the
  * whole screen's; the MP4 draw renders the view's cameras alone, once per view, and the HUD once a
  * frame, on the view drawn last. View 0 is drawn first: its camera 0 renders MP4's shadow maps in
  * the top-left corner and then repaints the whole screen (Hu3DShadowExec, Paths of Peril's layer
