@@ -24,7 +24,7 @@ read-only, at a path arhum gives.
   heaps' sizes and the data heap's peak, crashes; the montages, logs and each run's Wine output
   (`*.out`) sit beside it. After a crash `melee_game.dbg.xz` comes back too, for the symbols.
   `/keep` (the fleet's folder that stays on each machine) holds the apt packages, xwin, dxc,
-  DXVK, the Wine prefix and a ccache, so the next job on that machine is faster. Build
+  DXVK and a ccache (the Wine prefix stays in the container: Wine could not start programs from one in `/keep`), so the next job on that machine is faster. Build
   parallelism follows the job's memory (one compiler per GB).
 - `request.json`: the game job, with `COMMIT` (the full hash) to fill in: `fleet-job submit
   request.json`. Its `private_files` mounts Santi's discs read-only at `/private/melee.iso` and

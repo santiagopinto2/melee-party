@@ -21,7 +21,7 @@
 #   FLEET_BUILD_ONLY=1  stop after the two builds (a compile check on a CPU-only machine; see compile.json)
 #
 # /keep (the fleet's folder that stays on a machine between jobs) holds the downloads, the apt
-# packages, the Wine prefix and a compiler cache, so a second job on the same machine skips most
+# packages and a compiler cache, so a second job on the same machine skips most
 # of the setup and the builds.
 set -uo pipefail
 repo="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -112,7 +112,9 @@ if [ "${FLEET_BUILD_ONLY:-0}" = 1 ]; then
 fi
 
 step "wine prefix"
-export WINEPREFIX="$cache/wine-melee" WINEDEBUG=-all WINEARCH=win64
+# the prefix stays in the container: one in /keep made every game exit at once with status 53,
+# Wine unable to start a program (the mount's options go in the report)
+export WINEPREFIX="$HOME/.cache/wine-melee" WINEDEBUG=-all WINEARCH=win64
 export WINEDLLOVERRIDES="d3dcompiler_47=n"
 sys32="$WINEPREFIX/drive_c/windows/system32"
 [ -d "$sys32" ] || xvfb-run -a wineboot -i > "$out/wine.log" 2>&1
@@ -128,6 +130,8 @@ if [ -z "$dxvk_dir" ]; then
   url=$(curl -s https://api.github.com/repos/doitsujin/dxvk/releases/latest | grep -o 'https://[^"]*dxvk-[0-9.]*\.tar\.gz' | head -1)
   [ -n "$url" ] && curl -sL "$url" | tar xz -C "$cache" && dxvk_dir=$(ls -d "$cache"/dxvk-*/ 2>/dev/null | tail -1)
 fi
+say "/keep: $(grep ' /keep ' /proc/mounts | cut -d' ' -f3,4 | cut -c1-120)"
+say "wine: $(xvfb-run -a wine cmd /c echo runs 2>&1 | tr -d '\r' | tail -1) ($(wine --version 2>/dev/null))"
 vulkan=$(xvfb-run -a vulkaninfo --summary 2>/dev/null | grep -m1 deviceName | sed 's/.*= *//')
 say "dxvk: ${dxvk_dir:-none}; vulkan: ${vulkan:-no device}"
 # Wine's own D3D11 or DXVK's, by copying DXVK's DLLs in or taking them out of the prefix
