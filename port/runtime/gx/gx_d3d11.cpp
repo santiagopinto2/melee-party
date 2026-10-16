@@ -372,6 +372,12 @@ class D3D11Backend : public Backend {
   ComPtr<ID3D11DepthStencilState> no_depth_, clear_depth_;
   ComPtr<ID3D11RasterizerState> blit_raster_;
   ComPtr<ID3D11Texture2D> capture_staging_;
+  // Copies the game reads back (gx::set_copy_readback): staged at the copy, mapped and written to
+  // guest memory after the frame's commands, when the GPU has them.
+  struct PendingReadback { EfbCopy copy; ComPtr<ID3D11Texture2D> staging; };
+  std::unordered_map<uint32_t, ComPtr<ID3D11Texture2D>> readback_staging_;
+  std::vector<PendingReadback> pending_readbacks_;
+  void write_pending_readbacks();
 
   DynamicBuffer vertex_buffer_, index_buffer_;
   ConstantPool vs_constants_, ps_constants_;
@@ -1407,6 +1413,29 @@ void D3D11Backend::execute_copy(const EfbCopy& c) {
     if (box.right > box.left && box.bottom > box.top)
       context_->CopySubresourceRegion(e.resource.Get(), 0, 0, 0, 0, efb_color_.Get(), 0, &box);
   }
+  if (gx::copy_readback_wanted(c.dest_addr)) {
+    ComPtr<ID3D11Texture2D>& staging = readback_staging_[c.dest_addr];
+    D3D11_TEXTURE2D_DESC sd{};
+    if (staging) staging->GetDesc(&sd);
+    if (!staging || sd.Width != sw || sd.Height != sh) {
+      e.resource->GetDesc(&sd);
+      sd.Usage = D3D11_USAGE_STAGING; sd.BindFlags = 0; sd.CPUAccessFlags = D3D11_CPU_ACCESS_READ; sd.MiscFlags = 0;
+      staging.Reset();
+      if (FAILED(device_->CreateTexture2D(&sd, nullptr, &staging))) { host::log("d3d11: readback staging %ux%u failed", sw, sh); return; }
+    }
+    context_->CopyResource(staging.Get(), e.resource.Get());
+    pending_readbacks_.push_back({c, staging});
+  }
+}
+
+void D3D11Backend::write_pending_readbacks() {
+  for (PendingReadback& r : pending_readbacks_) {
+    D3D11_MAPPED_SUBRESOURCE m{};
+    if (FAILED(context_->Map(r.staging.Get(), 0, D3D11_MAP_READ, 0, &m))) continue;
+    gx::write_copy_readback(r.copy, (const uint8_t*)m.pData, m.RowPitch, (uint32_t)scale_);
+    context_->Unmap(r.staging.Get(), 0);
+  }
+  pending_readbacks_.clear();
 }
 
 // One full-screen triangle through the shared blit/sharpen shader. The caller has already set
@@ -1754,6 +1783,7 @@ void D3D11Backend::submit_frame(const Frame& frame, const DrawMatrices* override
     }
   }
 
+  if (!pending_readbacks_.empty()) write_pending_readbacks();
   present_wait_ = 0;
   if (presented) {
     bool capture = false;

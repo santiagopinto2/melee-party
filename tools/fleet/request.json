@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "name": "melee-party-mp4",
+  "repo": "https://github.com/santiagopinto2/melee-party.git",
+  "commit": "COMMIT",
+  "submodules": true,
+  "command": "MELEE_ISO_DIR=/private FLEET_TIME_LIMIT=7200 FLEET_FRAMES=14000 tools/fleet/job.sh bigger-blast cheep-cheep-sweep team-treasure-trek challenge-booksquirm paths-of-peril stamp-out",
+  "gpu": true,
+  "gpu_kind": "opengl",
+  "prefer": ["gpu-optiplex"],
+  "mem": "3G",
+  "time_limit_s": 7200,
+  "outputs": ["fleet-out"],
+  "private_files": true
+}

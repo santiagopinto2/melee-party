@@ -109,15 +109,25 @@ final score there as `[game] [party] ...` lines.
 (`MELEE_FRESH_CARD=1` starts from one, which keeps runs repeatable). The `MELEE_PARTY_*` knobs are
 in [melee-party.md](melee-party.md#testing-knobs).
 
+`port/scripts/party_minigame_menu.txt` is the player's own path, without `MELEE_PARTY_BOOT`: the
+menus to VS Mode, Party Minigames, its sixth row (Bowser's Bigger Blast with an MP4 disc), the
+character select with two humans picking, START. Run it with `MELEE_FRESH_CARD=1` and 3200 frames
+(headless, about 70 seconds) when a change touches the menu, the character select or how a match
+starts: the knobs skip all of that. Without an MP4 disc the sixth row does not exist and the
+cursor stops on the fifth. `party_minigame_menu_last.txt` is the same path to the list's last row
+(one press up from the first: the list wraps), the newest MP4 minigame with a disc and Dungeon Duos
+without one.
+
 ### Logic only: headless
 
 No renderer, about 23 game frames a second: a whole one-turn party with CPUs, board, minigame,
-podium and back to the menu in about 4 minutes.
+podium and back to the menu in about 4 minutes; with a Mario Party 4 disc the random pick can be
+a 60 or 90 second minigame, so give it 9000 frames.
 
 ```sh
 MELEE_PARTY_BOOT=1 MELEE_PARTY_SKIP_CSS=1 MELEE_PARTY_ALL_CPU=1 MELEE_PARTY_TURNS=1 \
 MELEE_PARTY_SEED=1 MELEE_PARTY_AUTO_ROLL=1 MELEE_FRESH_CARD=1 \
-  tools/wine_party.sh --headless --frames 6000 --script "$PWD/port/scripts/party_boot.txt"
+  tools/wine_party.sh --headless --frames 9000 --script "$PWD/port/scripts/party_boot.txt"
 grep '\[party\]' build-clangcl/port/melee_port.log | grep -v reaches
 ```
 
@@ -193,7 +203,11 @@ a release build's, so it can only play online against the same test build.
 - Wine prints ALSA and `X connection ... broken` noise on exit; it means nothing.
 - Wine's stack sits at high addresses (`0x7FFF...`), where Windows' usually sits low. A bug that
   passes an `int` where the game reads a 64-bit value can show up only under Wine (see the
-  variadic `NULL` terminators fixed in `melee-native.patch`).
+  variadic `NULL` terminators fixed in `melee-native.patch`). The reverse happens too: a stale
+  stack slot can be zero under Wine and not on Windows, so a path that works here can crash on a
+  PC. The title screen's attract demo and the menu path above are cheap checks that the knobs skip.
+- `pkill -x melee_source.exe` never matches: process names are cut at 15 characters. Stop a run
+  with `WINEPREFIX=~/.cache/wine-melee wineserver -k`.
 - Don't run two copies at once in the same exe folder: they share `melee_port.log` and `User/`.
 
 ## Status on the agent VM

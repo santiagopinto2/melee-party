@@ -61,6 +61,13 @@ unsigned int mu_mod_flags(void)
     return mu_host && mu_host->mod_flags ? mu_host->mod_flags() : 0;
 }
 
+void mu_gx_copy_readback(const void* addr, int on)
+{
+    if (mu_host && mu_host->gx_copy_readback) {
+        mu_host->gx_copy_readback((uint32_t) (uintptr_t) addr, on);
+    }
+}
+
 unsigned int mu_music_volume(void)
 {
     unsigned int level = mu_host && mu_host->music_volume ? mu_host->music_volume() : 100;

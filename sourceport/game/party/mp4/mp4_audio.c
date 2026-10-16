@@ -1,0 +1,87 @@
+/* Melee Party, Mario Party 4 runtime: MP4's sound (audio.c) is not played: the minigames' sound
+ * effects, music and voices are MP4's own and are not part of this port. Every call plays nothing
+ * and returns "no sound". */
+#include "game/msm.h"
+#include <dolphin/types.h>
+
+#include "game/audio.h"
+
+void HuAudFadeOut(s32 speed) { (void) speed; }
+int HuAudFXPlay(int seId) { (void) seId; return -1; }
+int HuAudFXPlayVol(int seId, s16 vol) { (void) seId; (void) vol; return -1; }
+int HuAudFXPlayVolPan(int seId, s16 vol, s16 pan) { (void) seId; (void) vol; (void) pan; return -1; }
+void HuAudFXStop(int seNo) { (void) seNo; }
+void HuAudFXAllStop(void) {}
+void HuAudFXPanning(int seNo, s16 pan) { (void) seNo; (void) pan; }
+void HuAudFXListnerSet(Vec *pos, Vec *heading, float sndDist, float sndSpeed)
+{
+    (void) pos; (void) heading; (void) sndDist; (void) sndSpeed;
+}
+void HuAudFXListnerUpdate(Vec *pos, Vec *heading) { (void) pos; (void) heading; }
+void HuAudFXListnerKill(void) {}
+void HuAudFXListnerSetEX(Vec *pos, Vec *heading, float sndDist, float sndSpeed, float startDis,
+                         float frontSurDis, float backSurDis)
+{
+    (void) pos; (void) heading; (void) sndDist; (void) sndSpeed; (void) startDis; (void) frontSurDis;
+    (void) backSurDis;
+}
+int HuAudFXEmiterPlay(int seId, Vec *pos) { (void) seId; (void) pos; return -1; }
+s32 PlayerFXPlay(s16 player, s16 seId) { (void) player; (void) seId; return -1; }
+s32 PlayerFXPlayPos(s16 player, s16 seId, Vec *pos) { (void) player; (void) seId; (void) pos; return -1; }
+void HuAudFXEmiterUpDate(int seNo, Vec *pos) { (void) seNo; (void) pos; }
+void HuAudFXPauseAll(BOOL pauseF) { (void) pauseF; }
+s32 HuAudFXVolSet(int seNo, s16 vol) { (void) seNo; (void) vol; return -1; }
+s32 HuAudSeqPlay(s16 musId) { (void) musId; return -1; }
+void HuAudSeqFadeOut(s32 musNo, s32 speed) { (void) musNo; (void) speed; }
+void HuAudSeqAllFadeOut(s32 speed) { (void) speed; }
+void HuAudSeqPauseAll(BOOL pause) { (void) pause; }
+s32 HuAudSStreamPlay(s16 streamId) { (void) streamId; return -1; }
+void HuAudDllSndGrpSet(u16 ovl) { (void) ovl; }
+void HuAudSndGrpSet(s16 grpId) { (void) grpId; }
+void HuAudSndCharGrpSet(s16 ovl) { (void) ovl; }
+
+void HuAudSeqAllStop(void) {}
+void HuAudSStreamAllStop(void) {}
+
+/* m441 at its end */
+void HuAudAllStop(void)
+{
+    HuAudSeqAllStop();
+    HuAudFXAllStop();
+    HuAudSStreamAllStop();
+}
+
+/* msm (the sound manager): a sound effect's parameters (m404 sets a volume) */
+s32 msmSeSetParam(int seNo, MSM_SEPARAM* param)
+{
+    (void) seNo;
+    (void) param;
+    return 0;
+}
+
+s32 HuAudFXPitchSet(int seNo, s16 pitch)
+{
+    (void) seNo;
+    (void) pitch;
+    return 0;
+}
+
+/* streamed music by file name (m434) */
+s32 HuAudStreamPlay(char* name, BOOL flag)
+{
+    (void) name;
+    (void) flag;
+    return -1;
+}
+
+void HuAudStreamFadeOut(s32 streamNo)
+{
+    (void) streamNo;
+}
+
+/* whether a sound effect still plays (m439): nothing plays here */
+s32 HuAudFXStatusGet(int seNo)
+{
+    (void) seNo;
+    return 0;
+}
