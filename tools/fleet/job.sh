@@ -18,6 +18,8 @@
 #                   DXVK with Mesa's software present, and Wine's own D3D11 on OpenGL), dxvk,
 #                   dxvk-sw or wined3d
 #   FLEET_NO_CAPTURE=1  skips the captures
+#   FLEET_PACKAGE=<name>  after the headless games all end, packages a test zip (tools/package_test_build.py)
+#                   into fleet-out/package; FLEET_PACKAGE_DESC is its one-line description
 #   FLEET_BUILD_ONLY=1  stop after the two builds (a compile check on a CPU-only machine; see compile.json)
 #
 # /keep (the fleet's folder that stays on a machine between jobs) holds the downloads, the apt
@@ -190,6 +192,18 @@ for g in "${games[@]}"; do
     say "$g: no game to the end"; fail=1
   fi
 done
+
+if [ -n "${FLEET_PACKAGE:-}" ]; then
+  step "test zip $FLEET_PACKAGE"
+  if [ $fail != 0 ]; then
+    say "a game did not play to the end: no zip"
+  elif python3 -W ignore tools/package_test_build.py --name "$FLEET_PACKAGE" --branch "${FLEET_BRANCH:-mp4/runtime}" \
+      --commit "$(git rev-parse --short HEAD)" --description "${FLEET_PACKAGE_DESC:-}" --out "$out/package" > "$out/package.log" 2>&1; then
+    say "zip: $(basename "$(tail -1 "$out/package.log")"), $(stat -c %s "$(tail -1 "$out/package.log")") bytes"
+  else
+    say "packaging failed (package.log)"; tail -5 "$out/package.log" | tee -a "$report"; fail=1
+  fi
+fi
 
 if [ "${FLEET_NO_CAPTURE:-0}" != 1 ]; then
   # Which way of rendering captures anything here: a short run of the first game with each.

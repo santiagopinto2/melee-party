@@ -33,6 +33,10 @@ read-only, at a path arhum gives.
   `"mem": "3G"` and `"prefer": ["gpu-optiplex"]`, so the GPU OptiPlex takes it and arhum's PC
   only when the OptiPlex is busy (Santi, 2026-10-09: his PC last). Bigger Blast comes first in its
   list: it was verified on the VM, so it tells a fleet problem from a minigame's.
+- `FLEET_PACKAGE=<name>` (with `FLEET_PACKAGE_DESC`): once every headless game has played to the end, `job.sh`
+  runs `tools/package_test_build.py` on the fresh build, and the test zip comes back in `fleet-out/package/`
+  (the VM only copies it into place; see `docs/agent-testing.md`). With `FLEET_NO_CAPTURE=1` the job is the
+  build, the 14 headless games and the zip, and nothing else.
 - `compile.json`: the same checkout built and nothing run (`FLEET_BUILD_ONLY=1`), as a CPU-only job
   with `"mem": "3G"` so Amal's PC and both OptiPlexes can take it (the fleet still prefers arhum's
   PC when it is free). Santi's choice (2026-10-09): his PC is the least reliable, so compile checks,
