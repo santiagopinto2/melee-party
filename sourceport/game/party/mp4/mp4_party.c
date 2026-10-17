@@ -581,16 +581,54 @@ void mp4_pad(int pad, u32 held, float stick_x, float stick_y, float substick_x, 
     HuPadTrigL[pad] = HuPadTrigR[pad] = (u8) (trigger * 255.0f);
 }
 
+/* A player's model hooked onto an object of another model (Hu3DModelHookSet: m419's three hang
+ * on their trees): its place in MP4's world, through that model's pose and motion, as hsfdraw.c
+ * draws it. 0 if no model holds it. */
+static int hooked_pose(s16 model, Mtx out)
+{
+    HU3DMODEL* m = &Hu3DData[model];
+    s16 i, j;
+    for (i = 0; i < HU3D_MODEL_MAX; i++) {
+        HSFDATA* hsf = Hu3DData[i].hsf;
+        HSFOBJECT* obj;
+        if (hsf == NULL || i == model) {
+            continue;
+        }
+        for (j = 0, obj = hsf->object; j < hsf->objectNum; j++, obj++) {
+            HSFCONSTDATA* c = obj->constData;
+            if (c != NULL && c->hookMdlId == model) {
+                Mtx local;
+                Hu3DModelObjMtxGet(i, obj->name, out);
+                MTXScale(local, m->scale.x, m->scale.y, m->scale.z);
+                mtxRotCat(local, m->rot.x, m->rot.y, m->rot.z);
+                mtxTransCat(local, m->pos.x, m->pos.y, m->pos.z);
+                MTXConcat(local, m->mtx, local);
+                MTXConcat(out, local, out);
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
 int mp4_player_pose(int player, float* x, float* y, float* z, float* yaw)
 {
     s16 model = mp4_char_model(player);
     HU3DMODEL* m;
+    Mtx w;
     if (model < 0 || !match_running) {
         return 0;
     }
     m = &Hu3DData[model];
     if (m->hsf == NULL) {
         return 0;
+    }
+    if ((m->attr & HU3D_ATTR_HOOK) && hooked_pose(model, w)) {
+        *x = w[0][3] * MP4_SCALE + world_offset.x;
+        *y = w[1][3] * MP4_SCALE + world_offset.y;
+        *z = w[2][3] * MP4_SCALE + world_offset.z;
+        *yaw = atan2f(w[0][2], w[2][2]);   /* where the model's forward (+z) points */
+        return 1;
     }
     *x = m->pos.x * MP4_SCALE + world_offset.x;
     *y = m->pos.y * MP4_SCALE + world_offset.y;
