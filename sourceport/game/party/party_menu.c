@@ -725,6 +725,7 @@ static const struct {
     { "tree-stomp", "Dodge the three stumps\nfor 45 s. One vs three." },
     { "fish-n-drips", "Press the buttons shown\nto fill your tank first." },
     { "hide-and-go-boom", "Hide in a cannon, or\nfind the three. B A Y X." },
+    { "blame-it-on-the-crane", "Work the crane with A,\nor roll clear of it." },
 };
 
 static const char* description_of(int menu_kind, int selection)

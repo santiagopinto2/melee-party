@@ -44,6 +44,7 @@ void m413_ObjectSetup(void);
 void m419_ObjectSetup(void);
 void m420_ObjectSetup(void);
 void m418_ObjectSetup(void);
+void m424_ObjectSetup(void);
 
 const int mp4_overlay_m440 = DLL_m440Dll;
 const int mp4_overlay_m438 = DLL_m438Dll;
@@ -68,6 +69,7 @@ const int mp4_overlay_m413 = DLL_m413Dll;
 const int mp4_overlay_m419 = DLL_m419Dll;
 const int mp4_overlay_m420 = DLL_m420dll;
 const int mp4_overlay_m418 = DLL_m418Dll;
+const int mp4_overlay_m424 = DLL_m424Dll;
 
 /* The markers: a byte before and a byte after the overlay's variables (see above). */
 #define OVERLAY_MARKERS(name)                                                       \
@@ -96,6 +98,7 @@ OVERLAY_MARKERS(m413)
 OVERLAY_MARKERS(m419)
 OVERLAY_MARKERS(m420)
 OVERLAY_MARKERS(m418)
+OVERLAY_MARKERS(m424)
 
 static int boot_reached;
 
@@ -134,6 +137,7 @@ static const struct {
     { DLL_m419Dll, m419_ObjectSetup, &m419_data_begin, &m419_data_end },
     { DLL_m420dll, m420_ObjectSetup, &m420_data_begin, &m420_data_end },
     { DLL_m418Dll, m418_ObjectSetup, &m418_data_begin, &m418_data_end },
+    { DLL_m424Dll, m424_ObjectSetup, &m424_data_begin, &m424_data_end },
 };
 #define OVERLAYS (sizeof overlays / sizeof overlays[0])
 
