@@ -277,8 +277,10 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
   won, lost) the minigame moves the player and the fighter follows, with the nearest Melee
   animation. Each minigame's wrapper (`mg_mp4_<name>.c`) decides which is which from the player's
   state.
-- **Not yet**: MP4's sound and music, its shadow pass, the reflection, toon and highlight maps
-  MP4 keeps in its executable, and its instruction screens.
+- **Not yet**: MP4's sound and music, the shadows on its scenery, the reflection, toon and
+  highlight maps MP4 keeps in its executable, and its instruction screens. The shadow pass runs
+  (Stamp Out! prints from it), but a shadow-map receiver (`Hu3DModelShadowMapSet`) draws as a
+  plain model: with MP4's shadow stage the port drew nothing of it (`hsfdraw.c`).
 - **Online, later.** The MP4 minigames play offline only. What putting them online would need,
   kept here so nothing done now makes it harder: the MP4 pool (`mp4_mem.c`) and the MP4 runtime's
   variables in the rollback snapshot (they are `.bss`, which the snapshot's image regions can

@@ -479,14 +479,6 @@ s32 lbl_1_bss_30[3];
 
 SHARED_SYM extern HU3DLIGHT Hu3DLocalLight[0x20];
 
-/* DEBUG-TEMP (Melee Party) */
-char* getenv(const char* name);
-static int m406_exp(const char* what)
-{
-    const char* v = getenv("MELEE_PARTY_M406_EXP");
-    return v != NULL && strcmp(v, what) == 0;
-}
-
 omObjData *fn_1_2308(Process *arg0)
 {
     s32 var_r31;
@@ -507,13 +499,9 @@ omObjData *fn_1_2308(Process *arg0)
     lbl_1_bss_CC = omAddObjEx(arg0, 0x7E, 0x15, 0, 1, fn_1_2C24);
     for (var_r31 = 0; var_r31 < 7; var_r31++) {
         var_r30 = lbl_1_bss_CC->model[var_r31] = Hu3DModelCreateFile(lbl_1_data_7A8[var_r31]);
-        if (!m406_exp("noshadow")) {
-            Hu3DModelShadowMapSet(var_r30);
-        }
+        Hu3DModelShadowMapSet(var_r30);
         Hu3DModelAttrSet(var_r30, HU3D_ATTR_DISPOFF);
-        /* DEBUG-TEMP (Melee Party): MELEE_PARTY_M406_EXP=nolit skips the material change,
-         * =noshadow the shadow-map receiver, to find why the course does not draw */
-        if (var_r31 < 6 && !m406_exp("nolit")) {
+        if (var_r31 < 6) {
             fn_1_CDD8(var_r30, 1.25f, 1.05f, 1.0f, 1.0f);
         }
         if (var_r31 < 6) {

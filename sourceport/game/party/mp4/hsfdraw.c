@@ -73,6 +73,24 @@ static s32 drawCnt;
 static s16 lightBit;
 static s16 DrawObjIdx;
 static HSFCONSTDATA *Hu3DObjInfoP;
+
+/* Melee Party: on the PC a shadow-map receiver (Hu3DModelShadowMapSet, Hu3DModelShadowMapObjSet)
+ * draws as a plain model, without MP4's shadow stage. With the stage the port drew nothing of it:
+ * Tree Stomp's and GOOOOOOOAL!!'s floors, Fish n' Drips' sky, Makin' Waves' raft, Blame it on the
+ * Crane's room, Avalanche!'s course and Stamp Out!'s page. The casters still render the shadow map,
+ * which Stamp Out! reads back for its prints. MELEE_PARTY_MP4_RECEIVERS=1 puts the stage back, to
+ * test it. */
+char* getenv(const char* name);
+static int receiver_exp = -1;
+static int ReceiverExp(void)
+{
+    if (receiver_exp < 0) {
+        const char* v = getenv("MELEE_PARTY_MP4_RECEIVERS");
+        receiver_exp = v == NULL || *v == 0 || *v == '0' ? 0 : *v - '0';
+    }
+    return receiver_exp;
+}
+#define ReceiverShadowF() (Hu3DShadowF != 0 && Hu3DShadowCamBit != 0 && (Hu3DObjInfoP->attr & HU3D_CONST_SHADOW_MAP) && ReceiverExp() != 0)
 static s16 reflectionMapNo;
 static s16 hiliteMapNo;
 static s16 vtxModeBak;
@@ -552,7 +570,7 @@ static void FaceDraw(HU3DDRAWOBJ *hsfDrawObject, HSFFACE *hsfFace) {
                 }
                 HuSprTexLoad(reflectAnim[reflectAnimIdx], 0, reflectionMapNo, GX_REPEAT, GX_REPEAT, GX_LINEAR);
             }
-            if (Hu3DShadowF != 0 && Hu3DShadowCamBit != 0 && (Hu3DObjInfoP->attr & HU3D_CONST_SHADOW_MAP)) {
+            if (ReceiverShadowF()) {
                 shadowMapNo = 1;
                 SetShadowTex();
                 BmpPtrBak[1] = PTR_INVALID;
@@ -706,7 +724,7 @@ static void FaceDraw(HU3DDRAWOBJ *hsfDrawObject, HSFFACE *hsfFace) {
             } else {
                 shadowMapNo = (s16) textureIdx;
             }
-            if (Hu3DShadowF != 0 && Hu3DShadowCamBit != 0 && (Hu3DObjInfoP->attr & HU3D_CONST_SHADOW_MAP)) {
+            if (ReceiverShadowF()) {
                 toonMapNo = shadowMapNo + 1;
                 SetShadowTex();
                 BmpPtrBak[shadowMapNo] = PTR_INVALID;
@@ -830,7 +848,7 @@ static void SetTevStageNoTex(HU3DDRAWOBJ *drawObj, HSFMATERIAL *matP) {
         tevStage++;
         texMap++;
     }
-    if (Hu3DShadowF != 0 && Hu3DShadowCamBit != 0 && (Hu3DObjInfoP->attr & HU3D_CONST_SHADOW_MAP)) {
+    if (ReceiverShadowF()) {
         SetShadow(drawObj, tevStage, (s16)texMap);
         tevStage++;
         texMap++;
@@ -1089,7 +1107,7 @@ static void SetTevStageTex(HU3DDRAWOBJ *drawObj, HSFMATERIAL *matP) {
             texCoordId++;
             tevStage++;
         }
-        if (Hu3DShadowF != 0 && Hu3DShadowCamBit != 0 && (Hu3DObjInfoP->attr & 8)) {
+        if (ReceiverShadowF()) {
             SetShadow(drawObj, tevStage, (u16) texCoordId);
             texCoordId++;
             tevStage++;
@@ -1357,7 +1375,7 @@ static void SetTevStageTex(HU3DDRAWOBJ *drawObj, HSFMATERIAL *matP) {
             tevStage++;
             texCoordId++;
         }
-        if (Hu3DShadowF != 0 && Hu3DShadowCamBit != 0 && (Hu3DObjInfoP->attr & HU3D_CONST_SHADOW_MAP)) {
+        if (ReceiverShadowF()) {
             SetShadow(drawObj, tevStage, (u16) texCoordId);
             texCoordId++;
             tevStage++;
@@ -2330,7 +2348,7 @@ void Hu3DDrawPost(void) {
                 GXLoadPosMtxImm(drawObj->matrix, GX_PNMTX0);
                 MTXInvXpose(drawObj->matrix, mtx);
                 GXLoadNrmMtxImm(mtx, 0);
-                if (Hu3DShadowF != 0 && Hu3DShadowCamBit != 0 && (Hu3DObjInfoP->attr & 8)) {
+                if (ReceiverShadowF()) {
                     MTXInverse(Hu3DCameraMtx, invCamera);
                     MTXConcat(invCamera, drawObj->matrix, mtx);
                     MTXConcat(Hu3DShadowData.projMtx, Hu3DShadowData.lookAtMtx, shadowCam);
@@ -2470,7 +2488,7 @@ static void ObjDraw(HU3DDRAWOBJ *arg0)
     MTXInvXpose(arg0->matrix, mtx);
     GXLoadNrmMtxImm(mtx, 0);
     GXInvalidateVtxCache();
-    if (Hu3DShadowF != FALSE && Hu3DShadowCamBit != 0 && (Hu3DObjInfoP->attr & HU3D_CONST_SHADOW_MAP)) {
+    if (ReceiverShadowF()) {
         MTXInverse(Hu3DCameraMtx, invCamera);
         MTXConcat(invCamera, arg0->matrix, mtx);
         MTXConcat(Hu3DShadowData.projMtx, Hu3DShadowData.lookAtMtx, shadowCam);
