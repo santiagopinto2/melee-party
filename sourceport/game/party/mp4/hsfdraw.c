@@ -331,6 +331,10 @@ static void objMesh(HU3DMODEL *modelP, HSFOBJECT *objPtr) {
             if ((constData->attr & HU3D_CONST_DISPOFF) || (objPtr->flags & HU3D_ATTR_CLUSTER_ON)) {
                 dispF = FALSE;
             }
+            /* Melee Party: a player's character, walked only for what hangs on it (hsfman.c) */
+            if (mp4_model_hidden[modelP - Hu3DData]) {
+                dispF = FALSE;
+            }
             if (dispF && (transformP->scale.x != 0.0f || transformP->scale.y != 0.0f || transformP->scale.z != 0.0f)) {
                 drawObj->model = modelP;
                 drawObj->object = objPtr;
