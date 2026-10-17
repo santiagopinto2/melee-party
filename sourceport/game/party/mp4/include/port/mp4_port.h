@@ -54,6 +54,16 @@ double fmod(double, double);   /* (m438) */
 /* The SDK's rotation by degrees (m416's map code). */
 #define MTXRotDeg(m, axis, deg) MTXRotRad((m), (axis), MTXDegToRad(deg))
 
+/* The SDK's quaternions (quat.c), which Melee's SDK lacks: the C versions, in mp4_math.c (m417). */
+void C_QUATMultiply(const Quaternion* a, const Quaternion* b, Quaternion* ab);
+void C_QUATNormalize(const Quaternion* src, Quaternion* unit);
+void C_QUATInverse(const Quaternion* src, Quaternion* inv);
+void C_QUATRotAxisRad(Quaternion* q, const Vec* axis, f32 rad);
+void C_QUATSlerp(const Quaternion* p, const Quaternion* q, Quaternion* r, f32 t);
+#define QUATMultiply C_QUATMultiply
+#define QUATNormalize C_QUATNormalize
+#define QUATInverse C_QUATInverse
+
 /* GX reads vertex arrays big-endian, as the console did; the PC port keeps them in host order. Each
  * array goes to GX through a big-endian copy made for the frame (mp4_gx.c). */
 void mp4_gx_set_array(int attr, const void* data, unsigned int size, unsigned char stride, int host_order);
