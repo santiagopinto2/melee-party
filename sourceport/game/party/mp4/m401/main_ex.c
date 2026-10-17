@@ -164,6 +164,18 @@ void fn_2_1301C(HU3DMODEL *model, HU3DPARTICLE *particle, Mtx matrix);
 void fn_2_1350C(HU3DMODEL *model, HU3DPARTICLE *particle, Mtx matrix);
 void fn_2_13B7C(HU3DMODEL *model, HU3DPARTICLE *particle, Mtx matrix);
 
+/* Melee Party: MP4 swaps a pooled particle's anim without moving its use count, so fn_2_10710 freed
+ * the three splash anims while particles still held them and the overlay's exit freed them again
+ * (12 "bad free" lines a game). The count follows the anim here. */
+static void m401_particle_anim_set(HU3DPARTICLE *particle, ANIMDATA *anim)
+{
+    if (particle->anim != anim) {
+        HuSprAnimLock(anim);
+        particle->anim->useNum--;
+        particle->anim = anim;
+    }
+}
+
 omObjData *fn_2_10A88(Vec *arg0, s16 arg1)
 {
     omObjData *temp_r31;
@@ -194,13 +206,13 @@ omObjData *fn_2_10A88(Vec *arg0, s16 arg1)
         if (arg1 == 1) {
             temp_r31->unk10 = fn_2_10A08();
             Hu3DModelAttrReset(temp_r31->unk10, HU3D_ATTR_DISPOFF);
-            temp_r28->anim = lbl_2_bss_220[1][temp_r30];
+            m401_particle_anim_set(temp_r28, lbl_2_bss_220[1][temp_r30]);
             temp_r27->unk1C = 1.0f;
             temp_r31->work[3] = 45;
             Hu3DModelTPLvlSet(temp_r31->unk10, temp_r27->unk1C);
         }
         else {
-            temp_r28->anim = lbl_2_bss_220[0][temp_r30];
+            m401_particle_anim_set(temp_r28, lbl_2_bss_220[0][temp_r30]);
         }
     }
     temp_r27->unk10 = 3;
