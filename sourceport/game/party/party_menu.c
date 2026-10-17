@@ -722,6 +722,7 @@ static const struct {
     { "paratrooper-plunge", "Skydive into the coins\nand dodge the rest." },
     { "toads-quick-draw", "Shoot the balloon that\nmatches Toad's sign." },
     { "bob-omb-breakers", "Group three of a colour\nto break them. 100 wins." },
+    { "tree-stomp", "Dodge the three stumps\nfor 45 s. One vs three." },
 };
 
 static const char* description_of(int menu_kind, int selection)
