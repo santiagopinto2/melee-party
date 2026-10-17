@@ -20,11 +20,12 @@
  * held plus the DVD, music and misc heaps' share of the pool. Those three never hold anything GX
  * reads (a compressed record while it unpacks, a sound, a scrap), so they live on the C runtime's
  * heap instead, outside the pool. Each loaded model keeps its unpacked file and the 64-bit
- * structures made from it, so a minigame that loads four characters twice (m412: a player and its
- * reflection on the ice) needs the room. */
-static u32 HeapSizeTbl[HEAP_MAX] = { 0x200000, 0x10000, 0xAD0000, 0x100000, 0x40000 };
+ * structures made from it, so the data heap is twice MP4's 10.5 MB: Manta Rings (m401) and
+ * Avalanche! (m406) ran out at 11 MB while loading. It is zero-filled .bss, so the pages a minigame
+ * never touches cost nothing. */
+static u32 HeapSizeTbl[HEAP_MAX] = { 0x200000, 0x10000, 0x1500000, 0x100000, 0x40000 };
 #define MP4_SYSTEM_SIZE 0x200000
-#define MP4_DATA_SIZE 0xAD0000
+#define MP4_DATA_SIZE 0x1500000
 #define MP4_POOL_SIZE (MP4_SYSTEM_SIZE + MP4_DATA_SIZE)   /* the system and data heaps: what GX reads */
 /* After the heaps, the frame's big-endian copies of vertex arrays (mp4_gx.c): all the float arrays
  * the frame's models draw with. A frame that wants more than the scratch has says so in the log. */

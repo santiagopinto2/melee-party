@@ -71,7 +71,7 @@ disc they are left out of the list and the rotation, and the log says why.
 | Avalanche! | Final Destination (MP4's mountain drawn away from it); needs the MP4 disc | Mario Party 4's own. Ski down a long snowy course ahead of an avalanche. The stick steers and A pushes off; ramps launch you, and an obstacle rolls you up in a snowball until you press A four times. Anyone the avalanche catches is out, and the first down the mountain wins. This one keeps MP4's movement (gravity skis you down the slope, so the fighters follow, crouched as a tuck). The winner takes first place, the rest share last; nobody wins if the avalanche catches everyone. |
 | Paratrooper Plunge | Final Destination (MP4's sky drawn away from it); needs the MP4 disc | Mario Party 4's own. Everyone jumps from a plane and skydives for about 30 seconds; the stick steers you into the coins (some are worth five) and around the things in the way. A hit spins you and shrinks your parachute, and the fourth takes it: you are out, but keep your coins. This one keeps MP4's movement (the skydive is the game, so the fighters follow, falling the whole way down), and the fighters are drawn at the size of MP4's players, which are small in this game. Placed by coins, ties share. |
 | Toad's Quick Draw | Final Destination (MP4's shooting gallery drawn away from it); needs the MP4 disc | Mario Party 4's own. Balloons with pictures float up and Toad holds up one picture: aim your cursor with the stick and fire your popgun with A at the balloon that matches. The first to three hits wins; after twelve rounds without one, nobody does. Nobody walks: the fighters stand in place, turn to aim and jab as they fire. The winner is first, the others placed by their hits, ties sharing. |
-| Bob-omb Breakers | Final Destination (MP4's board drawn away from it); needs the MP4 disc | Mario Party 4's own puzzle: pairs of coloured blocks and Bob-ombs fall into each player's three columns; three of a colour break, a Bob-omb surrounded on all sides blows up, and whoever completes a group scores. The stick moves the pair and drops it faster, A and B turn it, X and Y flip it. First to 100 points wins, or the last player whose columns have not overflowed. Nobody walks: each fighter stands on its section's face panel, crouches while its columns are full and taunts if it wins. The winner takes first place, the others follow by points. |
+| Bob-omb Breakers | Final Destination (MP4's board drawn away from it); needs the MP4 disc | Mario Party 4's own puzzle: pairs of coloured blocks and Bob-ombs fall into each player's three columns; three of a colour break, a Bob-omb surrounded on all sides blows up, and whoever completes a group scores. The stick moves the pair and drops it faster, A and B turn it, X and Y flip it. First to 100 points wins, or the last player whose columns have not overflowed. Nobody walks: each fighter stands in its MP4 character's place over its columns, crouches while they are full and taunts if it wins. The winner takes first place, the others follow by points. |
 
 ## Playing online
 
@@ -230,12 +230,12 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
   FSLIDE and RLE, types 0 to 5 (`mp4_dir.c`, `mp4_decode.c`). Only each archive's offset table
   stays in memory.
 - **Memory.** MP4's two heaps that GX reads from (`HuMem`, `mp4_mem.c`) sit in one pool in the
-  game image, not in Melee's main memory: a 10.8 MB data heap for models and motions (MP4's 9 MB
-  plus the share of its DVD, music and misc heaps, which live on the C runtime's heap here since
-  GX never reads them) and a 2 MB system heap, twice MP4's, since the structures are bigger here
-  and Chain Chomp Fever keeps two effects per Chomp lane in it. A loaded model keeps its unpacked
-  file and the 64-bit structures made from it; a minigame that loads four characters twice (Mr.
-  Blizzard's Brigade: a player and its reflection) needs most of the data heap. GX reads the
+  game image, not in Melee's main memory: a 21 MB data heap for models and motions, twice MP4's
+  10.5 MB, and a 2 MB system heap, twice MP4's, since the structures are bigger here and Chain
+  Chomp Fever keeps two effects per Chomp lane in it. MP4's DVD, music and misc heaps live on the
+  C runtime's heap, since GX never reads them. A loaded model keeps its unpacked file and the
+  64-bit structures made from it: Manta Rings and Avalanche! ran out of an 11 MB data heap while
+  loading. GX reads the
   textures, vertex arrays and display lists of MP4 models in place; after the heaps comes the
   per-frame scratch for big-endian copies of vertex arrays (1 MB; a frame of m438 uses 0.3 MB).
   The log gives the heaps' sizes when the disc opens and the data heap's peak in 512 KB steps.
@@ -253,7 +253,7 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
   ride along), and the host lets GX read up to the image's end. Addresses below 64 MB encode as
   before, so Melee's own drawing does not change. Each MP4 minigame linked in adds about 70 KB of
   code and moves the pool up by that much, which no longer matters: the heaps keep their sizes
-  however many minigames there are.
+  however many minigames there are, and could grow further.
 - **Models.** `hsfload.c` (with `hsf_byteswap.c`), `hsfdraw.c`, `hsfman.c` (the Hu3D model,
   camera and light layer), `hsfmotion.c`, `EnvelopeExec.c`, `ShapeExec.c`, `ClusterExec.c` and
   `hsfex.c` are MP4's. They draw through Melee's GX, which now records display lists
