@@ -724,6 +724,7 @@ static const struct {
     { "bob-omb-breakers", "Group three of a colour\nto break them. 100 wins." },
     { "tree-stomp", "Dodge the three stumps\nfor 45 s. One vs three." },
     { "fish-n-drips", "Press the buttons shown\nto fill your tank first." },
+    { "hide-and-go-boom", "Hide in a cannon, or\nfind the three. B A Y X." },
 };
 
 static const char* description_of(int menu_kind, int selection)
