@@ -4,9 +4,9 @@
  * of twelve columns, each player's section of three, the pairs of coloured blocks and Bob-ombs
  * that fall into it, the groups of three that break, the scores, the CPUs and the banners. A
  * human's stick and buttons play their falling pair as in MP4 (the stick moves it and drops it
- * faster, A and B turn it, X and Y flip it). Nobody walks: MP4 has no player characters on the
- * board, only a face panel above each section, so each Melee fighter stands on top of its
- * section's panel, facing the camera, and does not move. It crouches while its section is
+ * faster, A and B turn it, X and Y flip it). Nobody walks: each player's MP4 character stands in
+ * a window over its section; it is hidden, and the Melee fighter stands in its place, facing the
+ * camera, and does not move. It crouches while its section is
  * overflowed (no more blocks for it) and once it has lost, and the winner taunts when the result
  * shows. The match ends when the minigame returns to MP4's boot overlay. MP4 gives the winner
  * (the first to 100 points, or the only player whose section has not overflowed) 10 coins and
@@ -34,9 +34,9 @@
 
 #define WORLD_X 600.0f
 
-/* How far above the centre of its section's face panel (MP4 units) a fighter's feet are: on top of
- * the panel, clear of the next pair shown under it. */
-#define PANEL_TOP 80.0f
+/* How far in front of its MP4 character (MP4 units) the fighter stands: the character, hidden
+ * (m413/main.c), stands in a window over its section, and the fighter takes its place. */
+#define PANEL_FRONT 20.0f
 
 /* mp4_m413_player's result */
 enum { RES_ON = 0, RES_WON = 1, RES_LOST = 2, RES_DRAW = 3 };
@@ -46,8 +46,8 @@ int mp4_m413_player(int player, float* x, float* y, float* z, int* score, int* o
 static struct {
     int ended;
     struct {
-        int placed;        /* the panel's place is known */
-        float x, y, z;     /* the face panel over the player's section, MP4 units */
+        int placed;        /* the character's place is known */
+        float x, y, z;     /* the MP4 character over the player's section, MP4 units */
         int score;         /* the points MP4 counted, kept for the placements */
         int taunted;       /* the winner's taunt was started */
     } p[PARTY_PLAYERS];
@@ -116,7 +116,7 @@ static void bb_fighter_input(Fighter* fp)
     }
 }
 
-/* After collision: drawn standing on its section's face panel, facing the camera (MP4's yaw 0),
+/* After collision: drawn where its MP4 character stands over its section, facing the camera (MP4's yaw 0),
  * plus whatever height Melee gave it. */
 static void bb_fighter_drawn(Fighter* fp)
 {
@@ -126,8 +126,8 @@ static void bb_fighter_drawn(Fighter* fp)
         return;
     }
     pos.x = WORLD_X + bb.p[slot].x * MP4_SCALE;
-    pos.y = (bb.p[slot].y + PANEL_TOP) * MP4_SCALE + fp->cur_pos.y;
-    pos.z = bb.p[slot].z * MP4_SCALE;
+    pos.y = bb.p[slot].y * MP4_SCALE + fp->cur_pos.y;
+    pos.z = (bb.p[slot].z + PANEL_FRONT) * MP4_SCALE;
     if (fp->is_sub_fighter) {
         pos.z -= 3.0f;
     }

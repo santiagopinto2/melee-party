@@ -2157,6 +2157,9 @@ void fn_1_CBB4(omObjData *object)
     Hu3DMotionSpeedSet(object->model[0], 0.0f);
     object->model[4] = Hu3DModelCreateFile(DATA_MAKE_NUM(DATADIR_M413, 0x0D) + temp_r31->unk18);
     Hu3DModelPosSet(object->model[4], (temp_r31->unk10 * 300) - 450, 670, 60);
+    /* Melee Party: the player's MP4 character over its section; the Melee fighter stands there
+     * instead (mg_mp4_m413.c) */
+    Hu3DModelAttrSet(object->model[4], HU3D_ATTR_DISPOFF);
     Hu3DMotionTimeSet(object->model[4], 60.0f);
     Hu3DMotionSpeedSet(object->model[4], 0.0f);
     object->model[5] = Hu3DModelCreateFile(DATA_MAKE_NUM(DATADIR_M413, 0x15) + temp_r31->unk18);
