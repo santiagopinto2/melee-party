@@ -723,6 +723,7 @@ static const struct {
     { "toads-quick-draw", "Shoot the balloon that\nmatches Toad's sign." },
     { "bob-omb-breakers", "Group three of a colour\nto break them. 100 wins." },
     { "tree-stomp", "Dodge the three stumps\nfor 45 s. One vs three." },
+    { "fish-n-drips", "Press the buttons shown\nto fill your tank first." },
 };
 
 static const char* description_of(int menu_kind, int selection)
