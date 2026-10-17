@@ -3468,6 +3468,11 @@ void Hu3DModelObjDraw(HU3DMODELID modelId, char *objName, Mtx mtx)
 
     drawObj.model = &Hu3DData[modelId];
     drawObj.object = objPTR = Hu3DModelObjPtrGet(modelId, objName);
+    /* Melee Party: a name the model lacks draws nothing here (m413 asks for "m143", MP4's typo),
+     * where the console read through the null pointer */
+    if (objPTR == NULL) {
+        return;
+    }
     constData = objPTR->constData;
     MTXCopy(mtx, drawObj.matrix);
     drawObj.scale.x = drawObj.scale.y = drawObj.scale.z = 1.0f;
