@@ -727,6 +727,7 @@ static const struct {
     { "hide-and-go-boom", "Hide in a cannon, or\nfind the three. B A Y X." },
     { "blame-it-on-the-crane", "Work the crane with A,\nor roll clear of it." },
     { "makin-waves", "Stay on the raft, or\nmake waves with A, A." },
+    { "gooooooal", "Score 10 past the goalie,\nor keep them out. 1 vs 3." },
 };
 
 static const char* description_of(int menu_kind, int selection)
