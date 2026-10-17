@@ -180,6 +180,12 @@ float CharMotionMaxTimeGet(s16 charNo)
     return model >= 0 ? Hu3DMotionMaxTimeGet(model) : 0.0f;
 }
 
+float CharMotionTimeGet(s16 charNo)
+{
+    s16 model = mp4_char_model(charNo);
+    return model >= 0 ? Hu3DMotionTimeGet(model) : 0.0f;
+}
+
 void CharModelStepFxSet(s16 charNo, s32 stepFx)
 {
     (void) charNo;

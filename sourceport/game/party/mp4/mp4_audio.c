@@ -11,7 +11,9 @@ int HuAudFXPlay(int seId) { (void) seId; return -1; }
 int HuAudFXPlayVol(int seId, s16 vol) { (void) seId; (void) vol; return -1; }
 int HuAudFXPlayVolPan(int seId, s16 vol, s16 pan) { (void) seId; (void) vol; (void) pan; return -1; }
 void HuAudFXStop(int seNo) { (void) seNo; }
+void HuAudFXFadeOut(int seNo, s32 speed) { (void) seNo; (void) speed; }
 void HuAudFXAllStop(void) {}
+void HuAudAUXVolSet(s8 volA, s8 volB) { (void) volA; (void) volB; }
 void HuAudFXPanning(int seNo, s16 pan) { (void) seNo; (void) pan; }
 void HuAudFXListnerSet(Vec *pos, Vec *heading, float sndDist, float sndSpeed)
 {
