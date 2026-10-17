@@ -716,6 +716,12 @@ static const struct {
     { "challenge-booksquirm", "The pages keep coming.\nThe last one in plays on." },
     { "paths-of-peril", "Walk the narrow path to\nthe end. First pair wins." },
     { "stamp-out", "Get under the stamps to\nprint tiles. Most tiles wins." },
+    { "manta-rings", "Swim through the manta's\nrings. Most rings wins." },
+    { "slime-time", "Mash A to pull against\nthe slime. Don't stop!" },
+    { "avalanche", "Ski down ahead of the\navalanche. First wins." },
+    { "paratrooper-plunge", "Skydive into the coins\nand dodge the rest." },
+    { "toads-quick-draw", "Shoot the balloon that\nmatches Toad's sign." },
+    { "bob-omb-breakers", "Group three of a colour\nto break them. 100 wins." },
 };
 
 static const char* description_of(int menu_kind, int selection)

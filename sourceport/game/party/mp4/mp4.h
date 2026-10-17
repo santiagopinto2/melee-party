@@ -83,6 +83,12 @@ extern const int mp4_overlay_m429;
 extern const int mp4_overlay_m453;
 extern const int mp4_overlay_m439;
 extern const int mp4_overlay_m415;
+extern const int mp4_overlay_m401;
+extern const int mp4_overlay_m402;
+extern const int mp4_overlay_m406;
+extern const int mp4_overlay_m408;
+extern const int mp4_overlay_m409;
+extern const int mp4_overlay_m413;
 
 /* mp4_char.c: the player's hidden model, a Hu3D model id or -1. */
 s16 mp4_char_model(int charNo);
