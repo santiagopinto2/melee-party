@@ -192,6 +192,17 @@ static int view_list(MP4View out[HU3D_CAM_MAX])
         }
         out[v].cameras |= (s16) (1 << i);
     }
+    if (n > 1) {
+        /* a camera with no player beside a split screen (Long Claw of the Law's opening picture,
+         * camera 4 over the four views) draws in the view drawn last, over the others, as MP4
+         * draws its cameras in order; not once it shrank to nothing */
+        for (i = 0; i < HU3D_CAM_MAX; i++) {
+            HU3DCAMERA* cam = &Hu3DCamera[i];
+            if ((all & (1 << i)) && !(players & (1 << i)) && cam->viewportW > 0.0f && cam->viewportH > 0.0f) {
+                out[n - 1].cameras |= (s16) (1 << i);
+            }
+        }
+    }
     if (n == 0) {
         /* no player yet (the overlay is loading): one view, the first camera, everything in it */
         for (i = 0; i < HU3D_CAM_MAX && (all & (1 << i)) == 0; i++) {
@@ -448,6 +459,8 @@ static void draw_gobj_create(void)
 /* ---- a minigame ---- */
 
 static s8 match_groups[PARTY_PLAYERS];
+static int triggers_apart_next;   /* mp4_match_triggers_apart, for the next match */
+static int triggers_apart;        /* this match's */
 
 void mp4_match_groups(const s8 groups[4])
 {
@@ -476,6 +489,8 @@ void mp4_match_begin(int overlay, float offset_x, float offset_y, float offset_z
         memset(&GWPlayer[i], 0, sizeof GWPlayer[i]);
     }
     memset(match_groups, 0, sizeof match_groups);   /* the next match is four-player unless told */
+    triggers_apart = triggers_apart_next;
+    triggers_apart_next = 0;
     memset(&GWSystem, 0, sizeof GWSystem);
     GWSystem.player_curr = (s8) (party.mover >= 0 && party.mover < PARTY_PLAYERS ? party.mover : 0);
     memset(pad_prev, 0, sizeof pad_prev);
@@ -564,6 +579,11 @@ int mp4_match_over(void)
     return match_running && mp4_boot_reached();
 }
 
+void mp4_match_triggers_apart(void)
+{
+    triggers_apart_next = 1;
+}
+
 void mp4_pad(int pad, u32 held, float stick_x, float stick_y, float substick_x, float substick_y,
              float trigger)
 {
@@ -571,7 +591,7 @@ void mp4_pad(int pad, u32 held, float stick_x, float stick_y, float substick_x, 
         return;
     }
     HuPadBtn[pad] = (u16) (held & 0x0FFF & ~PAD_BUTTON_DIR);
-    if (trigger >= 0.75f) {
+    if (trigger >= 0.75f && !triggers_apart) {
         HuPadBtn[pad] |= PAD_BUTTON_TRIGGER_L;
     }
     HuPadStkX[pad] = (s8) (stick_x * 72.0f);
@@ -579,6 +599,15 @@ void mp4_pad(int pad, u32 held, float stick_x, float stick_y, float substick_x, 
     HuPadSubStkX[pad] = (s8) (substick_x * 72.0f);
     HuPadSubStkY[pad] = (s8) (substick_y * 72.0f);
     HuPadTrigL[pad] = HuPadTrigR[pad] = (u8) (trigger * 255.0f);
+}
+
+void mp4_pad_triggers(int pad, float l, float r)
+{
+    if (pad < 0 || pad >= 4 || !triggers_apart) {
+        return;
+    }
+    HuPadTrigL[pad] = (u8) ((l < 0.0f ? 0.0f : l > 1.0f ? 1.0f : l) * 255.0f);
+    HuPadTrigR[pad] = (u8) ((r < 0.0f ? 0.0f : r > 1.0f ? 1.0f : r) * 255.0f);
 }
 
 /* A player's model hooked onto an object of another model (Hu3DModelHookSet: m419's three hang

@@ -264,6 +264,13 @@ void CharEffectCoinGlowCreate(s16 cameraBit, HuVecF* pos)
     (void) pos;
 }
 
+/* chrman.c: a puff of smoke (m455's rod at the end, m442). No character effects here. */
+void CharEffectSmokeCreate(s16 cameraBit, HuVecF* pos)
+{
+    (void) cameraBit;
+    (void) pos;
+}
+
 void CharModelLayerSetAll2(s16 layerNo)
 {
     CharEffectLayerSet(layerNo);

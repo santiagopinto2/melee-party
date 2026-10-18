@@ -728,6 +728,14 @@ static const struct {
     { "blame-it-on-the-crane", "Work the crane with A,\nor roll clear of it." },
     { "makin-waves", "Stay on the raft, or\nmake waves with A, A." },
     { "gooooooal", "Score 10 past the goalie,\nor keep them out. 1 vs 3." },
+    { "three-throw", "Throw balls at the targets.\nA jumps, B throws." },
+    { "mario-medley", "Swim three lengths with\nthe buttons shown. Race!" },
+    { "take-a-breather", "Breathe in with L, R, L,\nR. Longest under wins." },
+    { "photo-finish", "Rebuild the photo first.\nL/R turns, A places." },
+    { "long-claw-of-the-law", "Catch three of the prize\non the sign with a claw." },
+    { "mario-speedwagons", "Hold R to rev, A shifts.\nFirst over the line wins." },
+    { "rumble-fishing", "Press A when the ! shows.\nToo early lands nothing." },
+    { "panel-panic", "Hit the block to drop a\npanel. Last one up wins." },
 };
 
 static const char* description_of(int menu_kind, int selection)

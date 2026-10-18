@@ -39,6 +39,14 @@ extern const PartyMinigame mg_mp4_m418;
 extern const PartyMinigame mg_mp4_m424;
 extern const PartyMinigame mg_mp4_m417;
 extern const PartyMinigame mg_mp4_m423;
+extern const PartyMinigame mg_mp4_m410;
+extern const PartyMinigame mg_mp4_m405;
+extern const PartyMinigame mg_mp4_m456;
+extern const PartyMinigame mg_mp4_m411;
+extern const PartyMinigame mg_mp4_m414;
+extern const PartyMinigame mg_mp4_m443;
+extern const PartyMinigame mg_mp4_m455;
+extern const PartyMinigame mg_mp4_m463;
 
 static const PartyMinigame* const table[] = {
     &mg_volleyball,
@@ -72,6 +80,14 @@ static const PartyMinigame* const table[] = {
     &mg_mp4_m424,
     &mg_mp4_m417,
     &mg_mp4_m423,
+    &mg_mp4_m410,
+    &mg_mp4_m405,
+    &mg_mp4_m456,
+    &mg_mp4_m411,
+    &mg_mp4_m414,
+    &mg_mp4_m443,
+    &mg_mp4_m455,
+    &mg_mp4_m463,
 };
 
 /* Set by the minigame being played; called from the party patch's food hook. */

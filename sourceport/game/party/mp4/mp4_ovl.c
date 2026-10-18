@@ -47,6 +47,14 @@ void m418_ObjectSetup(void);
 void m424_ObjectSetup(void);
 void m417_ObjectSetup(void);
 void m423_ObjectSetup(void);
+void m410_ObjectSetup(void);
+void m405_ObjectSetup(void);
+void m456_ObjectSetup(void);
+void m411_ObjectSetup(void);
+void m414_ObjectSetup(void);
+void m443_ObjectSetup(void);
+void m455_ObjectSetup(void);
+void m463_ObjectSetup(void);
 
 const int mp4_overlay_m440 = DLL_m440Dll;
 const int mp4_overlay_m438 = DLL_m438Dll;
@@ -74,6 +82,14 @@ const int mp4_overlay_m418 = DLL_m418Dll;
 const int mp4_overlay_m424 = DLL_m424Dll;
 const int mp4_overlay_m417 = DLL_m417Dll;
 const int mp4_overlay_m423 = DLL_m423Dll;
+const int mp4_overlay_m410 = DLL_m410Dll;
+const int mp4_overlay_m405 = DLL_m405Dll;
+const int mp4_overlay_m456 = DLL_m456Dll;
+const int mp4_overlay_m411 = DLL_m411Dll;
+const int mp4_overlay_m414 = DLL_m414Dll;
+const int mp4_overlay_m443 = DLL_m443Dll;
+const int mp4_overlay_m455 = DLL_m455Dll;
+const int mp4_overlay_m463 = DLL_m463Dll;
 
 /* The markers: a byte before and a byte after the overlay's variables (see above). */
 #define OVERLAY_MARKERS(name)                                                       \
@@ -105,6 +121,14 @@ OVERLAY_MARKERS(m418)
 OVERLAY_MARKERS(m424)
 OVERLAY_MARKERS(m417)
 OVERLAY_MARKERS(m423)
+OVERLAY_MARKERS(m410)
+OVERLAY_MARKERS(m405)
+OVERLAY_MARKERS(m456)
+OVERLAY_MARKERS(m411)
+OVERLAY_MARKERS(m414)
+OVERLAY_MARKERS(m443)
+OVERLAY_MARKERS(m455)
+OVERLAY_MARKERS(m463)
 
 static int boot_reached;
 
@@ -146,6 +170,14 @@ static const struct {
     { DLL_m424Dll, m424_ObjectSetup, &m424_data_begin, &m424_data_end },
     { DLL_m417Dll, m417_ObjectSetup, &m417_data_begin, &m417_data_end },
     { DLL_m423Dll, m423_ObjectSetup, &m423_data_begin, &m423_data_end },
+    { DLL_m410Dll, m410_ObjectSetup, &m410_data_begin, &m410_data_end },
+    { DLL_m405Dll, m405_ObjectSetup, &m405_data_begin, &m405_data_end },
+    { DLL_m456Dll, m456_ObjectSetup, &m456_data_begin, &m456_data_end },
+    { DLL_m411Dll, m411_ObjectSetup, &m411_data_begin, &m411_data_end },
+    { DLL_m414Dll, m414_ObjectSetup, &m414_data_begin, &m414_data_end },
+    { DLL_m443Dll, m443_ObjectSetup, &m443_data_begin, &m443_data_end },
+    { DLL_m455Dll, m455_ObjectSetup, &m455_data_begin, &m455_data_end },
+    { DLL_m463Dll, m463_ObjectSetup, &m463_data_begin, &m463_data_end },
 };
 #define OVERLAYS (sizeof overlays / sizeof overlays[0])
 
