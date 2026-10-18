@@ -45,6 +45,10 @@ static struct {
     int ended;
     s8 groups[PARTY_PLAYERS];
     s32 motion[PARTY_PLAYERS];   /* the motion slot seen last frame */
+    int frame;                   /* frames since the match began */
+    int in_point;                /* someone cheers or slumps after a point */
+    int points;
+    int hits;                    /* serves, bumps, sets, spikes and blocks since the last point */
 } bv;
 
 static void bv_start(void)
@@ -60,7 +64,24 @@ static void bv_start(void)
 
 static void bv_frame(void)
 {
+    int p, in_point = 0;
     party_arena_frame();
+    bv.frame++;
+    /* the log keeps each point's frame and the hits it took: how long the rallies are */
+    for (p = 0; p < PARTY_PLAYERS; p++) {
+        s32 state, motion, team;
+        float stick, heading;
+        int busy, airborne, playing;
+        if (mp4_m433_player(p, &state, &stick, &heading, &motion, &busy, &airborne, &team,
+                            &playing) && state == ST_POINT) {
+            in_point = 1;
+        }
+    }
+    if (in_point && !bv.in_point) {
+        party_log("m433: point %d at frame %d after %d hits", ++bv.points, bv.frame, bv.hits);
+        bv.hits = 0;
+    }
+    bv.in_point = in_point;
     /* over when MP4 returns to its boot overlay; at once without a disc (MELEE_PARTY_MINIGAME
      * can still name this minigame then: the lists do not) */
     if (!bv.ended && (mp4_match_over() || !mp4_available())) {
@@ -115,6 +136,7 @@ static void bv_fighter_input(Fighter* fp)
              (motion == MO_SERVE_HIT || motion == MO_SWING || motion == MO_SET ||
               motion == MO_SWING2 || motion == MO_SPIKE || motion == MO_BLOCK);
     bv.motion[slot] = motion;
+    bv.hits += struck && playing;
     if (playing && (state == ST_DEFEND || state == ST_ATTACK) && !busy && !airborne) {
         /* the stick back from MP4's fraction and heading (atan2d(x, -y)) */
         float a = heading * 3.14159265f / 180.0f;
