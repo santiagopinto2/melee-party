@@ -880,12 +880,6 @@ void fn_1_2E78(omObjData *object)
         fn_1_33E0(object);
     }
     fn_1_3764(object);
-    if (var_r31->unk_05 != 0) {
-        /* Melee Party: a CPU's held A (fn_1_33E0) is for this frame only. The console's pad read
-         * cleared it; here nothing does, and mp4_frame would turn the stuck bit into a new press
-         * (HuPadBtnDown) the next frame, so a CPU would ground-pound the frame after it jumps. */
-        HuPadBtn[var_r31->unk_04] &= (u16) ~0x100;
-    }
     switch (lbl_1_bss_648) {
         case 2:
             if (lbl_1_bss_640 == 1) {

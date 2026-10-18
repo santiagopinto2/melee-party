@@ -565,8 +565,14 @@ void mp4_frame(void)
     if (!match_running) {
         return;
     }
-    /* what HuPadRead leaves of the last frame's pads: a press is new for one frame */
+    /* what HuPadRead leaves of the last frame's pads: a press is new for one frame. A CPU's pad
+     * has no controller behind it, so on the console HuPadRead empties its buttons every frame:
+     * whatever its COM code set lasts that frame only, and a held bit never turns into a press. */
     for (i = 0; i < 4; i++) {
+        if (party.p[i].slot_type == Gm_PKind_Cpu) {
+            HuPadBtn[i] = HuPadBtnDown[i] = pad_prev[i] = 0;
+            continue;
+        }
         HuPadBtnDown[i] = HuPadBtn[i] & ~pad_prev[i];
         pad_prev[i] = HuPadBtn[i];
     }
