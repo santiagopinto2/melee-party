@@ -88,6 +88,13 @@ void HuPadRumbleSet(s16 pad, s16 duration, s16 off, s16 on)
     (void) pad; (void) duration; (void) off; (void) on;
 }
 
+/* Which pads have a rumble pak (0x80000000 >> pad): none, so Cliffhangers (m428) shows its gust
+ * warning on screen, as MP4 does without rumble */
+u32 HuPadRumbleGet(void)
+{
+    return 0;
+}
+
 s32 CharFXPlay(s16 charNo, s16 seId)
 {
     (void) charNo; (void) seId;
