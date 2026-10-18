@@ -6,9 +6,11 @@
  * GWPlayerCfg.group, which its board decides; the party pairs the players at random (as Cheep
  * Cheep Sweep does) and hands the groups to the runtime (mp4_match_groups). The four players are
  * MP4's player objects, each driving a hidden MP4 character model; the Melee fighters stand where
- * those models stand, through party_arena.c. While a player runs about its half of the court by
- * the stick, its fighter walks by Melee's physics and the player moves at the fighter's speed.
- * Everything else is MP4's and the fighter follows: waiting for a serve, the serve itself, the
+ * those models stand, through party_arena.c. While a human player runs about its half of the
+ * court by the stick, its fighter walks by Melee's physics and the player moves at the fighter's
+ * speed. A CPU keeps MP4's speed: MP4's CPUs never miss a ball they reach, and at a Melee
+ * fighter's dash they reached so many that a game of CPUs ran to 14000 frames, most points ten
+ * or more crossings of the net. Everything else is MP4's and the fighter follows: waiting for a serve, the serve itself, the
  * reach for a ball (A bumps or sets it), the jumps (B jumps to spike or block, A in the air
  * spikes), the cheer after a point and the walk-off at the end; the fighter jabs as a hit lands
  * on the sand, and attacks in the air as a serve, spike or block lands up there. The first pair
@@ -117,8 +119,9 @@ static void bv_setup(StartMeleeData* start)
     start->rules.on_frame_start = bv_frame;
 }
 
-/* Fighter_procInput: running about the court by the stick while the rally is on and the player is
- * free, following the player the rest of the time, with a jab or an aerial as it strikes. */
+/* Fighter_procInput: a human runs about the court by the stick while the rally is on and the
+ * player is free; a CPU, and anyone the rest of the time, follows the player, with a jab or an
+ * aerial as it strikes. */
 static void bv_fighter_input(Fighter* fp)
 {
     int slot = fp->player_idx;
@@ -137,7 +140,8 @@ static void bv_fighter_input(Fighter* fp)
               motion == MO_SWING2 || motion == MO_SPIKE || motion == MO_BLOCK);
     bv.motion[slot] = motion;
     bv.hits += struck && playing;
-    if (playing && (state == ST_DEFEND || state == ST_ATTACK) && !busy && !airborne) {
+    if (playing && (state == ST_DEFEND || state == ST_ATTACK) && !busy && !airborne &&
+        party.p[slot].slot_type != Gm_PKind_Cpu) {
         /* the stick back from MP4's fraction and heading (atan2d(x, -y)) */
         float a = heading * 3.14159265f / 180.0f;
         party_arena_walk(fp, (s16) (72.0f * stick * sinf(a)), (s16) (-72.0f * stick * cosf(a)));
