@@ -99,6 +99,8 @@ int party_arena_input_begin(Fighter* fp)
     if (slot >= 0 && slot < PARTY_PLAYERS && !fp->is_sub_fighter && human(slot)) {
         mp4_pad(slot, fp->input.held_buttons[0], fp->input.lstick[0].x, fp->input.lstick[0].y,
                 fp->input.cstick[0].x, fp->input.cstick[0].y, fp->input.triggers[0]);
+        mp4_pad_triggers(slot, HSD_PadGameStatus[fp->pad_port & 3].nml_analogL,
+                         HSD_PadGameStatus[fp->pad_port & 3].nml_analogR);
     }
     HSD_JObjSetTranslate(fp->gobj->hsd_obj, &fp->cur_pos);
     fp->input.lstick[0].x = fp->input.lstick[0].y = 0.0f;

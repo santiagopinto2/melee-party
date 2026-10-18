@@ -192,6 +192,17 @@ static int view_list(MP4View out[HU3D_CAM_MAX])
         }
         out[v].cameras |= (s16) (1 << i);
     }
+    if (n > 1) {
+        /* a camera with no player beside a split screen (Long Claw of the Law's opening picture,
+         * camera 4 over the four views) draws in the view drawn last, over the others, as MP4
+         * draws its cameras in order; not once it shrank to nothing */
+        for (i = 0; i < HU3D_CAM_MAX; i++) {
+            HU3DCAMERA* cam = &Hu3DCamera[i];
+            if ((all & (1 << i)) && !(players & (1 << i)) && cam->viewportW > 0.0f && cam->viewportH > 0.0f) {
+                out[n - 1].cameras |= (s16) (1 << i);
+            }
+        }
+    }
     if (n == 0) {
         /* no player yet (the overlay is loading): one view, the first camera, everything in it */
         for (i = 0; i < HU3D_CAM_MAX && (all & (1 << i)) == 0; i++) {
@@ -448,6 +459,8 @@ static void draw_gobj_create(void)
 /* ---- a minigame ---- */
 
 static s8 match_groups[PARTY_PLAYERS];
+static int triggers_apart_next;   /* mp4_match_triggers_apart, for the next match */
+static int triggers_apart;        /* this match's */
 
 void mp4_match_groups(const s8 groups[4])
 {
@@ -476,6 +489,8 @@ void mp4_match_begin(int overlay, float offset_x, float offset_y, float offset_z
         memset(&GWPlayer[i], 0, sizeof GWPlayer[i]);
     }
     memset(match_groups, 0, sizeof match_groups);   /* the next match is four-player unless told */
+    triggers_apart = triggers_apart_next;
+    triggers_apart_next = 0;
     memset(&GWSystem, 0, sizeof GWSystem);
     GWSystem.player_curr = (s8) (party.mover >= 0 && party.mover < PARTY_PLAYERS ? party.mover : 0);
     memset(pad_prev, 0, sizeof pad_prev);
@@ -564,6 +579,11 @@ int mp4_match_over(void)
     return match_running && mp4_boot_reached();
 }
 
+void mp4_match_triggers_apart(void)
+{
+    triggers_apart_next = 1;
+}
+
 void mp4_pad(int pad, u32 held, float stick_x, float stick_y, float substick_x, float substick_y,
              float trigger)
 {
@@ -571,7 +591,7 @@ void mp4_pad(int pad, u32 held, float stick_x, float stick_y, float substick_x, 
         return;
     }
     HuPadBtn[pad] = (u16) (held & 0x0FFF & ~PAD_BUTTON_DIR);
-    if (trigger >= 0.75f) {
+    if (trigger >= 0.75f && !triggers_apart) {
         HuPadBtn[pad] |= PAD_BUTTON_TRIGGER_L;
     }
     HuPadStkX[pad] = (s8) (stick_x * 72.0f);
@@ -581,16 +601,64 @@ void mp4_pad(int pad, u32 held, float stick_x, float stick_y, float substick_x, 
     HuPadTrigL[pad] = HuPadTrigR[pad] = (u8) (trigger * 255.0f);
 }
 
+void mp4_pad_triggers(int pad, float l, float r)
+{
+    if (pad < 0 || pad >= 4 || !triggers_apart) {
+        return;
+    }
+    HuPadTrigL[pad] = (u8) ((l < 0.0f ? 0.0f : l > 1.0f ? 1.0f : l) * 255.0f);
+    HuPadTrigR[pad] = (u8) ((r < 0.0f ? 0.0f : r > 1.0f ? 1.0f : r) * 255.0f);
+}
+
+/* A player's model hooked onto an object of another model (Hu3DModelHookSet: m419's three hang
+ * on their trees): its place in MP4's world, through that model's pose and motion, as hsfdraw.c
+ * draws it. 0 if no model holds it. */
+static int hooked_pose(s16 model, Mtx out)
+{
+    HU3DMODEL* m = &Hu3DData[model];
+    s16 i, j;
+    for (i = 0; i < HU3D_MODEL_MAX; i++) {
+        HSFDATA* hsf = Hu3DData[i].hsf;
+        HSFOBJECT* obj;
+        /* a hook function's or a camera's model keeps its function (or -1) where the HSF goes */
+        if (hsf == NULL || i == model || (Hu3DData[i].attr & (HU3D_ATTR_HOOKFUNC | HU3D_ATTR_CAMERA))) {
+            continue;
+        }
+        for (j = 0, obj = hsf->object; j < hsf->objectNum; j++, obj++) {
+            HSFCONSTDATA* c = obj->constData;
+            if (c != NULL && c->hookMdlId == model) {
+                Mtx local;
+                Hu3DModelObjMtxGet(i, obj->name, out);
+                MTXScale(local, m->scale.x, m->scale.y, m->scale.z);
+                mtxRotCat(local, m->rot.x, m->rot.y, m->rot.z);
+                mtxTransCat(local, m->pos.x, m->pos.y, m->pos.z);
+                MTXConcat(local, m->mtx, local);
+                MTXConcat(out, local, out);
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
 int mp4_player_pose(int player, float* x, float* y, float* z, float* yaw)
 {
     s16 model = mp4_char_model(player);
     HU3DMODEL* m;
+    Mtx w;
     if (model < 0 || !match_running) {
         return 0;
     }
     m = &Hu3DData[model];
     if (m->hsf == NULL) {
         return 0;
+    }
+    if ((m->attr & HU3D_ATTR_HOOK) && hooked_pose(model, w)) {
+        *x = w[0][3] * MP4_SCALE + world_offset.x;
+        *y = w[1][3] * MP4_SCALE + world_offset.y;
+        *z = w[2][3] * MP4_SCALE + world_offset.z;
+        *yaw = atan2f(w[0][2], w[2][2]);   /* where the model's forward (+z) points */
+        return 1;
     }
     *x = m->pos.x * MP4_SCALE + world_offset.x;
     *y = m->pos.y * MP4_SCALE + world_offset.y;

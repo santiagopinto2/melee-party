@@ -66,7 +66,8 @@ constexpr uint32_t MEM1_SIZE = 40u << 20;   // the console's 24 MB, grown for 8-
 constexpr uintptr_t LOCKED_CACHE_BASE = 0xE0000000u;
 constexpr uint32_t LOCKED_CACHE_SIZE = 16u << 10;
 // Right after MEM1, so the game's own statics (the font atlas, static textures) have a physical
-// address the GX texture and display-list registers can hold: 26 bits, the first 64 MB.
+// address the GX texture and display-list registers can hold. The console's SDK wrote 26-bit
+// addresses (the first 64 MB); the native game writes 29 bits, so the whole image is in reach.
 constexpr uintptr_t GAME_IMAGE_BASE = 0x82800000u;
 
 MuGameApi g_game{};
@@ -2472,7 +2473,7 @@ bool reserve_memory() {
     return false;
   }
   host::ram = (uint8_t*)MEM1_BASE;
-  host::ram_size = 64u << 20;   // MEM1 and the game image after it: everything GX can address
+  host::ram_size = 64u << 20;   // MEM1 and the game image after it; run() widens it to the image's end
   return true;
 }
 
@@ -2512,6 +2513,9 @@ int run(void (*shutdown)(int)) {
   const auto* nt = (const IMAGE_NT_HEADERS*)((const uint8_t*)module + ((const IMAGE_DOS_HEADER*)module)->e_lfanew);
   host::game_image = (uint8_t*)module;
   host::game_image_size = nt->OptionalHeader.SizeOfImage;
+  // GX reaches the whole image, not just its first 24 MB: the native game writes 24-bit texture,
+  // TLUT and copy addresses (29 bits, 512 MB from MEM1), and the image ends far below that.
+  host::ram_size = (uint32_t)(GAME_IMAGE_BASE - MEM1_BASE) + host::game_image_size;
   auto entry = (MuGameEntry)GetProcAddress(module, "mu_game_entry");
   if (!entry) host::die("%s has no mu_game_entry", g_dll.c_str());
   static MuHostApi api = make_host();

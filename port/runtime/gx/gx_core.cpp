@@ -514,12 +514,14 @@ void bp_write(uint32_t value) {
     case BP_LOADTLUT1: {
       uint32_t tmem_addr = (masked & 0x3FF) << 9;
       uint32_t count = (masked & 0x1FFC00) >> 5;
-      // BP_LOADTLUT0 carries the source address in bits 0..20 only; bits 21..23 are
-      // reserved and the GP ignores them. GXInitTlutObj writes just the 21-bit field
-      // and the 8-bit register id, so whatever the caller's uninitialised GXTlutObj
-      // held in between rides along (tobj.c and psdisp.c both use a stack local).
-      // Mask to the real field or those stale bits become a wild address.
-      uint32_t src = ((g_bp.reg[BP_LOADTLUT0] & 0x1FFFFFu) << 5) & 0x3FFFFFFFu;
+      // BP_LOADTLUT0 carries the source address in bits 0..20 on the console; bits 21..23
+      // are reserved and the GP ignores them. The native game's GXInitTlutObj writes all 24
+      // bits (melee-party.patch), as its textures and copies do, so GX reaches the whole game
+      // image past the first 64 MB. The console's GXInitTlutObj wrote just the 21-bit field and
+      // the register id, so whatever the caller's uninitialised GXTlutObj held in between rode
+      // along (tobj.c and psdisp.c both use a stack local): the recompiled game keeps 21 bits.
+      const uint32_t tlut_mask = host::game_image ? 0xFFFFFFu : 0x1FFFFFu;
+      uint32_t src = ((g_bp.reg[BP_LOADTLUT0] & tlut_mask) << 5) & 0x3FFFFFFFu;
       if (tmem_addr + count <= sizeof g_tmem) {
         std::memcpy(g_tmem + tmem_addr, host::ptr(0x80000000u | src, count), count);
         ++g_tmem_generation;

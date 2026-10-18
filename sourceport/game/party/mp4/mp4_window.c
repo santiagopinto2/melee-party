@@ -25,6 +25,18 @@ s16 HuWinExCreateStyled(float x, float y, s16 w, s16 h, s16 portrait, s16 frame)
     return -1;
 }
 void HuWinExAnimIn(s16 window) { (void) window; }
+s16 HuWinCreate(float x, float y, s16 w, s16 h, s16 frame)
+{
+    (void) x; (void) y; (void) w; (void) h; (void) frame;
+    return -1;
+}
+void HuWinBGTPLvlSet(s16 window, float tp_level) { (void) window; (void) tp_level; }
+void HuWinMesMaxSizeGet(s16 mess_num, float *size, ...)
+{
+    (void) mess_num;
+    size[0] = size[1] = 0.0f;
+}
+void HuWinExCleanup(s16 window) { (void) window; }
 
 /* ARAM (armem.c): nothing is ever moved there, so no transfer is ever in progress; a file "from
  * ARAM" is read from the disc. The sound fade (audio.c) is never in progress either. */
