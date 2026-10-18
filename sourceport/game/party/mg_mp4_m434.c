@@ -119,15 +119,13 @@ static float cs_knockback(Fighter* fp, float kb)
     return 0.0f;
 }
 
-/* MP4 gives each winner 10 coins and the others nothing; nobody when it is a draw. */
+/* MP4 gives each winner 10 coins and the others nothing; nobody when it is a draw, and then
+ * everyone is last. */
 static void cs_result(s8 place[PARTY_PLAYERS])
 {
-    int i, any = 0;
+    int i;
     for (i = 0; i < PARTY_PLAYERS; i++) {
-        any |= mp4_player_coins(i) > 0;
-    }
-    for (i = 0; i < PARTY_PLAYERS; i++) {
-        place[i] = (s8) (!any || mp4_player_coins(i) > 0 ? 0 : 3);
+        place[i] = (s8) (mp4_player_coins(i) > 0 ? 0 : 3);
     }
 }
 

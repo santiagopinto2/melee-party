@@ -105,12 +105,19 @@ static float qd_knockback(Fighter* fp, float kb)
 }
 
 /* MP4 gives the winner 10 coins: first. The others by their hits, ties sharing, after the winner;
- * a player with no hit last. */
+ * a player with no hit last. A draw (MP4 pays nobody) puts everyone last. */
 static void qd_result(s8 place[PARTY_PLAYERS])
 {
-    int i, j;
+    int i, j, any = 0;
+    for (i = 0; i < PARTY_PLAYERS; i++) {
+        any |= mp4_player_coins(i) > 0;
+    }
     for (i = 0; i < PARTY_PLAYERS; i++) {
         int p = 0;
+        if (!any) {
+            place[i] = 3;
+            continue;
+        }
         if (mp4_player_coins(i) > 0) {
             place[i] = 0;
             continue;

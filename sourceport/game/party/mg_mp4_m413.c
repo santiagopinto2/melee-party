@@ -12,7 +12,7 @@
  * (the first to 100 points, or the only player whose section has not overflowed) 10 coins and
  * everyone else nothing, and nobody anything on a draw (every section overflowed): the winner
  * takes first place, the others follow by their points (equal points share a place), and a draw
- * puts everyone first.
+ * puts everyone last.
  *
  * The Melee side: Final Destination, each fighter colliding on a lane of its own (party_arena.c),
  * with the MP4 board drawn 600 units to the side, clear of the stage's model. */
@@ -144,7 +144,7 @@ static float bb_knockback(Fighter* fp, float kb)
 
 /* MP4 gives the winner 10 coins and the rest nothing (nobody anything on a draw). The winner is
  * first; the others follow by their points, equal points sharing a place; a draw (or no game)
- * puts everyone first. */
+ * puts everyone last. */
 static void bb_result(s8 place[PARTY_PLAYERS])
 {
     int i, j, winner = -1;
@@ -156,7 +156,7 @@ static void bb_result(s8 place[PARTY_PLAYERS])
     for (i = 0; i < PARTY_PLAYERS; i++) {
         int ahead = 1;
         if (winner < 0 || i == winner) {
-            place[i] = 0;
+            place[i] = (s8) (winner < 0 ? 3 : 0);
             continue;
         }
         for (j = 0; j < PARTY_PLAYERS; j++) {

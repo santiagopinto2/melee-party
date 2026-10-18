@@ -10,7 +10,8 @@
  * when the belt carries it off the end and it falls, and at the start and the end, the fighter
  * follows. The match ends when the minigame returns to MP4's boot overlay; the side with more
  * coins wins (MP4 keeps the coins as coins: GWPlayerCoinCollectSet), so the winning side shares
- * first place and the other last, everyone first on a tie. */
+ * first place and the other last, everyone first on a tie, everyone last when neither side has a
+ * coin (MP4's draw). */
 #include <string.h>
 
 #include <melee/ft/fighter.h>
@@ -113,12 +114,13 @@ static float mb_knockback(Fighter* fp, float kb)
     return 0.0f;
 }
 
-/* The side with more coins wins; a tie puts everyone first. */
+/* The side with more coins wins; a tie puts everyone first, as both sides keep their coins, but no
+ * coins on either side is MP4's draw and puts everyone last. */
 static void mb_result(s8 place[PARTY_PLAYERS])
 {
     int i;
     for (i = 0; i < PARTY_PLAYERS; i++) {
-        place[i] = (s8) (mb.coins[i] < mb.theirs[i] ? 3 : 0);
+        place[i] = (s8) (mb.coins[i] < mb.theirs[i] || (mb.coins[i] == 0 && mb.theirs[i] == 0) ? 3 : 0);
     }
 }
 
