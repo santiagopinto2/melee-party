@@ -722,6 +722,12 @@ static const struct {
     { "paratrooper-plunge", "Skydive into the coins\nand dodge the rest." },
     { "toads-quick-draw", "Shoot the balloon that\nmatches Toad's sign." },
     { "bob-omb-breakers", "Group three of a colour\nto break them. 100 wins." },
+    { "tree-stomp", "Dodge the three stumps\nfor 45 s. One vs three." },
+    { "fish-n-drips", "Press the buttons shown\nto fill your tank first." },
+    { "hide-and-go-boom", "Hide in a cannon, or\nfind the three. B A Y X." },
+    { "blame-it-on-the-crane", "Work the crane with A,\nor roll clear of it." },
+    { "makin-waves", "Stay on the raft, or\nmake waves with A, A." },
+    { "gooooooal", "Score 10 past the goalie,\nor keep them out. 1 vs 3." },
 };
 
 static const char* description_of(int menu_kind, int selection)

@@ -10,6 +10,7 @@
 #include <string.h>
 
 extern float mp4_camera_scale;   /* Melee Party: MP4 units into Melee's (hsfman.c) */
+extern u8 mp4_model_hidden[HU3D_MODEL_MAX];   /* Melee Party: models Melee draws instead (hsfman.c) */
 
 #define DRAW_OBJ_MAX 512
 
@@ -292,7 +293,8 @@ static void objMesh(HU3DMODEL *modelP, HSFOBJECT *objPtr) {
         MTXCopy(drawObj->matrix, constData->matrix);
         if (constData->hookMdlId != HU3D_MODELID_NONE) {
             hookMdlP = &Hu3DData[constData->hookMdlId];
-            if (!(hookMdlP->attr & HU3D_ATTR_DISPOFF)) {
+            /* Melee Party: a player's character hooked here is drawn by Melee (mp4_model_hidden) */
+            if (!(hookMdlP->attr & HU3D_ATTR_DISPOFF) && !mp4_model_hidden[constData->hookMdlId]) {
                 i = attachMotionF;
                 if (hookMdlP->motId != HU3D_MOTID_NONE) {
                     attachMotionF = 1;
@@ -327,6 +329,10 @@ static void objMesh(HU3DMODEL *modelP, HSFOBJECT *objPtr) {
                 dispF = TRUE;
             }
             if ((constData->attr & HU3D_CONST_DISPOFF) || (objPtr->flags & HU3D_ATTR_CLUSTER_ON)) {
+                dispF = FALSE;
+            }
+            /* Melee Party: a player's character, walked only for what hangs on it (hsfman.c) */
+            if (mp4_model_hidden[modelP - Hu3DData]) {
                 dispF = FALSE;
             }
             if (dispF && (transformP->scale.x != 0.0f || transformP->scale.y != 0.0f || transformP->scale.z != 0.0f)) {

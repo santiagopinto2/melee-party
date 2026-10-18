@@ -41,6 +41,12 @@ void m406_ObjectSetup(void);
 void m408_ObjectSetup(void);
 void m409_ObjectSetup(void);
 void m413_ObjectSetup(void);
+void m419_ObjectSetup(void);
+void m420_ObjectSetup(void);
+void m418_ObjectSetup(void);
+void m424_ObjectSetup(void);
+void m417_ObjectSetup(void);
+void m423_ObjectSetup(void);
 
 const int mp4_overlay_m440 = DLL_m440Dll;
 const int mp4_overlay_m438 = DLL_m438Dll;
@@ -62,6 +68,12 @@ const int mp4_overlay_m406 = DLL_m406Dll;
 const int mp4_overlay_m408 = DLL_m408Dll;
 const int mp4_overlay_m409 = DLL_m409Dll;
 const int mp4_overlay_m413 = DLL_m413Dll;
+const int mp4_overlay_m419 = DLL_m419Dll;
+const int mp4_overlay_m420 = DLL_m420dll;
+const int mp4_overlay_m418 = DLL_m418Dll;
+const int mp4_overlay_m424 = DLL_m424Dll;
+const int mp4_overlay_m417 = DLL_m417Dll;
+const int mp4_overlay_m423 = DLL_m423Dll;
 
 /* The markers: a byte before and a byte after the overlay's variables (see above). */
 #define OVERLAY_MARKERS(name)                                                       \
@@ -87,6 +99,12 @@ OVERLAY_MARKERS(m406)
 OVERLAY_MARKERS(m408)
 OVERLAY_MARKERS(m409)
 OVERLAY_MARKERS(m413)
+OVERLAY_MARKERS(m419)
+OVERLAY_MARKERS(m420)
+OVERLAY_MARKERS(m418)
+OVERLAY_MARKERS(m424)
+OVERLAY_MARKERS(m417)
+OVERLAY_MARKERS(m423)
 
 static int boot_reached;
 
@@ -122,6 +140,12 @@ static const struct {
     { DLL_m408Dll, m408_ObjectSetup, &m408_data_begin, &m408_data_end },
     { DLL_m409Dll, m409_ObjectSetup, &m409_data_begin, &m409_data_end },
     { DLL_m413Dll, m413_ObjectSetup, &m413_data_begin, &m413_data_end },
+    { DLL_m419Dll, m419_ObjectSetup, &m419_data_begin, &m419_data_end },
+    { DLL_m420dll, m420_ObjectSetup, &m420_data_begin, &m420_data_end },
+    { DLL_m418Dll, m418_ObjectSetup, &m418_data_begin, &m418_data_end },
+    { DLL_m424Dll, m424_ObjectSetup, &m424_data_begin, &m424_data_end },
+    { DLL_m417Dll, m417_ObjectSetup, &m417_data_begin, &m417_data_end },
+    { DLL_m423Dll, m423_ObjectSetup, &m423_data_begin, &m423_data_end },
 };
 #define OVERLAYS (sizeof overlays / sizeof overlays[0])
 

@@ -121,6 +121,25 @@ void CharMotionDataClose(s16 charNo)
     (void) charNo;
 }
 
+/* chrman.c: a player's motion freed (m420, at its end) */
+void CharMotionKill(s16 charNo, u32 motId)
+{
+    (void) charNo;
+    if (motId < HU3D_MOTION_MAX) {
+        motion_data[motId] = -1;
+        Hu3DMotionKill((s16) motId);
+    }
+}
+
+/* chrman.c: the player's motion set to a frame (m419 holds the three's seated pose at 60) */
+void CharMotionTimeSet(s16 charNo, float time)
+{
+    s16 model = mp4_char_model(charNo);
+    if (model != HU3D_MODELID_NONE) {
+        Hu3DMotionTimeSet(model, time);
+    }
+}
+
 void CharModelDataClose(s16 charNo)
 {
     (void) charNo;
