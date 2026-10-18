@@ -728,6 +728,13 @@ static const struct {
     { "blame-it-on-the-crane", "Work the crane with A,\nor roll clear of it." },
     { "makin-waves", "Stay on the raft, or\nmake waves with A, A." },
     { "gooooooal", "Score 10 past the goalie,\nor keep them out. 1 vs 3." },
+    { "the-great-deflate", "Jump on your Thwomp, then\nground-pound it. 2 vs 2." },
+    { "revers-a-bomb", "Flip the arrows with A so\nbombs hit the other pair." },
+    { "order-up", "Grab the two dishes the\nchef orders. Two vs two." },
+    { "beach-volley-folly", "Bump, set and spike: the\nfirst pair to 5. Two vs two." },
+    { "cliffhangers", "Climb with your partner;\nhold A when it gusts." },
+    { "pair-a-sailing", "Drive the boat or ride the\nparasail and catch coins." },
+    { "right-oar-left", "Mash A and B to row; one\nalone steers. Pairs race." },
 };
 
 static const char* description_of(int menu_kind, int selection)
