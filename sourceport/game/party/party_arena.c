@@ -68,15 +68,16 @@ char* getenv(const char* name);
 
 /* Final Destination's stage and background maps draw before MP4 and write depth, so wherever one
  * stands in front of a translucent MP4 model (Pair-a-sailing's sky, 600 units ahead of its
- * cameras) the stage shows through it. MELEE_PARTY_MP4_STAGE=0 leaves them undrawn, and MP4
- * draws over an empty background, as on the console. Every frame: a map made later is caught too. */
+ * cameras) the stage shows through it. So they are left undrawn, and MP4 draws over an empty
+ * background, as on the console; MELEE_PARTY_MP4_STAGE=1 draws them. Every frame: a map made
+ * later is caught too. */
 void party_arena_stage_frame(void)
 {
     static int hide = -1;
     int i;
     if (hide < 0) {
         const char* v = getenv("MELEE_PARTY_MP4_STAGE");
-        hide = v != NULL && v[0] == '0';
+        hide = v == NULL || v[0] != '1';
     }
     if (!hide) {
         return;
