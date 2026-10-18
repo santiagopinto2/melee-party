@@ -132,8 +132,10 @@ typedef struct _unkStruct8 {
     unkStruct11 unk0[3];
     s16 unk18[3];
     s16 unk1E;
-    unkStruct11 unk20[3];
-    char unk38[0x30];
+    /* Melee Party: nine, filling the bytes to unk68 as on the console, where the REL's struct
+     * had three and padding. With three, GCC takes the nine-corner loops past
+     * unk20[2] for undefined behaviour and need not stop them. */
+    unkStruct11 unk20[9];
     float unk68[5];
     Vec unk7C;
     Vec unk88;

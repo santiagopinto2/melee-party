@@ -73,8 +73,10 @@ typedef struct M433DllUnkStruct {
 
 typedef struct M433DllUnkStruct4 {
     Vec unk_00;
-    s32 unk_0C[3];
-    s8 unk_18[4];
+    /* Melee Party: four corners for a quad (unk_1C 4), the fourth where the REL's struct had an
+     * unused s8 unk_18[4], as on the console. With three, GCC takes the quad loop past unk_0C[2]
+     * for undefined behaviour and need not stop it. */
+    s32 unk_0C[4];
     s8 unk_1C;
     float unk_20;
     float unk_24;

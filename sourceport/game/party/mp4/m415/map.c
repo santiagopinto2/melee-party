@@ -632,9 +632,14 @@ s16 fn_1_A2D0(u8 arg0, u8 arg1)
         var_r30->unk5C.x = var_r30->unk5C.y = var_r30->unk5C.z = 0.0f;
         var_r30->unk58 = 0;
 
-        for (var_r28 = 0; var_r28 < 0x10; var_r28++) {
-            var_r30->unk74[var_r28] = 0;
-        }
+        /* Melee Party: MP4 clears sixteen halfwords from unk74, the 0x20 bytes to the struct's end
+         * on the console (unk74 to unk80). unk74 has two, and with 8-byte pointers the bytes
+         * after it are laid out otherwise, so clear the same fields by name: GCC takes the loop
+         * past unk74[1] for undefined behaviour and need not stop it. */
+        memset(var_r30->unk74, 0, sizeof(var_r30->unk74));
+        var_r30->unk78 = NULL;
+        var_r30->unk7C = NULL;
+        memset(var_r30->unk80, 0, sizeof(var_r30->unk80));
         var_r30->unk40 = &var_r31->unk50[var_r29 * 4];
         var_r30->unk44 = &var_r31->unk54[var_r29 * 4];
         var_r30->unk48 = &var_r31->unk58[var_r29];

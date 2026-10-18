@@ -159,8 +159,10 @@ typedef struct M427DllMapSubstruct3 {
     M427DllMapUNKB8 unkB8[2][2];
     s16 unk178[3];
     M427DllMapUNK17E unk17E[2][2];
-    s16 unk18E[2];
-    char unk194[4];
+    /* Melee Party: one per river rock (lbl_1_bss_158.unk3A0, five), to the struct's end as on the
+     * console, where the REL's struct had two and padding. With two, GCC takes the rock loops
+     * past unk18E[1] for undefined behaviour and need not stop them. */
+    s16 unk18E[5];
 } M427DllMapSubstruct3; // sizeof 0x198
 
 typedef struct M427DllMapStruct3Sub {
