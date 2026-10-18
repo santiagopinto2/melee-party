@@ -116,14 +116,15 @@ void *HuMemDirectMallocNum(HeapID heap, size_t size, uintptr_t num)
     return HuMemMemoryAllocNum(HeapTbl[heap], size, num, 0);
 }
 
+/* Melee Party: the caller is kept in a freed block, for the "bad free" line */
 void HuMemDirectFree(void *ptr)
 {
-    HuMemMemoryFree(ptr, 0);
+    HuMemMemoryFree(ptr, (uintptr_t) __builtin_return_address(0));
 }
 
 void HuMemDirectFreeNum(HeapID heap, uintptr_t num)
 {
-    HuMemMemoryFreeNum(HeapTbl[heap], num, 0);
+    HuMemMemoryFreeNum(HeapTbl[heap], num, (uintptr_t) __builtin_return_address(0));
 }
 
 size_t HuMemUsedMallocSizeGet(HeapID heap) { return HuMemUsedMemorySizeGet(HeapTbl[heap]); }
@@ -219,7 +220,9 @@ void HuMemMemoryFree(void *ptr, uintptr_t retaddr)
     }
     block = DATA_GET_BLOCK(ptr);
     if (block->magic != 165) {
-        OSReport("[party] mp4: bad free %p\n", ptr);
+        /* by whom, and (magic 205: freed before) who freed it first */
+        OSReport("[party] mp4: bad free %p by %p, magic %d, freed by %p\n", ptr, (void*) retaddr,
+                 (int) block->magic, (void*) block->retaddr);
         return;
     }
     if ((u8*) block >= (u8*) HeapTbl[HEAP_DATA] && (u8*) block < (u8*) HeapTbl[HEAP_DATA] + HeapSizeTbl[HEAP_DATA]) {
