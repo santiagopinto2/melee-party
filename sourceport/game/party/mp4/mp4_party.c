@@ -172,6 +172,9 @@ static int view_list(MP4View out[HU3D_CAM_MAX])
             continue;
         }
         all |= (s16) (1 << i);
+        if (cam->viewportW <= 0.0f || cam->viewportH <= 0.0f) {
+            continue;   /* switched off by an empty viewport (Cliffhangers' losing pair at the end) */
+        }
         if ((players & (1 << i)) == 0) {
             continue;
         }
