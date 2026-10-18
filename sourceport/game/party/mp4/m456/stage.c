@@ -1518,13 +1518,13 @@ void fn_1_89AC(void)
     newWork[1] = 3;
 }
 
+/* Melee Party: the four particle models made in fn_1_89AC keep HU3D_ATTR_PARTICLE_KILL, so
+ * Hu3DModelKill frees their animations when the overlay ends. Killing them here as well freed
+ * each one (its ANIMDATA, bank, pat and bmp) twice, 16 "bad free" lines a game, and left the
+ * particles drawing freed animations until then. MP4 has the same double free; Rumble Fishing's
+ * twin (m455 fn_1_9168) leaves these kills out the same way. */
 void fn_1_8C68(void)
 {
-    StructBss90 *workP = lbl_1_bss_90;
-    HuSprAnimKill(workP->unk0[0]);
-    HuSprAnimKill(workP->unk0[1]);
-    HuSprAnimKill(workP->unk0[2]);
-    HuSprAnimKill(workP->unk0[3]);
 }
 
 float lbl_1_data_7B0[4] = { 1000, 200, 600, 1200 };
