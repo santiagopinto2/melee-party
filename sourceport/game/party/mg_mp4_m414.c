@@ -13,7 +13,7 @@
  * ways, so a human's triggers reach MP4 apart (mp4_match_triggers_apart). The match ends when the
  * minigame returns to MP4's boot overlay. MP4 gives the winner 10 coins and the others nothing;
  * the winner is first and the others are placed by the prizes they caught, ties sharing, a
- * player with none last. With no winner the catches alone place everyone. */
+ * player with none last. With no winner (time ran out) MP4 pays nobody: everyone last. */
 #include <string.h>
 
 #include <melee/ft/fighter.h>
@@ -106,12 +106,19 @@ static float lc_knockback(Fighter* fp, float kb)
 }
 
 /* MP4 gives the winner 10 coins: first. The others by their catches, ties sharing, after the
- * winner; a player with no catch last. */
+ * winner; a player with no catch last. A draw (MP4 pays nobody) puts everyone last. */
 static void lc_result(s8 place[PARTY_PLAYERS])
 {
-    int i, j;
+    int i, j, any = 0;
+    for (i = 0; i < PARTY_PLAYERS; i++) {
+        any |= mp4_player_coins(i) > 0;
+    }
     for (i = 0; i < PARTY_PLAYERS; i++) {
         int p = 0;
+        if (!any) {
+            place[i] = 3;
+            continue;
+        }
         if (mp4_player_coins(i) > 0) {
             place[i] = 0;
             continue;
