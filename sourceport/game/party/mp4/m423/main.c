@@ -5327,6 +5327,15 @@ void fn_1_11900(HU3DMODEL *arg0, Mtx arg1)
     if (HmfInverseMtxF3X3(arg1, sp128) == 0) {
         MTXIdentity(sp128);
     }
+    /* Melee Party: the modelview carries MP4's units into Melee's (mp4_camera_scale), so its
+     * inverse would make every particle quad ten times too big: keep the rotation alone, as
+     * m406 and hsfanim.c do. */
+    {
+        extern float mp4_camera_scale;
+        Mtx unscale;
+        MTXScale(unscale, mp4_camera_scale, mp4_camera_scale, mp4_camera_scale);
+        MTXConcat(sp128, unscale, sp128);
+    }
     MTXReorder(sp128, sp8);
     if (temp_r31->unk4C) {
         var_r18 = temp_r31->unk4C;
