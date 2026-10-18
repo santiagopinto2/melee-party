@@ -20,7 +20,7 @@
  * if it is one of the four, and nobody anything else; the places follow how long each player
  * stayed up: the one left first, then by the round each player's panel dropped (a later round
  * places higher, the same round shares a place). When one of the extra five wins, or the last
- * panels all drop at once, the players who lasted longest share first place.
+ * panels all drop at once, MP4 pays nobody: a draw, everyone last.
  *
  * The Melee side: Final Destination, each fighter colliding on a lane of its own with the MP4
  * world drawn 600 units to the side. While its player is in the air the fighter is held in the air
@@ -216,13 +216,21 @@ static float pp_knockback(Fighter* fp, float kb)
 }
 
 /* The one left (MP4's 10 coins) first; the rest by the round their panel dropped, a later round
- * higher, the same round sharing a place. A player whose panel never dropped stayed up longest. */
+ * higher, the same round sharing a place. A player whose panel never dropped stayed up longest.
+ * A draw (MP4 pays nobody) puts everyone last. */
 static void pp_result(s8 place[PARTY_PLAYERS])
 {
-    int i, j;
+    int i, j, any = 0;
+    for (i = 0; i < PARTY_PLAYERS; i++) {
+        any |= mp4_player_coins(i) > 0;
+    }
     for (i = 0; i < PARTY_PLAYERS; i++) {
         int above = 0;
         int mine = pp.p[i].out_frame == 0 ? 0x7FFFFFFF : pp.p[i].out_frame;
+        if (!any) {
+            place[i] = 3;
+            continue;
+        }
         if (mp4_player_coins(i) > 0) {
             place[i] = 0;
             continue;

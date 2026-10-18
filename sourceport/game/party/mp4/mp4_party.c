@@ -629,7 +629,8 @@ static int hooked_pose(s16 model, Mtx out)
     for (i = 0; i < HU3D_MODEL_MAX; i++) {
         HSFDATA* hsf = Hu3DData[i].hsf;
         HSFOBJECT* obj;
-        if (hsf == NULL || i == model) {
+        /* a hook function's or a camera's model keeps its function (or -1) where the HSF goes */
+        if (hsf == NULL || i == model || (Hu3DData[i].attr & (HU3D_ATTR_HOOKFUNC | HU3D_ATTR_CAMERA))) {
             continue;
         }
         for (j = 0, obj = hsf->object; j < hsf->objectNum; j++, obj++) {
