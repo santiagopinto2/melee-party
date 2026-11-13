@@ -62,7 +62,7 @@ static HSD_PadStatus* host_pad(void)
 static int rows(void)
 {
     int n = lb.screen == SCREEN_MODE ? 2
-          : lb.screen == SCREEN_BOARDS ? board_count() : minigame_count();
+          : lb.screen == SCREEN_BOARDS ? board_count() : minigame_offered_count(1);
     return n > ROWS ? ROWS : n;
 }
 
@@ -71,7 +71,7 @@ static const char* row_name(int i)
     if (lb.screen == SCREEN_MODE) {
         return i == MODE_BOARD ? "Board" : "Minigames";
     }
-    return lb.screen == SCREEN_BOARDS ? board_name(i) : minigame_get(i)->name;
+    return lb.screen == SCREEN_BOARDS ? board_name(i) : minigame_get(minigame_offered_at(i, 1))->name;
 }
 
 static void show(void)
@@ -144,13 +144,13 @@ static void menu_input(void)
         case SCREEN_MODE:
             lb.mode_cursor = lb.cursor;
             open_screen(lb.cursor == MODE_BOARD ? SCREEN_BOARDS : SCREEN_MINIGAMES,
-                 lb.cursor == MODE_BOARD ? party.board : party.minigame);
+                 lb.cursor == MODE_BOARD ? party.board : minigame_offered_row(party.minigame, 1));
             break;
         case SCREEN_BOARDS:
             pick_board(lb.cursor);
             break;
         default:
-            pick_minigame(lb.cursor);
+            pick_minigame(minigame_offered_at(lb.cursor, 1));
             break;
         }
     } else if ((p->trigger & HSD_PAD_B) && lb.screen != SCREEN_MODE) {

@@ -319,6 +319,14 @@ void init(Backend* backend);
 void write_fifo(uint32_t value, int bytes);   // write-gather pipe byte stream
 void write_fifo_bytes(const uint8_t* data, size_t bytes);   // the same stream in bulk, big-endian as the pipe carries it
 void stats(uint64_t* commands, uint64_t* draws, uint64_t* vertices, uint32_t* efb_copies);
+// A copy the game reads back: the backend writes its texels to guest memory at the copy's address,
+// in the copy's GX format and tiling (8-bit formats only), after rendering it. Mario Party 4's
+// Stamp Out! prints the shadow map's bytes this way (sourceport/game/party/mp4/m415).
+void set_copy_readback(uint32_t addr, bool on);
+bool copy_readback_wanted(uint32_t addr);
+// The shared conversion: `rgba` is the host texture's first row (`pitch` bytes a row, `scale`
+// host texels per copy texel). Writes w x h texels for the copy `c` (after its half scale).
+void write_copy_readback(const EfbCopy& c, const uint8_t* rgba, size_t pitch, uint32_t scale);
 void set_native_draw_audit(bool enabled);
 void native_render_scope_event(const NativeRenderScopeEvent& event);
 NativeDrawAuditStats native_draw_audit_stats();

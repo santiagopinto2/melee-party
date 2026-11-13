@@ -705,7 +705,8 @@ static void usage() {
 #ifdef MELEE_SOURCE_PORT
   std::printf("           [--card-self-test <new scratch directory>]\n"
               "           [--replay <file.slp> --replay-dir <directory>] [--record-native]\n"
-              "           [--mod-profile <name>] [--mod-dir <disc files directory>]... [--mod-iso <patched ISO>]... [--mod-gci <save.gci>]...\n");
+              "           [--mod-profile <name>] [--mod-dir <disc files directory>]... [--mod-iso <patched ISO>]... [--mod-gci <save.gci>]...\n"
+              "           [--mp4-iso <Mario Party 4 ISO>]\n");
 #endif
 }
 
@@ -1453,6 +1454,7 @@ static int melee_main(int argc, char** argv) {
     else if (a == "--party") { const std::string v = next();
       if (v != "on" && v != "off") { std::fprintf(stderr, "--party on|off\n"); return 2; }
       source_port::set_party(v == "on"); }
+    else if (a == "--mp4-iso") source_port::set_mp4_iso(next());
     else if (a == "--online-test") { if (!source_port::set_online_test(next())) {
       std::fprintf(stderr, "--online-test direct|unranked|teams[:<character>[:<color>]] (with --local-peer)\n"); return 2; } }
 #endif
@@ -1551,6 +1553,9 @@ static int melee_main(int argc, char** argv) {
   if (o.iso.empty()) { usage(); return 2; }
   if (!host::disc_open(o.iso)) { std::fprintf(stderr, "cannot open ISO %s\n", o.iso.c_str()); return 1; }
   remember_iso(o.iso);   // so the launcher can offer this disc without being told again
+#ifdef MELEE_SOURCE_PORT
+  source_port::open_mp4_disc(o.iso);
+#endif
   // Controllers do not count as activity to Windows, so a session played only on a pad let the
   // display power off after the idle timeout (monitors going black mid-game until the mouse moved).
   // Held by this thread for as long as the game runs; Windows drops it when the process exits.

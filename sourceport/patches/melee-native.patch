@@ -59779,7 +59779,7 @@ index 619113b0a..bf4cc6ad1 100644
          ftCo_800A0C8C(fp);
          return;
 diff --git a/src/melee/ft/ftdata.c b/src/melee/ft/ftdata.c
-index c3135ae97..8f1882e4d 100644
+index c3135ae97..cdff18ab2 100644
 --- a/src/melee/ft/ftdata.c
 +++ b/src/melee/ft/ftdata.c
 @@ -140,9 +140,9 @@ typedef struct ft_8045993C_t {
@@ -60204,7 +60204,7 @@ index c3135ae97..8f1882e4d 100644
      }
  }
  
-@@ -1600,7 +1613,7 @@ void ftData_80085820(FighterKind kind, int costume_id)
+@@ -1600,12 +1613,12 @@ void ftData_80085820(FighterKind kind, int costume_id)
                  &temp_r5->x14_archive,
                  ftData_803C2360[kind][costume_id].dat_filename, temp_r5,
                  ftData_803C2360[kind][costume_id].joint_name, &temp_r5->x4,
@@ -60213,7 +60213,13 @@ index c3135ae97..8f1882e4d 100644
          } else {
              lbArchive_80017040(
                  &temp_r5->x14_archive,
-@@ -1623,7 +1636,7 @@ void ftData_800858E4(FighterKind kind, int costume_id)
+                 ftData_803C2360[kind][costume_id].dat_filename, temp_r5,
+-                ftData_803C2360[kind][costume_id].joint_name, 0,
++                ftData_803C2360[kind][costume_id].joint_name, NULL,
+                 ftData_803C2360[kind][costume_id].matanim_joint_name);
+             CostumeListsForeachCharacter[kind].costume_list[costume_id].x4 =
+                 NULL;
+@@ -1623,12 +1636,12 @@ void ftData_800858E4(FighterKind kind, int costume_id)
                  &temp_r5->x14_archive,
                  ftData_803C2360[kind][costume_id].dat_filename, temp_r5,
                  ftData_803C2360[kind][costume_id].joint_name, &temp_r5->x4,
@@ -60222,6 +60228,12 @@ index c3135ae97..8f1882e4d 100644
          } else {
              lbArchive_80017040(
                  &temp_r5->x14_archive,
+                 ftData_803C2360[kind][costume_id].dat_filename, temp_r5,
+-                ftData_803C2360[kind][costume_id].joint_name, 0,
++                ftData_803C2360[kind][costume_id].joint_name, NULL,
+                 ftData_803C2360[kind][costume_id].matanim_joint_name);
+             CostumeListsForeachCharacter[kind].costume_list[costume_id].x4 =
+                 NULL;
 @@ -1671,14 +1684,21 @@ void ftData_80085A14(FighterKind kind)
          a_head = sp18;
          HSD_ASSERT(0x974, a_head);

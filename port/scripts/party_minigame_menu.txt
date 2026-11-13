@@ -1,0 +1,45 @@
+# Melee Party, the player's path to one minigame, on a fresh memory card: the two card notices (A),
+# past the intro movie and the title (START), VS Mode -> Party Minigames (the Special Melee entry)
+# -> its sixth row (Bowser's Bigger Blast when the MP4 disc is there) -> the character select,
+# where P1 and P2 (two humans) pick -> START. See docs/agent-testing.md.
+130 A
+140
+400 A
+410
+600 START
+610
+700 START
+710
+950 sy=-127
+956
+980 A
+990
+1020 sy=-127
+1026
+1050 sy=-127
+1056
+1090 A
+1100
+1130 sy=-127
+1136
+1160 sy=-127
+1166
+1190 sy=-127
+1196
+1220 sy=-127
+1226
+1250 sy=-127
+1256
+1290 A
+1300
+1350 p=2
+1750 sx=61 sy=127
+1750 p=2 sy=127
+1767
+1767 p=2
+1790 A
+1790 p=2 A
+1800
+1800 p=2
+1850 p=2 START
+1860 p=2

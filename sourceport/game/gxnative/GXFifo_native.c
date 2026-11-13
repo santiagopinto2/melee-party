@@ -25,8 +25,29 @@ unsigned char* mu_wg_high_water = mu_wg_buffer + sizeof(mu_wg_buffer) - 64;
 /* Provided by the host through the shim: the same stream the shipped game's decoder parses. */
 void mu_host_gx_fifo_bytes(const unsigned char* data, unsigned long size);
 
+/* A display list being recorded (GXBeginDisplayList): the pipe writes into the list instead.
+ * Nothing in Melee records one; Mario Party 4's model loader does (party/mp4/hsfdraw.c). */
+static struct __GXFifoObj* mu_dl_fifo;
+static unsigned char* mu_dl_saved_cursor;
+static unsigned char mu_dl_overflow[256];
+static int mu_dl_overflowed;
+
 void mu_wg_flush(void)
 {
+    if (mu_dl_fifo != NULL) {
+        /* GXEnd flushes after every primitive: the list just goes on */
+        if (mu_wg_cursor < mu_wg_high_water) {
+            return;
+        }
+        /* past the list's end: the rest goes nowhere and the list is cut where it overflowed */
+        if (!mu_dl_overflowed) {
+            mu_dl_overflowed = 1;
+            mu_dl_fifo->wrPtr = mu_wg_cursor;
+        }
+        mu_wg_cursor = mu_dl_overflow;
+        mu_wg_high_water = mu_dl_overflow + sizeof(mu_dl_overflow) - 64;
+        return;
+    }
     if (mu_wg_cursor != mu_wg_buffer) {
         mu_host_gx_fifo_bytes(mu_wg_buffer, (unsigned long) (mu_wg_cursor - mu_wg_buffer));
         mu_wg_cursor = mu_wg_buffer;
@@ -64,7 +85,22 @@ void GXInitFifoLimits(GXFifoObj* fifo, u32 hiWatermark, u32 loWatermark)
 
 void GXSetCPUFifo(GXFifoObj* fifo)
 {
-    CPUFifo = (struct __GXFifoObj*) fifo;
+    struct __GXFifoObj* realFifo = (struct __GXFifoObj*) fifo;
+    if (mu_dl_fifo == NULL && gx->inDispList && realFifo != NULL) {
+        /* GXBeginDisplayList: the commands so far go to the host, the next ones into the list */
+        mu_wg_flush();
+        mu_dl_fifo = realFifo;
+        mu_dl_overflowed = 0;
+        mu_dl_saved_cursor = mu_wg_cursor;
+        mu_wg_cursor = (unsigned char*) realFifo->base;
+        mu_wg_high_water = (unsigned char*) realFifo->base + realFifo->size - 64;
+    } else if (mu_dl_fifo != NULL && realFifo != mu_dl_fifo) {
+        /* GXEndDisplayList, after __GXSaveCPUFifoAux took the list's length */
+        mu_dl_fifo = NULL;
+        mu_wg_cursor = mu_dl_saved_cursor;
+        mu_wg_high_water = mu_wg_buffer + sizeof(mu_wg_buffer) - 64;
+    }
+    CPUFifo = realFifo;
     if (CPUFifo)
         CPUFifo->bind_cpu = 1;
 }
@@ -77,7 +113,22 @@ void GXSetGPFifo(GXFifoObj* fifo)
 }
 
 void GXSaveCPUFifo(GXFifoObj* fifo) { (void) fifo; mu_wg_flush(); }
-void __GXSaveCPUFifoAux(struct __GXFifoObj* realFifo) { (void) realFifo; mu_wg_flush(); }
+void __GXSaveCPUFifoAux(struct __GXFifoObj* realFifo)
+{
+    if (realFifo == mu_dl_fifo && realFifo != NULL) {
+        /* the end of a display list: its length, padded with no-ops to 32 bytes as GX's was */
+        unsigned char* end = mu_dl_overflowed ? (unsigned char*) realFifo->wrPtr : mu_wg_cursor;
+        while (((unsigned char*) end - (unsigned char*) realFifo->base) & 31) {
+            if (end >= (unsigned char*) realFifo->base + realFifo->size)
+                break;
+            *end++ = 0;
+        }
+        realFifo->wrPtr = end;
+        realFifo->count = (s32) (end - (unsigned char*) realFifo->base);
+        return;
+    }
+    mu_wg_flush();
+}
 void GXSaveGPFifo(GXFifoObj* fifo) { (void) fifo; }
 
 void GXGetGPStatus(GXBool* overhi, GXBool* underlow, GXBool* readIdle, GXBool* cmdIdle, GXBool* brkpt)
@@ -159,8 +210,8 @@ u32 GXResetOverflowCount(void)
     return old;
 }
 
-/* Redirecting the pipe into memory is how the console recorded display lists. Nothing in the game
- * does it (GXBeginDisplayList is never called), so it is left unimplemented on purpose. */
+/* Redirecting the pipe into an arbitrary buffer is not available; display lists are recorded
+ * through GXBeginDisplayList (GXSetCPUFifo above). */
 volatile void* GXRedirectWriteGatherPipe(void* ptr)
 {
     (void) ptr;
@@ -175,5 +226,9 @@ void GXRestoreWriteGatherPipe(void) {}
 MU_EXCLUSIONS(gx_fifo,
               MU_EXCLUDE(mu_wg_buffer),
               MU_EXCLUDE(mu_wg_cursor),
-              MU_EXCLUDE(mu_wg_high_water))
+              MU_EXCLUDE(mu_wg_high_water),
+              MU_EXCLUDE(mu_dl_fifo),
+              MU_EXCLUDE(mu_dl_saved_cursor),
+              MU_EXCLUDE(mu_dl_overflow),
+              MU_EXCLUDE(mu_dl_overflowed))
 #endif

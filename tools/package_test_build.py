@@ -62,7 +62,9 @@ How to play
    touched; this folder keeps its own settings, saves and replays).
 2. Drag your Melee NTSC 1.02 ISO onto PlayTest.bat. It remembers the ISO, so after that just
    double-click PlayTest.bat. (Or put the ISO next to it named melee.iso.)
-3. Melee Party is under VS. Mode > Melee Party.
+3. Melee Party is under VS. Mode > Melee Party. A single minigame is under VS. Mode > Party Minigames.
+4. For the Mario Party 4 minigames, put your Mario Party 4 ISO next to your Melee ISO, named
+   mp4.iso. Without it Party Minigames lists only the Melee ones.
 
 Notes
 -----
@@ -70,7 +72,7 @@ Notes
   only works against someone on this same test build.
 - Your saves from another folder: copy GALE01-*.gci into User\\GC\\CardA.
 - If it crashes, send melee_port.log (and melee_port_crash.txt if there is one) from this folder.
-- Nothing from the game is included; the ISO stays wherever you keep it.
+- Nothing from either game is included; the ISOs stay wherever you keep them.
 """
 
 # Never in a test zip: disc images and anything extracted from one.

@@ -420,6 +420,11 @@ class D3D12Backend : public Backend {
   // retired; a slot is reused only after the fence value recorded at its submission completes.
   static constexpr int FRAME_SLOTS = 3;
   ComPtr<ID3D12CommandAllocator> allocators_[FRAME_SLOTS];
+  // Copies the game reads back (gx::set_copy_readback): copied into a readback buffer at the copy,
+  // mapped and written to guest memory when the slot comes round again and its fence is done.
+  struct PendingReadback { EfbCopy copy; ComPtr<ID3D12Resource> buffer; UINT pitch; };
+  std::vector<PendingReadback> pending_readbacks_[FRAME_SLOTS];
+  void read_copy_readbacks();
   uint64_t slot_fence_[FRAME_SLOTS] = {};
   // --flicker-scan: each presented frame's EFB is copied into its slot's readback buffer, and read
   // when that slot comes round again (its fence has passed, so the read never stalls the GPU).
@@ -1931,6 +1936,40 @@ void D3D12Backend::execute_copy(const EfbCopy& c) {
   back[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
   back[1].Transition = {e.resource.Get(), 0, dst_state, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE};
   list_->ResourceBarrier(2, back);
+  if (gx::copy_readback_wanted(c.dest_addr)) {
+    const UINT pitch = (UINT)((sw * 4 + 255) & ~255u);
+    D3D12_HEAP_PROPERTIES hp{D3D12_HEAP_TYPE_READBACK};
+    D3D12_RESOURCE_DESC rd{};
+    rd.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; rd.Width = (UINT64)pitch * sh; rd.Height = 1; rd.DepthOrArraySize = 1; rd.MipLevels = 1;
+    rd.SampleDesc.Count = 1; rd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    ComPtr<ID3D12Resource> buffer;
+    if (FAILED(device_->CreateCommittedResource(&hp, D3D12_HEAP_FLAG_NONE, &rd, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&buffer)))) {
+      host::log("d3d12: readback buffer %ux%u failed", sw, sh); return;
+    }
+    D3D12_RESOURCE_BARRIER to_src{};
+    to_src.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    to_src.Transition = {e.resource.Get(), 0, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_SOURCE};
+    list_->ResourceBarrier(1, &to_src);
+    D3D12_TEXTURE_COPY_LOCATION dst{buffer.Get(), D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT};
+    dst.PlacedFootprint.Footprint = {DXGI_FORMAT_R8G8B8A8_UNORM, sw, sh, 1, pitch};
+    D3D12_TEXTURE_COPY_LOCATION src{e.resource.Get(), D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX};
+    list_->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+    to_src.Transition = {e.resource.Get(), 0, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE};
+    list_->ResourceBarrier(1, &to_src);
+    pending_readbacks_[slot_].push_back({c, buffer, pitch});
+  }
+}
+
+// This slot's fence is done (the caller reset its allocator): the copies it read back are on the CPU.
+void D3D12Backend::read_copy_readbacks() {
+  for (PendingReadback& r : pending_readbacks_[slot_]) {
+    uint8_t* data = nullptr;
+    if (FAILED(r.buffer->Map(0, nullptr, (void**)&data)) || !data) continue;
+    gx::write_copy_readback(r.copy, data, r.pitch, (uint32_t)scale_);
+    D3D12_RANGE none{0, 0};
+    r.buffer->Unmap(0, &none);
+  }
+  pending_readbacks_[slot_].clear();
 }
 
 void D3D12Backend::present_efb(const EfbCopy& c, const DxrScene* dxr_scene) {
@@ -2495,6 +2534,7 @@ void D3D12Backend::submit_frame(const Frame& frame, const DrawMatrices* override
   diag("frame slot fence");
   if (scan_pending_[slot_]) read_flicker_scan();
   if (timer_pending_[slot_]) read_gpu_timers();
+  if (!pending_readbacks_[slot_].empty()) read_copy_readbacks();
   vertex_ring_.reset(slot_); index_ring_.reset(slot_); constant_ring_.reset(slot_); upload_ring_.reset(slot_);
   select_frame_geometry(frame);
   diag("geometry upload fence");

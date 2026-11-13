@@ -15,6 +15,7 @@
 #include <melee/mn/forward.h>
 #include <sysdolphin/baselib/random.h>
 
+#include "mp4/mp4.h"
 #include "party.h"
 
 /* From the host's C runtime: the game's own library (MSL) has neither (see mu_shim.h). */
@@ -389,6 +390,7 @@ void party_setup_phase(int phase, StartMeleeData* start)
         results_setup(start);
         break;
     }
+    mp4_debug_setup(start);
 }
 
 /* The next phase's fighters and stage, preloaded while the scene before it ends. */
@@ -537,7 +539,7 @@ int mu_party_menu_enter(int previous_mode, unsigned char* menu_kind, unsigned ch
     *menu_kind = MENU_KIND_SPECIAL;
     if (menu_minigame >= 0) {
         party_menu_show(PARTY_MENU_MINIGAMES);
-        *hovered = (unsigned char) menu_minigame;
+        *hovered = (unsigned char) minigame_offered_row(menu_minigame, 0);
     } else {
         party_menu_show(menu_debug ? PARTY_MENU_DEBUG_BOARDS : PARTY_MENU_BOARDS);
         *hovered = (unsigned char) menu_board;

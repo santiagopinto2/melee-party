@@ -7,23 +7,25 @@
 #include "mu_shim.h"
 
 /* ---- character classes ----
- * MSL's ctype.h indexes this table (ctype.h defines the bit for each class). The values are the
- * ASCII classes; the game only ever asks about ASCII. */
-#define MU_CTRL 0x01
-#define MU_WHITE 0x02
-#define MU_PUNCT 0x04
-#define MU_DIGIT 0x08
-#define MU_HEX 0x10
-#define MU_LOWER 0x20
-#define MU_UPPER 0x40
+ * MSL's ctype.h indexes this table with the bit it defines for each class (__control_char and the
+ * rest), so the values here are those bits, as in the console's table (MSL/ctype.c). The game
+ * only ever asks about ASCII. A table with bits of its own here made isalpha false for every
+ * lowercase letter and isdigit false for every digit. */
+#define MU_CTRL 0x01     /* __control_char */
+#define MU_MOTION 0x02   /* __motion_char: tab, newline, vertical tab, form feed, return */
+#define MU_SPACE 0x04    /* __space_char */
+#define MU_PUNCT 0x08    /* __punctuation */
+#define MU_DIGIT 0x10    /* __digit */
+#define MU_HEX 0x20      /* __hex_digit */
+#define MU_LOWER 0x40    /* __lower_case */
+#define MU_UPPER 0x80    /* __upper_case */
 
 const unsigned char __ctype_map[256] = {
     /* 0x00 */ MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL,
-    /* 0x08 */ MU_CTRL, MU_CTRL | MU_WHITE, MU_CTRL | MU_WHITE, MU_CTRL | MU_WHITE,
-               MU_CTRL | MU_WHITE, MU_CTRL | MU_WHITE, MU_CTRL, MU_CTRL,
+    /* 0x08 */ MU_CTRL, MU_MOTION, MU_MOTION, MU_MOTION, MU_MOTION, MU_MOTION, MU_CTRL, MU_CTRL,
     /* 0x10 */ MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL,
     /* 0x18 */ MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL, MU_CTRL,
-    /* 0x20 */ MU_WHITE, MU_PUNCT, MU_PUNCT, MU_PUNCT, MU_PUNCT, MU_PUNCT, MU_PUNCT, MU_PUNCT,
+    /* 0x20 */ MU_SPACE, MU_PUNCT, MU_PUNCT, MU_PUNCT, MU_PUNCT, MU_PUNCT, MU_PUNCT, MU_PUNCT,
     /* 0x28 */ MU_PUNCT, MU_PUNCT, MU_PUNCT, MU_PUNCT, MU_PUNCT, MU_PUNCT, MU_PUNCT, MU_PUNCT,
     /* 0x30 */ MU_DIGIT | MU_HEX, MU_DIGIT | MU_HEX, MU_DIGIT | MU_HEX, MU_DIGIT | MU_HEX,
                MU_DIGIT | MU_HEX, MU_DIGIT | MU_HEX, MU_DIGIT | MU_HEX, MU_DIGIT | MU_HEX,

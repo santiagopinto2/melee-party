@@ -1,0 +1,9 @@
+# Boot on a fresh memory card and leave the title screen alone: its attract demo plays a match.
+# A check of a match starting with no player input at all (2600 frames: the demo match loads at
+# about frame 2420). See docs/agent-testing.md.
+130 A
+140
+400 A
+410
+600 START
+610

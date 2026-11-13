@@ -20,6 +20,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <system_error>
 #include <unordered_map>
@@ -554,6 +555,11 @@ bool read_cosmetic(uint32_t offset, void* dst, uint32_t size, bool* ok) {
 bool g_slippi_menus_requested = true;   // --slippi-menus on|off
 bool g_slippi_menus = false;            // requested and the layer loaded
 bool g_party = true;                    // --party on|off: Melee Party (sourceport/game/party)
+// Melee Party's second disc, Mario Party 4 (USA), for the minigames ported from it
+// (sourceport/game/party/mp4). Read in place; the game checks its header.
+std::string g_mp4_iso_arg;              // --mp4-iso
+std::FILE* g_mp4_disc = nullptr;
+std::mutex g_mp4_mutex;
 // Melee Party's online identity: sha256("melee-party online protocol 6"). Change the string when
 // a change to the party would make two builds play different matches.
 const char* const kPartyFingerprint = "5279f70a6f47eeb8cd2d05d951df93a2b54e1753a78c8442d394d0464da56465";
@@ -688,7 +694,17 @@ void h_log(const char* text) {
   if (!line.empty()) host::log("[game] %s", line.c_str());
 }
 void h_panic(const char* file, int32_t line, const char* message) {
-  host::log("game panic at %s:%d", file ? file : "?", line);
+  // The rest of this can hang (under Wine nothing after the first log line came out of Stamp Out!'s
+  // XFB assertion, and the run sat there until its time limit): the process ends anyway.
+  CreateThread(nullptr, 0, [](LPVOID) -> DWORD {
+    Sleep(10000);
+    std::fprintf(stderr, "\nFATAL: the game's panic did not exit within 10 s\n");
+    std::fflush(stderr);
+    TerminateProcess(GetCurrentProcess(), 3);
+    return 0;
+  }, nullptr, 0, nullptr);
+  host::log("game panic at %s:%d: %s", file ? file : "?", line, message ? message : "");
+  host::log_flush();
   void* frames[32];
   const USHORT count = CaptureStackBackTrace(0, 32, frames, nullptr);
   for (USHORT i = 0; i < count; ++i) {
@@ -1424,6 +1440,13 @@ void h_disc_read(uint32_t offset, void* dst, uint32_t size, MuDiscDone done, voi
 }
 int32_t h_disc_status() { return 0; }
 uint32_t h_disc_id(void* out, uint32_t size) { const uint32_t n = std::min<uint32_t>(size, 0x20); std::memcpy(out, (void*)MEM1_BASE, n); return n; }
+void h_gx_copy_readback(uint32_t addr, int32_t on) { gx::set_copy_readback(addr, on != 0); }
+
+uint32_t h_mp4_disc_read(uint32_t offset, void* dst, uint32_t size) {
+  std::lock_guard<std::mutex> lock(g_mp4_mutex);
+  if (!g_mp4_disc || _fseeki64(g_mp4_disc, offset, SEEK_SET) != 0) return 0;
+  return (uint32_t)std::fread(dst, 1, size, g_mp4_disc);
+}
 
 // Memory card: slot A is a Dolphin-compatible folder of .gci files. The game-side shim passes
 // native pointers here, so directory entries are converted explicitly instead of exposing their
@@ -2141,6 +2164,8 @@ MuHostApi make_host() {
   h.hud_scales = h_hud_scales;
   h.hud_player = h_hud_player;
   h.vi_idle_step = h_vi_idle_step;
+  h.mp4_disc_read = h_mp4_disc_read;
+  h.gx_copy_readback = h_gx_copy_readback;
   return h;
 }
 
@@ -2165,7 +2190,29 @@ LONG CALLBACK on_game_exception(EXCEPTION_POINTERS* info) {
         called_by_game = caller >= base && caller < end;
       } __except (EXCEPTION_EXECUTE_HANDLER) { }
     }
-    if (!called_by_game) return EXCEPTION_CONTINUE_SEARCH;
+    if (!called_by_game) {
+      // A fault in a library function the game called (memcpy reading a bad pointer): its return
+      // address into the game is near the top of the stack. Logged, as a first-chance exception
+      // (one a handler may still take), because a fault on an MP4 coroutine's stack never reaches
+      // the crash filter: Stamp Out! died there with exit 5 and nothing in the log.
+      for (int i = 0; i < 16; ++i) {
+        uint64_t v = 0;
+        __try { v = ((const uint64_t*)info->ContextRecord->Rsp)[i]; } __except (EXCEPTION_EXECUTE_HANDLER) { break; }
+        if (v >= base && v < end) {
+          static volatile LONG logged = 0;
+          if (!InterlockedExchange(&logged, 1)) {
+            host::log("exception %08lX at %016llX, called from melee_game.dll+0x%llX", code, (unsigned long long)rip,
+                      (unsigned long long)(v - 1 - base));
+            if (code == EXCEPTION_ACCESS_VIOLATION && info->ExceptionRecord->NumberParameters >= 2)
+              host::log("  %s address %016llX", info->ExceptionRecord->ExceptionInformation[0] ? "writing" : "reading",
+                        (unsigned long long)info->ExceptionRecord->ExceptionInformation[1]);
+            host::log_flush();
+          }
+          break;
+        }
+      }
+      return EXCEPTION_CONTINUE_SEARCH;
+    }
   }
   write_replay_recording();   // a --replay run keeps what it played up to the crash
   if (in_game)
@@ -2228,6 +2275,33 @@ bool set_online_test(const char* spec) {
 
 void set_slippi_menus(bool on) { g_slippi_menus_requested = on; }
 void set_party(bool on) { g_party = on; }
+void set_mp4_iso(const char* path) { g_mp4_iso_arg = path; }
+
+void open_mp4_disc(const std::string& melee_iso) {
+  if (!g_party) return;
+  std::string path = g_mp4_iso_arg;
+  const char* how = "--mp4-iso";
+  if (path.empty()) {
+    if (const char* env = std::getenv("MELEE_PARTY_MP4_ISO"); env && *env) {
+      path = env;
+      how = "MELEE_PARTY_MP4_ISO";
+    }
+  }
+  if (path.empty()) {
+    std::error_code ec;
+    const std::filesystem::path beside = std::filesystem::u8path(melee_iso).parent_path() / "mp4.iso";
+    if (!std::filesystem::is_regular_file(beside, ec)) {
+      host::log("party: no Mario Party 4 disc (%s, --mp4-iso or MELEE_PARTY_MP4_ISO); its minigames are off",
+                beside.u8string().c_str());
+      return;
+    }
+    path = beside.u8string();
+    how = "beside the Melee ISO";
+  }
+  g_mp4_disc = _wfopen(std::filesystem::u8path(path).wstring().c_str(), L"rb");
+  if (!g_mp4_disc) host::log("party: cannot open the Mario Party 4 disc %s (%s)", path.c_str(), how);
+  else host::log("party: Mario Party 4 disc %s (%s)", path.c_str(), how);
+}
 
 void set_mod_directory(const char* path) {
   g_mod_layers.push_back({mods::LayerKind::Dir, std::filesystem::u8path(path)});
