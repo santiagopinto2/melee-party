@@ -27,6 +27,8 @@ struct HSD_CObj;
 void party_arena_begin(int overlay, float offset_x, float offset_y, float offset_z);
 /* on_frame_start: MP4's frame, then its camera on the match camera. */
 void party_arena_frame(void);
+/* Called by party_arena_frame; a minigame with its own frame calls it itself (m440). */
+void party_arena_stage_frame(void);
 
 /* fighter_input, first: a human's pad goes to MP4, Melee's inputs are cleared, and the fighter's
  * model stands where it collides (Melee works the collision box out from the bones). 0 for a

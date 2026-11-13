@@ -152,6 +152,15 @@ void CharMotionVoiceOnSet(s16 charNo, s16 motion, BOOL voiceOn)
     (void) voiceOn;
 }
 
+/* For NPC characters (8 and up), which the players never are (m433 calls it) */
+s32 CharNpcDustVoiceOffSet(HU3DMODELID modelId, HU3DMOTID motId, s16 type)
+{
+    (void) modelId;
+    (void) motId;
+    (void) type;
+    return 0;
+}
+
 void CharModelKill(s16 charNo)
 {
     s16 i;

@@ -186,12 +186,20 @@ static float pp_knockback(Fighter* fp, float kb)
     return 0.0f;
 }
 
-/* More coins place higher; equal coins share a place. */
+/* More coins place higher; equal coins share a place. Nobody with a coin is a draw: everyone
+ * last. */
 static void pp_result(s8 place[PARTY_PLAYERS])
 {
-    int i, j;
+    int i, j, any = 0;
+    for (i = 0; i < PARTY_PLAYERS; i++) {
+        any |= pp.p[i].coins > 0;
+    }
     for (i = 0; i < PARTY_PLAYERS; i++) {
         int above = 0;
+        if (!any) {
+            place[i] = 3;
+            continue;
+        }
         for (j = 0; j < PARTY_PLAYERS; j++) {
             above += pp.p[j].coins > pp.p[i].coins;
         }

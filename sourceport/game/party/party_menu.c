@@ -736,6 +736,13 @@ static const struct {
     { "mario-speedwagons", "Hold R to rev, A shifts.\nFirst over the line wins." },
     { "rumble-fishing", "Press A when the ! shows.\nToo early lands nothing." },
     { "panel-panic", "Hit the block to drop a\npanel. Last one up wins." },
+    { "the-great-deflate", "Jump on your Thwomp, then\nground-pound it. 2 vs 2." },
+    { "revers-a-bomb", "Flip the arrows with A so\nbombs hit the other pair." },
+    { "order-up", "Grab the two dishes the\nchef orders. Two vs two." },
+    { "beach-volley-folly", "Bump, set and spike: the\nfirst pair to 5. Two vs two." },
+    { "cliffhangers", "Climb with your partner;\nhold A when it gusts." },
+    { "pair-a-sailing", "Drive the boat or ride the\nparasail and catch coins." },
+    { "right-oar-left", "Mash A and B to row; one\nalone steers. Pairs race." },
 };
 
 static const char* description_of(int menu_kind, int selection)

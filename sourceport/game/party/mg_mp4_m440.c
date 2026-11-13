@@ -32,6 +32,7 @@
 
 #include "mp4/mp4.h"
 #include "party.h"
+#include "party_arena.h"
 
 #define WORLD_X 600.0f
 
@@ -98,6 +99,7 @@ static void bb_start(void)
 
 static void bb_frame(void)
 {
+    party_arena_stage_frame();
     mp4_frame();
     camera_frame();
     /* over when MP4 returns to its boot overlay; at once without a disc (MELEE_PARTY_MINIGAME

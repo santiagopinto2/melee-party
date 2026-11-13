@@ -115,7 +115,7 @@ s32 _CheckFlag(u32 flag)
 void HuPadRumbleAllStop(void) {}
 
 /* Whether the pads may rumble (the options' setting): no. Rumble Fishing (m455) then shows its "!"
- * when a fish bites, as MP4 does with rumble off. */
+ * when a fish bites, as MP4 does with rumble off, and Cliffhangers (m428) its gust warning. */
 u32 HuPadRumbleGet(void)
 {
     return 0;

@@ -12,7 +12,7 @@
  * heading (one line in m439's player code); when the game moves the player (a fall, the way back
  * onto the path, the end) the fighter follows. The match ends when the minigame returns to MP4's
  * boot overlay; the pair of the first player to reach the end shares first place, the other
- * last; nobody loses if nobody got there. */
+ * last; everyone is last if nobody got there. */
 #include <math.h>
 #include <string.h>
 
@@ -118,13 +118,13 @@ static float pp_knockback(Fighter* fp, float kb)
     return 0.0f;
 }
 
-/* The pair of the first player to reach the end wins (MP4 pays the finishers); nobody loses if
- * nobody got there. */
+/* The pair of the first player to reach the end wins (MP4 pays the finishers); everyone is last
+ * if nobody got there, as MP4 places them. */
 static void pp_result(s8 place[PARTY_PLAYERS])
 {
     int i;
     for (i = 0; i < PARTY_PLAYERS; i++) {
-        place[i] = (s8) (pp.first < 0 || pp.groups[i] == pp.groups[pp.first] ? 0 : 3);
+        place[i] = (s8) (pp.first >= 0 && pp.groups[i] == pp.groups[pp.first] ? 0 : 3);
     }
 }
 
