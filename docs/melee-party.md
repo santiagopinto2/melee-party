@@ -66,6 +66,26 @@ disc they are left out of the list and the rotation, and the log says why.
 | Challenge Booksquirm | Final Destination (MP4's book drawn away from it); needs the MP4 disc | Mario Party 4's one-player challenge with all four at once: the pages keep coming, faster as they go, and when one player is left that one keeps going, endless as in MP4, until they lose (or MP4's own cap of 99 pages). The stick walks everyone with Melee's walk, dash and run; a page lands on whatever is under it. Placements by the page each player went out on, the last out first. |
 | Paths of Peril | Final Destination (MP4's paths drawn away from it); needs the MP4 disc | Mario Party 4's own, two against two on a four-way split screen (one camera a player once the game starts): walk your narrow path over the drop past the pits and the breaking planks to the end; the pair of the first player there wins. The party pairs the players at random (MP4's board would). The stick walks everyone with Melee's walk, dash and run; a fall and the way back are MP4's, and the fighter follows. The winning pair shares first place, the other last. |
 | Stamp Out! | Final Destination (MP4's tiled floor drawn away from it); needs the MP4 disc | Mario Party 4's own: stamps come down on the tiled floor and print the shadow of whoever is under them; the most tiles stamped wins. The stick walks everyone with Melee's walk, dash and run; a stamp landing on the player is MP4's, and the fighter follows. The top stampers share first place, the rest last. The print itself is the shadow map's bytes, which the renderer reads back into memory for the game (unverified until a run on the PC). |
+| Manta Rings | Final Destination (MP4's sea drawn away from it); needs the MP4 disc | Mario Party 4's own. Everyone dives off a boat and swims behind a manta through the deep for about 45 seconds: the stick steers and A kicks forward. Bubble rings count one each and the rings the manta leaves three; a sea creature that hits you takes rings off you. The swim is the game, so the fighters follow MP4's movement. The most rings wins and shares first place, the others place by their rings; nobody wins without a ring. |
+| Slime Time | Final Destination (MP4's stage drawn away from it); needs the MP4 disc | Mario Party 4's own. Each player is stuck to a blob of slime: mash A to pull forward, a few presses a step. Go a second without finishing a step and the slime snaps you back to the start. The first to the end wins; nobody wins after 30 seconds. MP4 moves everyone, so the fighters follow: they run while their player pulls and flinch when the slime snaps back. The winner takes first place, the others share last. |
+| Avalanche! | Final Destination (MP4's mountain drawn away from it); needs the MP4 disc | Mario Party 4's own. Ski down a long snowy course ahead of an avalanche. The stick steers and A pushes off; ramps launch you, and an obstacle rolls you up in a snowball until you press A four times. Anyone the avalanche catches is out, and the first down the mountain wins. This one keeps MP4's movement (gravity skis you down the slope, so the fighters follow, crouched as a tuck). The winner takes first place, the rest share last; nobody wins if the avalanche catches everyone. |
+| Paratrooper Plunge | Final Destination (MP4's sky drawn away from it); needs the MP4 disc | Mario Party 4's own. Everyone jumps from a plane and skydives for about 30 seconds; the stick steers you into the coins (some are worth five) and around the things in the way. A hit spins you and shrinks your parachute, and the fourth takes it: you are out, but keep your coins. This one keeps MP4's movement (the skydive is the game, so the fighters follow, falling the whole way down), and the fighters are drawn at the size of MP4's players, which are small in this game. Placed by coins, ties share. |
+| Toad's Quick Draw | Final Destination (MP4's shooting gallery drawn away from it); needs the MP4 disc | Mario Party 4's own. Balloons with pictures float up and Toad holds up one picture: aim your cursor with the stick and fire your popgun with A at the balloon that matches. The first to three hits wins; after twelve rounds without one, nobody does. Nobody walks: the fighters stand in place, turn to aim and jab as they fire. The winner is first, the others placed by their hits, ties sharing. |
+| Bob-omb Breakers | Final Destination (MP4's board drawn away from it); needs the MP4 disc | Mario Party 4's own puzzle: pairs of coloured blocks and Bob-ombs fall into each player's three columns; three of a colour break, a Bob-omb surrounded on all sides blows up, and whoever completes a group scores. The stick moves the pair and drops it faster, A and B turn it, X and Y flip it. First to 100 points wins, or the last player whose columns have not overflowed. Nobody walks: each fighter stands in its MP4 character's place over its columns, crouches while they are full and taunts if it wins. The winner takes first place, the others follow by points. |
+| Tree Stomp | Final Destination (MP4's clearing drawn away from it); needs the MP4 disc | Mario Party 4's own, one against three: the three ride walking tree stumps and drive them at the one (the stick turns, A goes forward, B back), and a stump that touches the one knocks it flying; the one wins if it lasts 45 seconds. Two monkeys throw banana peels to slip on and a golden banana that triples the speed of whoever gets it. The party picks the one at random (MP4's board would). The one walks with Melee's walk, dash and run; the three's fighters stand on their stumps. The winning side shares first place, the other last. |
+| Blame it on the Crane | Final Destination (MP4's turntable drawn away from it); needs the MP4 disc | Mario Party 4's own, one against three: the one works a crane with A alone (hold to swing the arm, let go to drop the claw); the three roll inside clear balls on a spinning turntable among six decoys and steer clear of the claw. The one wins by dropping all three down the chute within 60 seconds, otherwise the three win. The party picks the one at random (MP4's board would). A ball rolls with its fighter's Melee walk, dash and run; the crane's fighter stands on the tower. The winning side shares first place, the other last. |
+| Hide and Go BOOM! | Final Destination (MP4's cannons drawn away from it); needs the MP4 disc | Mario Party 4's own, one against three: while the one looks away, the three each pick one of four cannons with B, A, Y or X and hide in it (one who picks none drops through a trapdoor); then the one gets three shots at the cannons, and a cannon with someone inside blasts them off. The three win if any of them is still hidden after the third shot. The party picks the one at random (MP4's board would). Nobody walks by the stick: MP4 walks each hider to its cannon and the fighters follow. The winning side shares first place, the other last. |
+| Fish n' Drips | Final Destination (MP4's water tanks drawn away from it); needs the MP4 disc | Mario Party 4's own, one against three: the one works a pump by pressing the six buttons it is shown in turn, the three pass a bucket down their line one button each. The first full tank wins; after 60 seconds, or when both fill at once, nobody does. The party picks the one at random (MP4's board would). Nobody walks: the fighters stand at their places. The winning side shares first place, the other last; everyone is last on a draw. |
+| Makin' Waves | Final Destination (MP4's pool drawn away from it); needs the MP4 disc | Mario Party 4's own, one against three: the one walks on a raft in the middle of a pool to keep it level, the three ride floats around the edge and send waves across with ground pounds (A jumps, A again in the air pounds). The three win when the raft throws the one off, the one if it stays on for 30 seconds. The party picks the one at random (MP4's board would). The one walks with Melee's walk, dash and run; the three's fighters follow their floats. The winning side shares first place, the other last. |
+| GOOOOOOOAL!! | Final Destination (MP4's stadium drawn away from it); needs the MP4 disc | Mario Party 4's own, one against three: the one keeps goal (the stick shuffles along the line, A dives or jumps), the three shoot at once (the stick aims, holding A powers the kick). The three win with 10 goals between them, the one if they have not scored them in 30 seconds. The stadium's big screen is MP4's own render pass. The party picks the one at random (MP4's board would). The goalie walks with Melee's walk, dash and run; the shooters' fighters follow. The winning side shares first place, the other last. |
+| Three Throw | Final Destination (MP4's target wall drawn away from it); needs the MP4 disc | Mario Party 4's own. Rows of targets slide past; catch the ball tossed to you and throw it, B from the ground or A to jump and B in the air. The middle row scores 2, the others 1, for 30 seconds. The fighters only follow the game: nobody walks by the stick, and a throw shows as a jab or an aerial. The top score shares first place; the rest are placed by score. |
+| Mario Medley | Final Destination (MP4's pool drawn away from it); needs the MP4 disc | Mario Party 4's own. A swimming race of three lengths, a stroke each: butterfly (A and B together), backstroke (L and R in turn) and freestyle (A and B in turn); each press is a stroke, and mashing too fast tires your swimmer. The first to touch the wall after the third length wins; nobody wins after five minutes. The pool's water is MP4's own render passes (ripples and the scene under the water copied from the screen). MP4 moves everyone, so the fighters follow: a short hop off the block, a run while their player strokes. The winner takes first place, the others share last. |
+| Take a Breather | Final Destination (MP4's sea drawn away from it); needs the MP4 disc | Mario Party 4's own. Everyone stands on a raft and for five seconds presses L and R in turn to breathe in (only presses in turn count, and a trigger has to click); then everyone dives and stays under a fifth of a second per breath, and the most breaths wins. Nobody walks: MP4 moves every player, so the fighters follow, crouched while they breathe in and hold their breath. The water's refraction and caustics are MP4's own screen copies. Placed by breaths, ties share; nobody wins without a breath. |
+| Photo Finish | Final Destination (MP4's photo drawn away from it); needs the MP4 disc | Mario Party 4's own. One of three scenes is photographed live and cut into eight pieces, and each player puts them back together in a quarter of the screen: the stick moves a piece, L or R turns it, A drops it in place. The first to finish wins; after 60 seconds nobody does. The photo is MP4's own render pass, copied every frame. Nobody walks: the fighters stay out of sight while the puzzles are up, and the winner's walks into its view at the end. The winner takes first place, the others share last. |
+| Long Claw of the Law | Final Destination (MP4's claw rooms drawn away from it); needs the MP4 disc | Mario Party 4's own, on a four-way split screen: each player works a long claw in a ring of prizes on two shelves, behind shutters that open and close. The stick raises and lowers the claw, L and R turn it to the next pair of prizes, and A shoots it out. The first to catch three of the prize on the sign wins; after 60 seconds nobody does. Nobody walks: the fighters stand at their claws, jab as the claw shoots out and taunt for the win. The winner is first, the others placed by their catches, ties sharing; with no winner everyone is last. |
+| Mario Speedwagons | Final Destination (MP4's drag strip drawn away from it); needs the MP4 disc | Mario Party 4's own drag race on a four-way split screen (one camera a car, spinning out from the middle after the opening flyover): R is the throttle, as far as you press it, and A shifts up through four gears; too many revs at the start spin the wheels. The first car over the line wins. Nobody walks: the fighters ride crouched in MP4's cars and stand on its podium at the end. Placed by MP4's own order at the line, as its podium shows; after five minutes with nobody across it is a draw and everyone is last. |
+| Rumble Fishing | Final Destination (MP4's pier drawn away from it); needs the MP4 disc | Mario Party 4's own. Four players fish off a pier; a "!" over your head says a fish bit, and the first three to pull with A land a fish, the first the biggest. Pull before the "!" and you land nothing. MP4 shows the "!" only when the pads can't rumble, which here they never do. Nobody walks: the fighters stand on the pier, jab as they pull, and taunt or crouch at the end. Placed by the order of the pulls; the early and the idle share the place after the last. |
+| Panel Panic | Final Destination (MP4's panels drawn away from it); needs the MP4 disc | Mario Party 4's own. Nine panels in a 3 by 3 grid, the four players and five extra MP4 characters on them. First you have five seconds to pick a panel: the stick steps you one panel at a time, A stands on it. Then each round everyone still up hits the roulette block over their head with A, and every panel the blocks stop on drops away with whoever stands on it. The last one left wins; nobody does if the last panels drop together. Nobody walks by the stick (MP4 slides you from panel to panel), so the fighters follow, drawn at the size of MP4's players here, and hop when they hit their block. The one left is first, the rest placed by the round their panel dropped; with nobody left everyone is last. |
 
 ## Playing online
 
@@ -224,35 +244,30 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
   FSLIDE and RLE, types 0 to 5 (`mp4_dir.c`, `mp4_decode.c`). Only each archive's offset table
   stays in memory.
 - **Memory.** MP4's two heaps that GX reads from (`HuMem`, `mp4_mem.c`) sit in one pool in the
-  game image, not in Melee's main memory: a 10.8 MB data heap for models and motions (MP4's 9 MB
-  plus the share of its DVD, music and misc heaps, which live on the C runtime's heap here since
-  GX never reads them) and a 2 MB system heap, twice MP4's, since the structures are bigger here
-  and Chain Chomp Fever keeps two effects per Chomp lane in it. A loaded model keeps its unpacked
-  file and the 64-bit structures made from it; a minigame that loads four characters twice (Mr.
-  Blizzard's Brigade: a player and its reflection) needs most of the data heap. GX reads the
-  textures, vertex arrays and display lists of MP4 models in place, and it can only address MEM1
-  and the image (below 0x84000000); after the heaps comes the per-frame scratch for big-endian
-  copies of vertex arrays (1 MB; a frame of m438 uses 0.3 MB). Each minigame linked in moves the
-  pool up by its code's size, so the data heap gives way: it is 10.8 MB, or what is left between
-  the system heap and the scratch below the limit (10.3 MB with all fourteen minigames). Under
-  9 MB (Mr. Blizzard's Brigade peaks at 8.6 MB) the MP4 minigames switch themselves off. The log
-  gives the heaps' sizes when the disc opens and the data heap's peak in 512 KB steps. The pool is zero-filled `.bss` and costs
-  nothing without an MP4 disc. Rollback snapshots leave it out, because the MP4 minigames are
-  offline only for now. MP4's processes run on coroutines (`mp4_coro.c`) whose 64 KB stacks come
-  from the C runtime's heap: GX never reads them, and a process that outlives a match (the boot
-  overlay's watcher, the banners) outlives Melee's heap.
-- **Where the 0x84000000 limit comes from.** The host (`port/app/source_host.cpp`,
-  `reserve_memory`) puts MEM1 at 0x80000000, 40 MB of it (the console's 24 MB grown for 8-byte
-  pointers), and links the game image right after it at 0x82800000, so that the game's statics
-  have an address the emulated GX texture and display-list registers can hold: 26 bits, the first
-  64 MB from 0x80000000. The game image is already 24 MB, so its last sections end past the
-  limit; the MP4 pool is placed by the linker like any other `.bss` and ends past it now: the
-  data heap is cut to fit (`data_heap_size` in `mp4_mem.c`). Each MP4 minigame linked in adds
-  about 70 KB of code, which moves everything after it up by that much. More room, when the data
-  heap gets too small: the DVD, music and misc heaps (1.3 MB) could
-  leave the pool, since GX never reads them (the system heap stays: sprite bitmaps and m438's
-  effect display lists live there); a smaller MEM1 would let the image start lower; or the port's
-  GX could decode wider addresses. None of this is done.
+  game image, not in Melee's main memory: a 21 MB data heap for models and motions, twice MP4's
+  10.5 MB, and a 2 MB system heap, twice MP4's, since the structures are bigger here and Chain
+  Chomp Fever keeps two effects per Chomp lane in it. MP4's DVD, music and misc heaps live on the
+  C runtime's heap, since GX never reads them. A loaded model keeps its unpacked file and the
+  64-bit structures made from it: Manta Rings and Avalanche! ran out of an 11 MB data heap while
+  loading. GX reads the
+  textures, vertex arrays and display lists of MP4 models in place; after the heaps comes the
+  per-frame scratch for big-endian copies of vertex arrays (1 MB; a frame of m438 uses 0.3 MB).
+  The log gives the heaps' sizes when the disc opens and the data heap's peak in 512 KB steps.
+  The pool is zero-filled `.bss` and costs nothing without an MP4 disc. Rollback snapshots leave
+  it out, because the MP4 minigames are offline only for now. MP4's processes run on coroutines
+  (`mp4_coro.c`) whose 64 KB stacks come from the C runtime's heap: GX never reads them, and a
+  process that outlives a match (the boot overlay's watcher, the banners) outlives Melee's heap.
+- **How far GX reaches.** The host (`port/app/source_host.cpp`, `reserve_memory`) puts MEM1 at
+  0x80000000, 40 MB of it (the console's 24 MB grown for 8-byte pointers), and links the game
+  image right after it at 0x82800000, so that the game's statics have an address the emulated GX
+  registers can hold. The console's SDK wrote 26-bit texture, TLUT and copy addresses (the first
+  64 MB), and the image (25 MB with the MP4 pool) runs past that. `melee-party.patch` makes the
+  native SDK write all 24 bits of those register fields (29-bit addresses, 512 MB), the host's GX
+  reads them (TLUT loads took 21 bits; they keep 21 for the recompiled game, whose stale bits
+  ride along), and the host lets GX read up to the image's end. Addresses below 64 MB encode as
+  before, so Melee's own drawing does not change. Each MP4 minigame linked in adds about 70 KB of
+  code and moves the pool up by that much, which no longer matters: the heaps keep their sizes
+  however many minigames there are, and could grow further.
 - **Models.** `hsfload.c` (with `hsf_byteswap.c`), `hsfdraw.c`, `hsfman.c` (the Hu3D model,
   camera and light layer), `hsfmotion.c`, `EnvelopeExec.c`, `ShapeExec.c`, `ClusterExec.c` and
   `hsfex.c` are MP4's. They draw through Melee's GX, which now records display lists
@@ -276,8 +291,20 @@ Party 4 disc. `party/mp4/` holds that code, ported from the MP4 decompilation
   won, lost) the minigame moves the player and the fighter follows, with the nearest Melee
   animation. Each minigame's wrapper (`mg_mp4_<name>.c`) decides which is which from the player's
   state.
-- **Not yet**: MP4's sound and music, its shadow pass, the reflection, toon and highlight maps
-  MP4 keeps in its executable, and its instruction screens.
+- **Pads** (`mp4_pad`). A human's Melee pad becomes MP4's: the buttons, both sticks and the
+  triggers. Melee's input merges L and R, so by default either trigger is MP4's L and both of
+  MP4's analog triggers get the stronger one's value. A minigame that reads them apart (Long Claw
+  of the Law, Take a Breather, Photo Finish) asks for a GameCube pad's triggers with
+  `mp4_match_triggers_apart` before the match: the clicks are L and R and each analog value
+  comes from its own trigger.
+- **Views.** Each MP4 camera a player's model is in becomes a view of the match camera; cameras
+  with the same viewport share one. A split screen is then a view per quarter. A camera with no
+  player beside a split screen (Long Claw of the Law's opening picture) draws in the last view,
+  over the others.
+- **Not yet**: MP4's sound and music, the shadows on its scenery, the reflection, toon and
+  highlight maps MP4 keeps in its executable, and its instruction screens. The shadow pass runs
+  (Stamp Out! prints from it), but a shadow-map receiver (`Hu3DModelShadowMapSet`) draws as a
+  plain model: with MP4's shadow stage the port drew nothing of it (`hsfdraw.c`).
 - **Online, later.** The MP4 minigames play offline only. What putting them online would need,
   kept here so nothing done now makes it harder: the MP4 pool (`mp4_mem.c`) and the MP4 runtime's
   variables in the rollback snapshot (they are `.bss`, which the snapshot's image regions can

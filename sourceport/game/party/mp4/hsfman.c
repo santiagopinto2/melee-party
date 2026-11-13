@@ -179,6 +179,22 @@ void Hu3DPreProc(void) {
  * told apart from these. Cleared when the model goes. */
 u8 mp4_model_hidden[HU3D_MODEL_MAX];
 
+/* Melee Party: whether a model holds another on one of its objects (Hu3DModelHookSet). A hidden
+ * player's character that does (m420's bucket, m441's net, m404's brush, m418's torch) still goes
+ * through the draw, at its MP4 pose, for the held model alone: hsfdraw.c skips its own meshes. */
+static int mp4_model_holds(HU3DMODEL* data)
+{
+    HSFOBJECT* obj = data->hsf->object;
+    s16 i;
+    for (i = 0; i < data->hsf->objectNum; i++, obj++) {
+        HSFCONSTDATA* c = obj->constData;
+        if (c != NULL && c->hookMdlId != HU3D_MODELID_NONE) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void Hu3DAdvance(void);
 void mp4_gx_draw_done(void);
 void mp4_gx_wait_draw_done(void);
@@ -271,7 +287,7 @@ void Hu3DExec(void) {
                                 if ((data->attr & HU3D_ATTR_CAMERA_UPDATE) == HU3D_ATTR_CAMERA_UPDATE && data->motId != -1) {
                                     Hu3DMotionExec(i, data->motId, data->motWork.time, 0);
                                 }
-                                if ((data->attr & (HU3D_ATTR_DISPOFF|HU3D_ATTR_MOTION_OFF)) == 0 && !mp4_model_hidden[i] && (data->cameraBit & cameraBit) != 0 && data->layerNo == j) {
+                                if ((data->attr & (HU3D_ATTR_DISPOFF|HU3D_ATTR_MOTION_OFF)) == 0 && (!mp4_model_hidden[i] || mp4_model_holds(data)) && (data->cameraBit & cameraBit) != 0 && data->layerNo == j) {
                                     if (((data->attr & HU3D_ATTR_MOT_EXEC) == 0 && (data->attr & HU3D_ATTR_MOT_SLOW) == 0) || ((data->attr & HU3D_ATTR_MOT_SLOW) != 0 && (data->tick & 1) != 0)) {
                                         var_r25 = 0;
                                         data->motAttr &= ~HU3D_MOTATTR;

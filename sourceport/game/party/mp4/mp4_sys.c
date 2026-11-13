@@ -114,6 +114,13 @@ s32 _CheckFlag(u32 flag)
 
 void HuPadRumbleAllStop(void) {}
 
+/* Whether the pads may rumble (the options' setting): no. Rumble Fishing (m455) then shows its "!"
+ * when a fish bites, as MP4 does with rumble off. */
+u32 HuPadRumbleGet(void)
+{
+    return 0;
+}
+
 /* The frame rate divider (main.c): fixed here. Called by m441's unused debug display. */
 void HuSysVWaitSet(s16 vcount)
 {

@@ -6,12 +6,17 @@ Notes collected for the next release. When it is cut, rename this file to
 ## New
 
 - Melee Party: with a Mario Party 4 (USA) disc as a plain `.iso` next to the Melee ISO (or given
-  with `--mp4-iso`), the party plays all fourteen of MP4's own minigames, run from MP4's code
+  with `--mp4-iso`), the party plays thirty-four of MP4's own minigames, run from MP4's code
   and drawn from the disc's models with the Melee fighters as the players: Bowser's Bigger
   Blast, Chain Chomp Fever, Mr. Blizzard's Brigade, Booksquirm, Butterfly Blitz, Trace Race,
   Candlelight Flight, Money Belts, Hop or Pop, Cheep Cheep Sweep, Stamp Out!, Team Treasure
-  Trek and Paths of Peril (both on a four-way split screen) and Challenge Booksquirm (MP4's
-  one-player challenge with all four at once; the last one in plays on). They are in the Party
+  Trek and Paths of Peril (both on a four-way split screen), Challenge Booksquirm (MP4's
+  one-player challenge with all four at once; the last one in plays on), Manta Rings, Slime
+  Time, Avalanche!, Paratrooper Plunge, Toad's Quick Draw, Bob-omb Breakers, Three Throw, Mario
+  Medley, Take a Breather, Rumble Fishing, Panel Panic, Photo Finish, Long Claw of the Law and
+  Mario Speedwagons (the last three on a four-way split screen), and the one
+  against three games Tree Stomp, Blame it on the Crane, Hide and Go BOOM!, Fish n' Drips,
+  Makin' Waves and GOOOOOOOAL!! (the party picks the one at random). They are in the Party
   Minigames list and the board's rotation, offline only. Without the disc nothing changes.
 
 ## Fixes

@@ -18,6 +18,7 @@
 #                   DXVK with Mesa's software present, and Wine's own D3D11 on OpenGL), dxvk,
 #                   dxvk-sw or wined3d
 #   FLEET_NO_CAPTURE=1  skips the captures
+#   FLEET_CAPTURE="id ..."  captures only these games (all run headless)
 #   FLEET_PACKAGE=<name>  after the headless games all end, packages a test zip (tools/package_test_build.py)
 #                   into fleet-out/package; FLEET_PACKAGE_DESC is its one-line description
 #   FLEET_BUILD_ONLY=1  stop after the two builds (a compile check on a CPU-only machine; see compile.json)
@@ -37,7 +38,7 @@ jobs="${FLEET_JOBS:-$(( $(nproc) < mem_gb ? $(nproc) : mem_gb ))}"
 host_jobs="${FLEET_HOST_JOBS:-$(( jobs < mem_gb * 2 / 3 ? jobs : (mem_gb * 2 / 3 > 0 ? mem_gb * 2 / 3 : 1) ))}"
 iso_dir="${MELEE_ISO_DIR:-}"
 games=("$@")
-[ ${#games[@]} -gt 0 ] || games=(bigger-blast chomp-fever blizzard-brigade booksquirm butterfly-blitz trace-race candlelight-flight money-belts hop-or-pop cheep-cheep-sweep team-treasure-trek challenge-booksquirm paths-of-peril stamp-out)
+[ ${#games[@]} -gt 0 ] || games=(bigger-blast chomp-fever blizzard-brigade booksquirm butterfly-blitz trace-race candlelight-flight money-belts hop-or-pop cheep-cheep-sweep team-treasure-trek challenge-booksquirm paths-of-peril stamp-out manta-rings slime-time avalanche paratrooper-plunge toads-quick-draw bob-omb-breakers tree-stomp fish-n-drips hide-and-go-boom blame-it-on-the-crane makin-waves gooooooal three-throw mario-medley take-a-breather photo-finish long-claw-of-the-law mario-speedwagons rumble-fishing panel-panic)
 t0=$(date +%s)
 deadline=$(( t0 + ${FLEET_TIME_LIMIT:-7200} - 240 ))   # 4 minutes kept for packing the outputs
 cache="$HOME/.cache"
@@ -257,8 +258,9 @@ if [ "${FLEET_NO_CAPTURE:-0}" != 1 ]; then
       fi
     done
     i=0
-    for g in "${games[@]}"; do
-      left=$(( ${#games[@]} - i )); i=$((i + 1))
+    cap_games=("${games[@]}"); [ -z "${FLEET_CAPTURE:-}" ] || read -r -a cap_games <<< "$FLEET_CAPTURE"
+    for g in "${cap_games[@]}"; do
+      left=$(( ${#cap_games[@]} - i )); i=$((i + 1))
       step "$g capture"
       # the whole first game if the time allows; the time left shared by the games left
       want=$(( ${first_end[$g]:-2400} + 240 ))

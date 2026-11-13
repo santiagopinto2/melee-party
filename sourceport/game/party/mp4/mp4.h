@@ -41,6 +41,14 @@ int mp4_match_over(void);
 /* A human's pad this frame, as MP4 reads it (from the wrapper's fighter_input). */
 void mp4_pad(int pad, u32 held, float stick_x, float stick_y, float substick_x, float substick_y,
              float trigger);
+/* For a minigame that reads L and R apart (Long Claw of the Law turns its claw one way with each),
+ * from the wrapper before mp4_match_begin: in the next match a human's triggers reach MP4 as a
+ * GameCube pad's, the clicks as L and R and each analog value on its own. Otherwise either trigger
+ * is MP4's L and both analog values are the one Melee merges. */
+void mp4_match_triggers_apart(void);
+/* A human's analog L and R this frame, 0..1, after mp4_pad (party_arena_input_begin); used only
+ * in a match with mp4_match_triggers_apart. */
+void mp4_pad_triggers(int pad, float l, float r);
 /* Where a player's MP4 model stands, in Melee's world (with the offset), and its yaw in radians;
  * 0 if the player has no model yet. */
 int mp4_player_pose(int player, float* x, float* y, float* z, float* yaw);
@@ -83,6 +91,26 @@ extern const int mp4_overlay_m429;
 extern const int mp4_overlay_m453;
 extern const int mp4_overlay_m439;
 extern const int mp4_overlay_m415;
+extern const int mp4_overlay_m401;
+extern const int mp4_overlay_m402;
+extern const int mp4_overlay_m406;
+extern const int mp4_overlay_m408;
+extern const int mp4_overlay_m409;
+extern const int mp4_overlay_m413;
+extern const int mp4_overlay_m419;
+extern const int mp4_overlay_m420;
+extern const int mp4_overlay_m418;
+extern const int mp4_overlay_m424;
+extern const int mp4_overlay_m417;
+extern const int mp4_overlay_m423;
+extern const int mp4_overlay_m410;
+extern const int mp4_overlay_m405;
+extern const int mp4_overlay_m456;
+extern const int mp4_overlay_m411;
+extern const int mp4_overlay_m414;
+extern const int mp4_overlay_m443;
+extern const int mp4_overlay_m455;
+extern const int mp4_overlay_m463;
 
 /* mp4_char.c: the player's hidden model, a Hu3D model id or -1. */
 s16 mp4_char_model(int charNo);

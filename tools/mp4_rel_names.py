@@ -2,7 +2,8 @@
 """Prefix a ported Mario Party 4 minigame's own symbols with its name.
 
 Every MP4 minigame (REL) in the decompilation names its functions fn_1_<address> and its data
-lbl_1_<section>_<address>, and defines ObjectSetup; linked into one library, two minigames would
+lbl_1_<section>_<address> (fn_2_ and lbl_2_ in a REL's second module, m401's main_ex.c), and
+defines ObjectSetup; linked into one library, two minigames would
 clash. This writes a header of #defines (fn_1_3C4 -> m440_fn_1_3C4) that the build includes
 ahead of that minigame's sources.
 
@@ -12,7 +13,7 @@ import re
 import sys
 from pathlib import Path
 
-NAMES = re.compile(r"\b(fn_1_[0-9A-Fa-f]+|lbl_1_[A-Za-z0-9_]+|ObjectSetup)\b")
+NAMES = re.compile(r"\b(fn_[0-9]_[0-9A-Fa-f]+|lbl_[0-9]_[A-Za-z0-9_]+|ObjectSetup)\b")
 
 
 def main():

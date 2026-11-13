@@ -27,6 +27,26 @@ extern const PartyMinigame mg_mp4_m429;
 extern const PartyMinigame mg_mp4_m453;
 extern const PartyMinigame mg_mp4_m439;
 extern const PartyMinigame mg_mp4_m415;
+extern const PartyMinigame mg_mp4_m401;
+extern const PartyMinigame mg_mp4_m402;
+extern const PartyMinigame mg_mp4_m406;
+extern const PartyMinigame mg_mp4_m408;
+extern const PartyMinigame mg_mp4_m409;
+extern const PartyMinigame mg_mp4_m413;
+extern const PartyMinigame mg_mp4_m419;
+extern const PartyMinigame mg_mp4_m420;
+extern const PartyMinigame mg_mp4_m418;
+extern const PartyMinigame mg_mp4_m424;
+extern const PartyMinigame mg_mp4_m417;
+extern const PartyMinigame mg_mp4_m423;
+extern const PartyMinigame mg_mp4_m410;
+extern const PartyMinigame mg_mp4_m405;
+extern const PartyMinigame mg_mp4_m456;
+extern const PartyMinigame mg_mp4_m411;
+extern const PartyMinigame mg_mp4_m414;
+extern const PartyMinigame mg_mp4_m443;
+extern const PartyMinigame mg_mp4_m455;
+extern const PartyMinigame mg_mp4_m463;
 
 static const PartyMinigame* const table[] = {
     &mg_volleyball,
@@ -48,6 +68,26 @@ static const PartyMinigame* const table[] = {
     &mg_mp4_m453,
     &mg_mp4_m439,
     &mg_mp4_m415,
+    &mg_mp4_m401,
+    &mg_mp4_m402,
+    &mg_mp4_m406,
+    &mg_mp4_m408,
+    &mg_mp4_m409,
+    &mg_mp4_m413,
+    &mg_mp4_m419,
+    &mg_mp4_m420,
+    &mg_mp4_m418,
+    &mg_mp4_m424,
+    &mg_mp4_m417,
+    &mg_mp4_m423,
+    &mg_mp4_m410,
+    &mg_mp4_m405,
+    &mg_mp4_m456,
+    &mg_mp4_m411,
+    &mg_mp4_m414,
+    &mg_mp4_m443,
+    &mg_mp4_m455,
+    &mg_mp4_m463,
 };
 
 /* Set by the minigame being played; called from the party patch's food hook. */

@@ -121,6 +121,25 @@ void CharMotionDataClose(s16 charNo)
     (void) charNo;
 }
 
+/* chrman.c: a player's motion freed (m420, at its end) */
+void CharMotionKill(s16 charNo, u32 motId)
+{
+    (void) charNo;
+    if (motId < HU3D_MOTION_MAX) {
+        motion_data[motId] = -1;
+        Hu3DMotionKill((s16) motId);
+    }
+}
+
+/* chrman.c: the player's motion set to a frame (m419 holds the three's seated pose at 60) */
+void CharMotionTimeSet(s16 charNo, float time)
+{
+    s16 model = mp4_char_model(charNo);
+    if (model != HU3D_MODELID_NONE) {
+        Hu3DMotionTimeSet(model, time);
+    }
+}
+
 void CharModelDataClose(s16 charNo)
 {
     (void) charNo;
@@ -180,6 +199,12 @@ float CharMotionMaxTimeGet(s16 charNo)
     return model >= 0 ? Hu3DMotionMaxTimeGet(model) : 0.0f;
 }
 
+float CharMotionTimeGet(s16 charNo)
+{
+    s16 model = mp4_char_model(charNo);
+    return model >= 0 ? Hu3DMotionTimeGet(model) : 0.0f;
+}
+
 void CharModelStepFxSet(s16 charNo, s32 stepFx)
 {
     (void) charNo;
@@ -234,6 +259,13 @@ void CharMotionSpeedSet(s16 charNo, float speed)
 
 /* chrman.c: the ring of sparks around a picked-up coin (m422). No character effects here. */
 void CharEffectCoinGlowCreate(s16 cameraBit, HuVecF* pos)
+{
+    (void) cameraBit;
+    (void) pos;
+}
+
+/* chrman.c: a puff of smoke (m455's rod at the end, m442). No character effects here. */
+void CharEffectSmokeCreate(s16 cameraBit, HuVecF* pos)
 {
     (void) cameraBit;
     (void) pos;

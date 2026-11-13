@@ -456,12 +456,7 @@ void fn_1_1960(omObjData *object)
             DCStoreRangeNoSync((*temp_r3)->bmp->data, temp_r29);
             break;
         case 2:
-#ifdef TARGET_PC
-            /* Melee Party: the canvas stays out of the shadow map. As a receiver the port draws
-             * nothing of it, prints included, and the toy room's floor shows through */
-#else
             Hu3DModelShadowMapObjSet(object->model[0], "kyanbasu");
-#endif
             Hu3DModelShadowReset(object->model[0]);
             Hu3DModelShadowReset(object->model[3]);
             break;
