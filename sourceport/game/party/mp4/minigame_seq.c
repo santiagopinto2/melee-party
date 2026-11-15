@@ -872,79 +872,7 @@ static s32 SeqMakeWord(SeqWork *work, char *str, s16 flags)
     return grp_idx;
 }
 
-#ifdef TARGET_PC
-/* DEBUG-TEMP MELEE_PARTY_MP4_FONTDUMP=1: each banner letter's layers and bitmaps, raw, in the log
- * (once per letter), to compare its colors with what the sprite pass draws. */
-extern void party_log(const char *fmt, ...);
-char* getenv(const char* name);
-
-static void SeqFontDump(char c, ANIMDATA *anim)
-{
-    static char seen[256];
-    static int enabled = -1;
-    s32 i;
-    if (enabled < 0) {
-        const char *v = getenv("MELEE_PARTY_MP4_FONTDUMP");
-        enabled = v != NULL && *v && *v != '0';
-    }
-    if (!enabled || anim == NULL || seen[(u8)c]) {
-        return;
-    }
-    seen[(u8)c] = 1;
-    party_log("fontdump: '%c' banks %d pats %d bmps %d", c, anim->bankNum, anim->patNum, anim->bmpNum);
-    for (i = 0; i < anim->patNum; i++) {
-        ANIMPAT *pat = &anim->pat[i];
-        s32 l;
-        party_log("fontdump: '%c' pat %d layers %d center %d %d size %d %d", c, (int)i, pat->layerNum,
-            pat->centerX, pat->centerY, pat->sizeX, pat->sizeY);
-        for (l = 0; l < pat->layerNum; l++) {
-            ANIMLAYER *ly = &pat->layer[l];
-            party_log("fontdump: '%c' pat %d layer %d bmp %d alpha %d flip %d start %d %d size %d %d", c, (int)i,
-                (int)l, ly->bmpNo, ly->alpha, ly->flip, ly->startX, ly->startY, ly->sizeX, ly->sizeY);
-        }
-    }
-    for (i = 0; i < anim->bmpNum; i++) {
-        ANIMBMP *bmp = &anim->bmp[i];
-        u32 len[2];
-        const u8 *src[2];
-        s32 k;
-        party_log("fontdump: '%c' bmp %d fmt 0x%02x pix %d size %d %d pal %d data %u", c, (int)i, bmp->dataFmt,
-            bmp->pixSize, bmp->sizeX, bmp->sizeY, bmp->palNum, (unsigned)bmp->dataSize);
-        src[0] = bmp->palData;
-        len[0] = bmp->palData ? (u32)bmp->palNum * 2 : 0;
-        src[1] = bmp->data;
-        len[1] = bmp->data ? bmp->dataSize : 0;
-        for (k = 0; k < 2; k++) {
-            u32 off;
-            for (off = 0; off < len[k] && off < 65536; off += 96) {
-                char hex[200];
-                u32 n = len[k] - off < 96 ? len[k] - off : 96;
-                u32 b;
-                for (b = 0; b < n; b++) {
-                    static const char digits[] = "0123456789abcdef";
-                    hex[b * 2] = digits[src[k][off + b] >> 4];
-                    hex[b * 2 + 1] = digits[src[k][off + b] & 15];
-                }
-                hex[n * 2] = '\0';
-                party_log("fontdump: '%c' %d %s %u %s", c, (int)i, k ? "tex" : "pal", (unsigned)off, hex);
-            }
-        }
-    }
-}
-#endif
-
-static ANIMDATA *SeqLoadFontCharRaw(char *str, s16 flags);
-
 static ANIMDATA *SeqLoadFontChar(char *str, s16 flags)
-{
-    ANIMDATA *anim = SeqLoadFontCharRaw(str, flags);
-#ifdef TARGET_PC
-    SeqFontDump(*str, anim);
-#endif
-    return anim;
-}
-
-static ANIMDATA *SeqLoadFontCharRaw(char *str, s16 flags)
 {
     s32 data_num;
     s16 id;
