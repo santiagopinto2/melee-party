@@ -1,6 +1,7 @@
 /* Melee Party: the mode, its states and the state that lives across them (see party.h). */
 #include <stdarg.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <dolphin/os.h>
 #include <melee/ft/types.h>
@@ -224,6 +225,22 @@ void party_start(const VsModeData* vs, u32 seed)
                 ck = cpu_pool[party_rand((int) (sizeof cpu_pool / sizeof cpu_pool[0]))];
             } while (ckind_taken(ck, i));
             pp->ckind = ck;
+            {
+                /* MELEE_PARTY_FIGHTERS="0,3,25,14": test runs pick the CPUs' fighters
+                 * (CharacterKind numbers, one per slot; -1 or nothing keeps the random one) */
+                const char* list = getenv("MELEE_PARTY_FIGHTERS");
+                int k;
+                for (k = 0; list != NULL && *list && k < i; k++) {
+                    list = strchr(list, ',');
+                    list = list != NULL ? list + 1 : NULL;
+                }
+                if (list != NULL && *list && *list != ',') {
+                    int want = atoi(list);
+                    if (want >= 0 && want < CKind_Playable_Count) {
+                        pp->ckind = (s8) want;
+                    }
+                }
+            }
             pp->color = 0;
             pp->slot_type = (vs == NULL && i == 0 && !party_env_int("MELEE_PARTY_ALL_CPU", 0))
                                 ? Gm_PKind_Human
