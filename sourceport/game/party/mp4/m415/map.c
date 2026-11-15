@@ -9,6 +9,8 @@
 
 #include <string.h>
 
+extern float mp4_camera_scale;   /* Melee Party: MP4 units into Melee's (hsfman.c) */
+
 void fn_1_8780(s16 arg0, s16 arg1)
 {
     s32 var_r31;
@@ -197,6 +199,14 @@ void fn_1_88B8(unkSubStruct2 *arg0)
                         if (HmfInverseMtxF3X3(spC0, sp90) == 0) {
                             MTXIdentity(sp90);
                         }
+                        /* Melee Party: spC0 carries the MP4-into-Melee scale (hsfman.c), so its
+                         * inverse would blow these billboards up by its reciprocal: keep the
+                         * rotation alone, as m409's cursors do */
+                        {
+                            Mtx unscale;
+                            MTXScale(unscale, mp4_camera_scale, mp4_camera_scale, mp4_camera_scale);
+                            MTXConcat(sp90, unscale, sp90);
+                        }
                         MTXConcat(sp90, sp60, sp60);
                     }
                     else if (var_r31->unk31 == 1) {
@@ -278,6 +288,14 @@ void fn_1_95C0(HU3DMODEL *arg0, Mtx arg1)
     MTXTranspose(sp38, sp8);
     GXLoadNrmMtxImm(sp8, 0);
     HmfInverseMtxF3X3(Hu3DCameraMtx, lbl_1_bss_36C.unk0);
+    /* Melee Party: the camera matrix carries the MP4-into-Melee scale (hsfman.c), so its inverse
+     * would make every billboard (case 0) ten times too big: keep the rotation alone, as m409's
+     * cursors do */
+    {
+        Mtx unscale;
+        MTXScale(unscale, mp4_camera_scale, mp4_camera_scale, mp4_camera_scale);
+        MTXConcat(lbl_1_bss_36C.unk0, unscale, lbl_1_bss_36C.unk0);
+    }
 
     for (var_r30 = 0; var_r30 < lbl_1_bss_36C.unk30; var_r30++, var_r31++) {
         if ((var_r31->unk8 != 0) && ((var_r31->unk8 & 2) != 0) && ((var_r31->unk8 & 4) == 0)) {
