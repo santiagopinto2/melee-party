@@ -374,7 +374,6 @@ void mp4_camera_set(s32 camNo, Mtx out)
     MTXConcat(view, scale, out);
 }
 
-/* Melee's cached GX state no longer holds after MP4's draws. */
 /* The TEV swap tables at GX's defaults and every stage on table 0 (the colors as they are). MP4
  * draws as if nothing else changed them, but Melee's draw before it leaves stages swapped (a TObj
  * with its own tex_swap), which turned the RGB5A3 seq letters gray: their red channel in all
@@ -392,6 +391,20 @@ static void gx_swap_defaults(void)
     }
 }
 
+/* Before MP4's draws: the pixel-engine modes of a plain Melee material. MP4 sets its blend, z and
+ * alpha-compare modes per material but never the color or alpha update, which it takes as GXInit
+ * left them, and the last Melee draw may have turned them off. Mr. Game & Watch draws in the
+ * match camera's first loop, just before MP4 in the same pass (ftdrawcommon.c), and his outline's
+ * last pass writes depth only (ftmaterial.c: color update off): with him in the match, MP4's
+ * whole scene drew into the depth buffer alone. */
+static void gx_enter(void)
+{
+    HSD_StateInvalidate(HSD_STATE_RENDER_MODE);
+    HSD_SetupPEMode(0, NULL);
+    gx_swap_defaults();
+}
+
+/* Melee's cached GX state no longer holds after MP4's draws. */
 static void gx_restore(void)
 {
     gx_swap_defaults();
@@ -529,7 +542,7 @@ static void draw_over_fighters(void)
     mp4_camera_view = view;
     mp4_camera_scale = MP4_SCALE;
     GXSetCurrentMtx(0);
-    gx_swap_defaults();
+    gx_enter();
     for (Hu3DCameraNo = 0, camera = Hu3DCamera; Hu3DCameraNo < HU3D_CAM_MAX; Hu3DCameraNo++, camera++) {
         s16 bit = (s16) (1 << Hu3DCameraNo);
         int drawn = 0;
@@ -610,13 +623,13 @@ static void draw(HSD_GObj* gobj, intptr_t pass)
     mp4_camera_scale = MP4_SCALE;
     match_view_save();
     mp4_gx_frame_begin();
+    gx_enter();
     /* what Hu3DPreProc does at the start of MP4's frame, without its EFB clear colour */
     for (i = 0, model = Hu3DData; i < HU3D_MODEL_MAX; i++, model++) {
         if (model->hsf != NULL) {
             model->attr &= ~HU3D_ATTR_MOT_EXEC;
         }
     }
-    gx_swap_defaults();
     over_hide(1);
     Hu3DExec();
     over_hide(0);
@@ -962,6 +975,7 @@ static void debug_draw(HSD_GObj* gobj, intptr_t pass)
     mp4_camera_view = view;
     match_view_save();
     mp4_gx_frame_begin();
+    gx_enter();
     for (i = 0, model = Hu3DData; i < HU3D_MODEL_MAX; i++, model++) {
         if (model->hsf != NULL) {
             model->attr &= ~HU3D_ATTR_MOT_EXEC;
