@@ -876,6 +876,7 @@ static s32 SeqMakeWord(SeqWork *work, char *str, s16 flags)
 /* DEBUG-TEMP MELEE_PARTY_MP4_FONTDUMP=1: each banner letter's layers and bitmaps, raw, in the log
  * (once per letter), to compare its colors with what the sprite pass draws. */
 extern void party_log(const char *fmt, ...);
+char* getenv(const char* name);
 
 static void SeqFontDump(char c, ANIMDATA *anim)
 {
