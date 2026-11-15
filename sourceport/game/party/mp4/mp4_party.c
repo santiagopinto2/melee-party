@@ -400,6 +400,151 @@ int mp4_draw_rearm(void)
     return 1;
 }
 
+/* Models drawn over the fighters (mp4_model_over_fighters). MP4's draw runs in the match camera's
+ * first loop over the links, and the fighters draw in its second (Camera_800311EC: fighters draw
+ * only while Camera_80031060() is 0), so a translucent MP4 model, which tests depth but does not
+ * write it, ends up under a fighter standing inside it. These models leave the main draw (their
+ * camera bits are cleared for it, so they still cast their shadows) and are drawn on their own
+ * in the second loop's pass 1, after every fighter. */
+#define OVER_MAX 8
+static s16 over_models[OVER_MAX];
+static u16 over_bits[OVER_MAX];
+static int over_count;
+static int over_armed;   /* the main draw ran; the over-the-fighters draw is still to come */
+extern HSFSCENE FogData;
+int Camera_80031060(void);   /* cm/camera.c: 1 in the match camera's first loop, 0 in its second */
+void InitVtxParm(HSFDATA* hsf);
+void EnvelopeProc(HSFDATA* hsf);
+void ShapeProc(HSFDATA* hsf);
+void ClusterProc(HU3DMODEL* model);
+void ClusterMotionExec(HU3DMODEL* model);
+
+void mp4_model_over_fighters(s16 model)
+{
+    int k;
+    if (model < 0 || model >= HU3D_MODEL_MAX) {
+        return;
+    }
+    for (k = 0; k < over_count; k++) {
+        if (over_models[k] == model) {
+            return;
+        }
+    }
+    if (over_count < OVER_MAX) {
+        over_models[over_count++] = model;
+    }
+}
+
+/* Around the main draw: out of it, then back with their camera bits. */
+static void over_hide(int hide)
+{
+    int k;
+    for (k = 0; k < over_count; k++) {
+        HU3DMODEL* m = &Hu3DData[over_models[k]];
+        if (m->hsf == NULL) {
+            continue;
+        }
+        if (hide) {
+            over_bits[k] = m->cameraBit;
+            m->cameraBit = 0;
+        } else {
+            m->cameraBit = over_bits[k];
+        }
+    }
+}
+
+/* What Hu3DExec does for a model in a layer (hsfman.c): its motions, then the draw. */
+static void over_draw_model(s16 i, HU3DMODEL* m)
+{
+    Mtx local, mtx;
+    if ((m->attr & HU3D_ATTR_MOT_EXEC) == 0) {
+        m->motAttr &= ~HU3D_MOTATTR;
+        if (m->motId != -1) {
+            Hu3DMotionExec(i, m->motId, m->motWork.time, 0);
+        }
+        if (m->motIdShift != -1) {
+            Hu3DSubMotionExec(i);
+        }
+        if (m->motIdOvl != -1) {
+            Hu3DMotionExec(i, m->motIdOvl, m->motOvlWork.time, 1);
+        }
+        if ((m->attr & HU3D_ATTR_CLUSTER_ON) != 0) {
+            ClusterMotionExec(m);
+        }
+        if (m->motIdShape != -1) {
+            Hu3DMotionExec(i, m->motIdShape, m->motShapeWork.time, m->motId == -1 ? 0 : 1);
+        }
+        if ((m->attr & (HU3D_ATTR_ENVELOPE_OFF | HU3D_ATTR_HOOKFUNC)) == 0 &&
+            (m->motAttr & HU3D_MOTATTR_PAUSE) == 0) {
+            InitVtxParm(m->hsf);
+            if (m->motIdShape != -1) {
+                ShapeProc(m->hsf);
+            }
+            if ((m->attr & HU3D_ATTR_CLUSTER_ON) != 0) {
+                ClusterProc(m);
+            }
+            if (m->hsf->cenvNum != 0) {
+                EnvelopeProc(m->hsf);
+            }
+        }
+        GXInvalidateVtxCache();
+        m->attr |= HU3D_ATTR_MOT_EXEC;
+    }
+    if ((m->attr & HU3D_ATTR_HOOK) == 0 && (m->scale.x != 0.0f || m->scale.y != 0.0f || m->scale.z != 0.0f)) {
+        mtxRot(local, m->rot.x, m->rot.y, m->rot.z);
+        mtxScaleCat(local, m->scale.x, m->scale.y, m->scale.z);
+        mtxTransCat(local, m->pos.x, m->pos.y, m->pos.z);
+        MTXConcat(Hu3DCameraMtx, local, mtx);
+        MTXConcat(mtx, m->mtx, mtx);
+        Hu3DDraw(m, mtx, &m->scale);
+    }
+}
+
+static void draw_over_fighters(void)
+{
+    HU3DCAMERA* camera;
+    Mtx view, shift;
+    int k;
+    HSD_CObjGetViewingMtx(HSD_CObjGetCurrent(), view);
+    MTXTrans(shift, world_offset.x, world_offset.y, world_offset.z);
+    MTXConcat(view, shift, view);
+    mp4_camera_view = view;
+    mp4_camera_scale = MP4_SCALE;
+    GXSetCurrentMtx(0);
+    for (Hu3DCameraNo = 0, camera = Hu3DCamera; Hu3DCameraNo < HU3D_CAM_MAX; Hu3DCameraNo++, camera++) {
+        s16 bit = (s16) (1 << Hu3DCameraNo);
+        int drawn = 0;
+        if (camera->fov == -1.0f || (mp4_view_cameras >= 0 && (mp4_view_cameras & bit) == 0)) {
+            continue;
+        }
+        GXInvalidateVtxCache();
+        Hu3DCameraBit = bit;
+        if (FogData.fogType != GX_FOG_NONE) {
+            GXSetFog(FogData.fogType, FogData.fogStart * mp4_camera_scale, FogData.fogEnd * mp4_camera_scale,
+                     mp4_fog_near, mp4_fog_far, FogData.color);
+        }
+        Hu3DDrawPreInit();
+        Hu3DCameraSet(Hu3DCameraNo, Hu3DCameraMtx);
+        MTXInvXpose(Hu3DCameraMtx, Hu3DCameraMtxXPose);
+        for (k = 0; k < over_count; k++) {
+            s16 i = over_models[k];
+            HU3DMODEL* m = &Hu3DData[i];
+            if (m->hsf != NULL && (m->attr & (HU3D_ATTR_DISPOFF | HU3D_ATTR_MOTION_OFF)) == 0 &&
+                (m->cameraBit & bit) != 0) {
+                over_draw_model(i, m);
+                drawn = 1;
+            }
+        }
+        if (drawn) {
+            Hu3DDrawPost();
+        }
+    }
+    WipeExecAlways();
+    mp4_camera_view = NULL;
+    mp4_camera_scale = 1.0f;
+    gx_restore();
+}
+
 static void draw(HSD_GObj* gobj, intptr_t pass)
 {
     HU3DMODEL* model;
@@ -407,7 +552,16 @@ static void draw(HSD_GObj* gobj, intptr_t pass)
     s16 i;
     (void) gobj;
     if (pass == 2) {
+        if (over_armed) {   /* a camera without the second loop: still once, and its wipe */
+            over_armed = 0;
+            draw_over_fighters();
+        }
         draw_armed = 1;
+        return;
+    }
+    if (pass == 1 && over_armed && Camera_80031060() == 0) {
+        over_armed = 0;
+        draw_over_fighters();
         return;
     }
     if (pass != 0 || !draw_armed) {
@@ -443,8 +597,13 @@ static void draw(HSD_GObj* gobj, intptr_t pass)
             model->attr &= ~HU3D_ATTR_MOT_EXEC;
         }
     }
+    over_hide(1);
     Hu3DExec();
-    WipeExecAlways();
+    over_hide(0);
+    over_armed = over_count > 0;
+    if (!over_armed) {
+        WipeExecAlways();   /* else after the models over the fighters, so it covers them all */
+    }
     mp4_camera_view = NULL;
     mp4_camera_scale = 1.0f;
     gx_restore();
@@ -464,6 +623,33 @@ static void draw_gobj_create(void)
 static s8 match_groups[PARTY_PLAYERS];
 static int triggers_apart_next;   /* mp4_match_triggers_apart, for the next match */
 static int triggers_apart;        /* this match's */
+
+/* The name MGSeqInitWin shows for a winner. Its MP4 "character" is the port (mp4_match_begin), so
+ * this is that port's Melee fighter, in the letters the seq font has (A-Z, 0-9, ! ? and space). */
+const char* mp4_winner_name(int winner)
+{
+    static const char* const names[CKind_Playable_Count] = {
+        [CKind_Captain] = "CAPTAIN FALCON", [CKind_Donkey] = "DONKEY KONG", [CKind_Fox] = "FOX",
+        [CKind_GameWatch] = "GAME AND WATCH", [CKind_Kirby] = "KIRBY", [CKind_Koopa] = "BOWSER",
+        [CKind_Link] = "LINK", [CKind_Luigi] = "LUIGI", [CKind_Mario] = "MARIO",
+        [CKind_Mars] = "MARTH", [CKind_Mewtwo] = "MEWTWO", [CKind_Ness] = "NESS",
+        [CKind_Peach] = "PEACH", [CKind_Pikachu] = "PIKACHU", [CKind_PopoNana] = "ICE CLIMBERS",
+        [CKind_Purin] = "JIGGLYPUFF", [CKind_Samus] = "SAMUS", [CKind_Yoshi] = "YOSHI",
+        [CKind_Zelda] = "ZELDA", [CKind_Seak] = "SHEIK", [CKind_Falco] = "FALCO",
+        [CKind_CLink] = "YOUNG LINK", [CKind_DrMario] = "DR MARIO", [CKind_Emblem] = "ROY",
+        [CKind_Pichu] = "PICHU", [CKind_Ganon] = "GANONDORF",
+    };
+    static const char* const ports[PARTY_PLAYERS] = { "P1", "P2", "P3", "P4" };
+    int ckind;
+    if (winner < 0 || winner >= PARTY_PLAYERS) {
+        return "PLAYER";
+    }
+    ckind = party.p[winner].ckind;
+    if (ckind >= 0 && ckind < CKind_Playable_Count && names[ckind] != NULL) {
+        return names[ckind];
+    }
+    return ports[winner];
+}
 
 void mp4_match_groups(const s8 groups[4])
 {
@@ -500,6 +686,8 @@ void mp4_match_begin(int overlay, float offset_x, float offset_y, float offset_z
     mp4_pad_reset();
     WipeInit(RenderMode);   /* a match that ended mid-wipe would block the next one's fade-in */
     mp4_boot_reset();
+    over_count = 0;   /* the last minigame's models over the fighters are gone with it */
+    over_armed = 0;
     /* a match that ended by a quit left its overlay in the history: the new one returns to boot */
     omovlhisidx = 0;
     omOvlCallEx((OMOVL) overlay, 1, 0, 0);

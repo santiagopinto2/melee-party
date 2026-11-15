@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include <melee/ft/fighter.h>
+#include <melee/ft/ftanim.h>
 #include <melee/ft/types.h>
 #include <melee/gm/gmvs.h>
 #include <melee/gr/forward.h>
@@ -31,6 +32,7 @@ int mp4_m412_player(int player, s16* state);
 
 static struct {
     int ended;
+    u8 frozen[PARTY_PLAYERS];   /* hit: frozen until the match ends (MP4 sets state 4 at the end) */
 } mb;
 
 static void mb_start(void)
@@ -66,14 +68,41 @@ static void mb_setup(StartMeleeData* start)
     start->rules.on_frame_start = mb_frame;
 }
 
-/* Fighter_procInput: the fighter follows its player; frozen in its snowman, it stands still. */
+/* Frozen in its snowman: MP4 pauses its player's model where the snowball caught it
+ * (HU3D_MOTATTR_PAUSE) and never moves it again, so the fighter keeps the pose it was hit in. Its
+ * motion state's input, animation and physics callbacks are cleared (nothing takes it out of that
+ * motion, as letting go of the stick would), its animation stops and it stands where it is. Every
+ * frame, in case anything changed its motion since. The snowman draws over it (mp4_party.c,
+ * mp4_model_over_fighters). */
+static void mb_freeze(Fighter* fp)
+{
+    fp->input_cb = NULL;
+    fp->anim_cb = NULL;
+    fp->phys_cb = NULL;
+    fp->self_vel.x = fp->self_vel.y = fp->self_vel.z = 0.0f;
+    fp->x8c_kb_vel.x = fp->x8c_kb_vel.y = fp->x8c_kb_vel.z = 0.0f;
+    fp->gr_vel = 0.0f;
+    ftAnim_SetAnimRate(fp->gobj, 0.0f);
+}
+
+/* Fighter_procInput: the fighter follows its player; frozen in its snowman, it stays still until
+ * the match ends (with Nana, for Ice Climbers). */
 static void mb_fighter_input(Fighter* fp)
 {
     s16 state;
-    if (!party_arena_input_begin(fp) || mb.ended) {
+    int slot = fp->player_idx;
+    int driven = party_arena_input_begin(fp);
+    if (slot < 0 || slot >= PARTY_PLAYERS) {
         return;
     }
-    if (mp4_m412_player(fp->player_idx, &state) && state == ST_FROZEN) {
+    if (driven && mp4_m412_player(slot, &state) && state == ST_FROZEN) {
+        mb.frozen[slot] = 1;
+    }
+    if (mb.frozen[slot]) {
+        mb_freeze(fp);
+        return;
+    }
+    if (!driven || mb.ended) {
         return;
     }
     party_arena_follow(fp, 0);

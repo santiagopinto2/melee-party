@@ -57,6 +57,10 @@ int mp4_player_pose(int player, float* x, float* y, float* z, float* yaw);
 s32 mp4_player_motion(int player);
 /* 1 while the game shows the player's model (0 once it hid it, as after a blast). */
 int mp4_player_shown(int player);
+/* A model the minigame wants drawn over the Melee fighters, from its setup (m412's snowmen, which
+ * a frozen fighter stands inside): MP4's draw runs before the fighters', so a translucent model
+ * would otherwise end up under a fighter inside it. It keeps its shadow; up to 8 a match. */
+void mp4_model_over_fighters(s16 model);
 /* party_arena.c, for a minigame's own walking code: the speed its player walks at this frame, in
  * MP4's units: the Melee fighter's while it drives the player, else the minigame's own. */
 float mp4_player_speed(int player, float speed);
