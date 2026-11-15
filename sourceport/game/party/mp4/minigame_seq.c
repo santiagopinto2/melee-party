@@ -872,7 +872,78 @@ static s32 SeqMakeWord(SeqWork *work, char *str, s16 flags)
     return grp_idx;
 }
 
+#ifdef TARGET_PC
+/* DEBUG-TEMP MELEE_PARTY_MP4_FONTDUMP=1: each banner letter's layers and bitmaps, raw, in the log
+ * (once per letter), to compare its colors with what the sprite pass draws. */
+extern void party_log(const char *fmt, ...);
+
+static void SeqFontDump(char c, ANIMDATA *anim)
+{
+    static char seen[256];
+    static int enabled = -1;
+    s32 i;
+    if (enabled < 0) {
+        const char *v = getenv("MELEE_PARTY_MP4_FONTDUMP");
+        enabled = v != NULL && *v && *v != '0';
+    }
+    if (!enabled || anim == NULL || seen[(u8)c]) {
+        return;
+    }
+    seen[(u8)c] = 1;
+    party_log("fontdump: '%c' banks %d pats %d bmps %d", c, anim->bankNum, anim->patNum, anim->bmpNum);
+    for (i = 0; i < anim->patNum; i++) {
+        ANIMPAT *pat = &anim->pat[i];
+        s32 l;
+        party_log("fontdump: '%c' pat %d layers %d center %d %d size %d %d", c, (int)i, pat->layerNum,
+            pat->centerX, pat->centerY, pat->sizeX, pat->sizeY);
+        for (l = 0; l < pat->layerNum; l++) {
+            ANIMLAYER *ly = &pat->layer[l];
+            party_log("fontdump: '%c' pat %d layer %d bmp %d alpha %d flip %d start %d %d size %d %d", c, (int)i,
+                (int)l, ly->bmpNo, ly->alpha, ly->flip, ly->startX, ly->startY, ly->sizeX, ly->sizeY);
+        }
+    }
+    for (i = 0; i < anim->bmpNum; i++) {
+        ANIMBMP *bmp = &anim->bmp[i];
+        u32 len[2];
+        const u8 *src[2];
+        s32 k;
+        party_log("fontdump: '%c' bmp %d fmt 0x%02x pix %d size %d %d pal %d data %u", c, (int)i, bmp->dataFmt,
+            bmp->pixSize, bmp->sizeX, bmp->sizeY, bmp->palNum, (unsigned)bmp->dataSize);
+        src[0] = bmp->palData;
+        len[0] = bmp->palData ? (u32)bmp->palNum * 2 : 0;
+        src[1] = bmp->data;
+        len[1] = bmp->data ? bmp->dataSize : 0;
+        for (k = 0; k < 2; k++) {
+            u32 off;
+            for (off = 0; off < len[k] && off < 65536; off += 96) {
+                char hex[200];
+                u32 n = len[k] - off < 96 ? len[k] - off : 96;
+                u32 b;
+                for (b = 0; b < n; b++) {
+                    static const char digits[] = "0123456789abcdef";
+                    hex[b * 2] = digits[src[k][off + b] >> 4];
+                    hex[b * 2 + 1] = digits[src[k][off + b] & 15];
+                }
+                hex[n * 2] = '\0';
+                party_log("fontdump: '%c' %d %s %u %s", c, (int)i, k ? "tex" : "pal", (unsigned)off, hex);
+            }
+        }
+    }
+}
+#endif
+
+static ANIMDATA *SeqLoadFontCharRaw(char *str, s16 flags);
+
 static ANIMDATA *SeqLoadFontChar(char *str, s16 flags)
+{
+    ANIMDATA *anim = SeqLoadFontCharRaw(str, flags);
+#ifdef TARGET_PC
+    SeqFontDump(*str, anim);
+#endif
+    return anim;
+}
+
+static ANIMDATA *SeqLoadFontCharRaw(char *str, s16 flags)
 {
     s32 data_num;
     s16 id;
@@ -2725,6 +2796,113 @@ static s16 winnerNameW[8];
 #define GET_LANG_IDX() ((seqLanguage == 0) ? 0 : 1)
 #define GET_WIN_KANAF() ((seqLanguage == 0) ? 1 : 0)
 
+#ifdef TARGET_PC
+/* Melee Party: a winner is a Melee fighter, so "X WON!" names the fighter (mp4_winner_name) and
+ * lays the words out from their real widths, not from MP4's list of long names (7, 10, 13). */
+extern const char *mp4_winner_name(int winner);
+
+static float winPos[5][2];   /* each word's place from the center: MGSeqInitWin sets it, the
+                              * update puts it back after the landing shake */
+
+static float SeqWinNameW(const char *name)
+{
+    float w = 0.0f;
+    for (; *name != '\0'; name++) {
+        w += (*name == ' ') ? 30.0f : 50.0f;
+    }
+    return w;
+}
+
+static s32 SeqWinLayout(SeqWork *work, va_list params)
+{
+    float name_w[4];
+    float max_w = 0.0f;
+    float scale = 0.75f;
+    s32 num_winners = 0;
+    s32 column = 0;
+    s32 i;
+    s32 j;
+    for (j = 0; j < 4; j++) {
+        int winner = va_arg(params, int);
+        const char *name;
+        s16 word_grp;
+        float x;
+        if (winner < 0) {
+            continue;
+        }
+        name = mp4_winner_name(winner);
+        word_grp = SeqMakeWord(work, (char *)name, 0);
+        if (word_grp < 0) {
+            continue;
+        }
+        name_w[num_winners] = SeqWinNameW(name);
+        x = 0.0f;
+        for (i = 0; i < work->word_len && name[i] != '\0'; i++) {
+            HuSprPosSet(work->spr_grp[word_grp], i, 25.0f + (x - (0.5f * name_w[num_winners])), 0.0f);
+            HuSprAttrSet(work->spr_grp[word_grp], i, HUSPR_ATTR_LINEAR);
+            x += (name[i] == ' ') ? 30.0f : 50.0f;
+        }
+        winnerNameW[num_winners + 1] = name_w[num_winners];
+        if (name_w[num_winners] > max_w) {
+            max_w = name_w[num_winners];
+        }
+        num_winners++;
+    }
+    if (num_winners == 0) {
+        return 0;
+    }
+    /* Names squeeze sideways (win_scale) to fit their slot: beside WON! for one winner, half
+     * the screen for a side slot of MP4's grid, the whole width for a centered one. Too
+     * squeezed, and every word goes in a column instead, one per line. */
+    if (num_winners == 1) {
+        if (312.0f < name_w[0] * scale) {
+            scale = 312.0f / name_w[0];
+        }
+        column = scale < 0.6f;
+        if (!column) {
+            float total = 32.0f + winnerNameW[0] + (name_w[0] * scale);
+            winPos[0][0] = (total / 2.0f) - (winnerNameW[0] / 2.0f);
+            winPos[1][0] = -(total / 2.0f) + ((name_w[0] * scale) / 2.0f);
+            winPos[0][1] = winPos[1][1] = 0.0f;
+        }
+    }
+    else {
+        for (j = 1; j <= num_winners; j++) {
+            float room = (abs(winPosOfs[num_winners - 1][j][0]) == 144) ? 240.0f : 544.0f;
+            if (room < name_w[j - 1] * scale) {
+                scale = room / name_w[j - 1];
+            }
+        }
+        column = scale < 0.5f;
+        if (!column) {
+            for (j = 0; j <= num_winners; j++) {
+                s16 ofs = winPosOfs[num_winners - 1][j][0];
+                winPos[j][0] = 0.0f;
+                if (j > 0 && abs(ofs) == 144) {
+                    float half = 16.0f + ((name_w[j - 1] * scale) / 2.0f);
+                    winPos[j][0] = (half > 112.0f) ? half : 112.0f;
+                    if (ofs < 0) {
+                        winPos[j][0] = -winPos[j][0];
+                    }
+                }
+                winPos[j][1] = winPosOfs[num_winners - 1][j][1];
+            }
+        }
+    }
+    if (column) {
+        scale = (544.0f < max_w * 0.75f) ? 544.0f / max_w : 0.75f;
+        for (j = 0; j <= num_winners; j++) {
+            /* the names from the top, WON! on the last line */
+            s32 row = (j == 0) ? num_winners : j - 1;
+            winPos[j][0] = 0.0f;
+            winPos[j][1] = (row - (num_winners / 2.0f)) * 70.0f;
+        }
+    }
+    work->win_scale = scale;
+    return num_winners;
+}
+#endif
+
 s32 MGSeqInitWin(SeqWork *work, va_list params)
 {
     int win_type = va_arg(params, int);
@@ -2756,6 +2934,29 @@ s32 MGSeqInitWin(SeqWork *work, va_list params)
         HuSprPosSet(work->spr_grp[word_grp], i, 25.0f + ((i * 50) - (0.5f * (work->word_len * 50))), 0.0f);
         HuSprAttrSet(work->spr_grp[word_grp], i, HUSPR_ATTR_LINEAR);
     }
+#endif
+#ifdef TARGET_PC
+    num_winners = SeqWinLayout(work, params);
+    if (num_winners == 0) {
+        return 0;
+    }
+    work->state = 0;
+    work->word_len = num_winners + 1;
+    work->angle = 0.0f;
+    work->type = 0;
+    for (j = 0; j < num_winners + 1; j++) {
+        HuSprGrpPosSet(work->spr_grp[j], HU_DISP_CENTERX + winPos[j][0], HU_DISP_CENTERY + winPos[j][1]);
+    }
+    if (seqPauseF) {
+        work->type = 1;
+        for (j = 0; j < num_winners + 1; j++) {
+            HuSprAttrSet(work->spr_grp[j], 0, HUSPR_ATTR_DISPOFF);
+        }
+    }
+    else {
+        work->param[0] = 3;
+    }
+    return 1;
 #endif
     num_winners = 0;
 #if !VERSION_JP
@@ -2998,6 +3199,11 @@ s32 MGSeqUpdateWin(SeqWork *work)
                         else {
                             ofs[0] = ofs[1] = 0.0f;
                         }
+#ifdef TARGET_PC
+                        HuSprGrpPosSet(work->spr_grp[idx], (HU_DISP_CENTERX + winPos[idx][0]) + ofs[0],
+                            ofs[1] + (HU_DISP_CENTERY + winPos[idx][1]));
+                        continue;
+#endif
                         if (work->word_len == 2) {
                             pos_x = winnerNameW[1] + winnerNameW[0] + 32;
                             pos_x = (((HU_DISP_WIDTH - pos_x) / 2.0f) + (winnerNameW[1] / 2)) - HU_DISP_CENTERX;
