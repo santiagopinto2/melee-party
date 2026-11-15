@@ -375,8 +375,26 @@ void mp4_camera_set(s32 camNo, Mtx out)
 }
 
 /* Melee's cached GX state no longer holds after MP4's draws. */
+/* The TEV swap tables at GX's defaults and every stage on table 0 (the colors as they are). MP4
+ * draws as if nothing else changed them, but Melee's draw before it leaves stages swapped (a TObj
+ * with its own tex_swap), which turned the RGB5A3 seq letters gray: their red channel in all
+ * three (START!, FINISH!, "X WON!"). hsfdraw.c rewrites tables 1 and 2 for its own materials, so
+ * gx_restore puts GX's defaults back for Melee too. */
+static void gx_swap_defaults(void)
+{
+    int stage;
+    GXSetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
+    GXSetTevSwapModeTable(GX_TEV_SWAP1, GX_CH_RED, GX_CH_RED, GX_CH_RED, GX_CH_ALPHA);
+    GXSetTevSwapModeTable(GX_TEV_SWAP2, GX_CH_GREEN, GX_CH_GREEN, GX_CH_GREEN, GX_CH_ALPHA);
+    GXSetTevSwapModeTable(GX_TEV_SWAP3, GX_CH_BLUE, GX_CH_BLUE, GX_CH_BLUE, GX_CH_ALPHA);
+    for (stage = GX_TEVSTAGE0; stage < GX_MAX_TEVSTAGE; stage++) {
+        GXSetTevSwapMode((GXTevStageID) stage, GX_TEV_SWAP0, GX_TEV_SWAP0);
+    }
+}
+
 static void gx_restore(void)
 {
+    gx_swap_defaults();
     mp4_camera_restore();
     GXSetCurrentMtx(0);
     GXInvalidateVtxCache();
@@ -511,6 +529,7 @@ static void draw_over_fighters(void)
     mp4_camera_view = view;
     mp4_camera_scale = MP4_SCALE;
     GXSetCurrentMtx(0);
+    gx_swap_defaults();
     for (Hu3DCameraNo = 0, camera = Hu3DCamera; Hu3DCameraNo < HU3D_CAM_MAX; Hu3DCameraNo++, camera++) {
         s16 bit = (s16) (1 << Hu3DCameraNo);
         int drawn = 0;
@@ -597,6 +616,7 @@ static void draw(HSD_GObj* gobj, intptr_t pass)
             model->attr &= ~HU3D_ATTR_MOT_EXEC;
         }
     }
+    gx_swap_defaults();
     over_hide(1);
     Hu3DExec();
     over_hide(0);
