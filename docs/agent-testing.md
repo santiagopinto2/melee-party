@@ -133,6 +133,10 @@ grep '\[party\]' build-clangcl/port/melee_port.log | grep -v reaches
 
 With a fixed `MELEE_PARTY_SEED` the log is the same on every run, so it can be diffed before and
 after a change. `MELEE_PARTY_MINIGAME=<id>` plays one minigame over and over.
+`MELEE_PARTY_FIGHTERS=3,1,25,14` picks the CPUs' fighters, one CharacterKind number per slot
+(-1 or nothing keeps the random pick). Use it to test a fighter on purpose: long names in
+"X WON!" (1 Donkey Kong, 3 Mr. Game & Watch), or a fighter that draws differently (Mr. Game &
+Watch's outline pass once turned MP4's whole scene off).
 
 ### Seeing it: frame captures
 
