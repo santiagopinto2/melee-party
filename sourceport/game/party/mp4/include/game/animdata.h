@@ -65,6 +65,7 @@ typedef struct anim_tex_data {
     bool tex_initialized;
     bool tlut_initialized;
     GXTexObj tex_obj;
+    u32 tex_obj_spill[2];       /* see GXTexObj in port/mp4_port.h */
     GXTlutObj tlut_obj;
 } AnimTexData;
 #endif

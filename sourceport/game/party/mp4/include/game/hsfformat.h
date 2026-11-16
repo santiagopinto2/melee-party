@@ -202,7 +202,9 @@ typedef struct HsfAttribute_s {
     bool tlut_initialized;
     bool tlut8000_initialized;
     GXTexObj tex_obj;
+    u32 tex_obj_spill[2];       /* see GXTexObj in port/mp4_port.h */
     GXTexObj tex8000_obj;
+    u32 tex8000_obj_spill[2];
     GXTlutObj tlut_obj;
     GXTlutObj tlut8000_obj; // used in dataFmt 11
 #endif

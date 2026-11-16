@@ -375,10 +375,9 @@ void mp4_camera_set(s32 camNo, Mtx out)
 }
 
 /* The TEV swap tables at GX's defaults and every stage on table 0 (the colors as they are). MP4
- * draws as if nothing else changed them, but Melee's draw before it leaves stages swapped (a TObj
- * with its own tex_swap), which turned the RGB5A3 seq letters gray: their red channel in all
- * three (START!, FINISH!, "X WON!"). hsfdraw.c rewrites tables 1 and 2 for its own materials, so
- * gx_restore puts GX's defaults back for Melee too. */
+ * draws as if nothing else changed them, but a Melee TObj with its own tex_swap can leave a stage
+ * swapped. hsfdraw.c rewrites tables 1 and 2 for its own materials, so gx_restore puts GX's
+ * defaults back for Melee too. */
 static void gx_swap_defaults(void)
 {
     int stage;
