@@ -441,6 +441,10 @@ static s16 over_models[OVER_MAX];
 static u16 over_bits[OVER_MAX];
 static int over_count;
 static int over_armed;   /* the main draw ran; the over-the-fighters draw is still to come */
+/* MP4's HUD, its screen-wide sprite pass (Hu3DExec's HuSprExec(0)) with the START!, FINISH!, and
+ * "X WON!" banners, ends MP4's frame over everything it drew. Here it waits for the same pass as
+ * the models above, so the fighters (on the winners' podium, say) don't cover it either. */
+static int hud_late;
 extern HSFSCENE FogData;
 int Camera_80031060(void);   /* cm/camera.c: 1 in the match camera's first loop, 0 in its second */
 void InitVtxParm(HSFDATA* hsf);
@@ -545,7 +549,7 @@ static void draw_over_fighters(void)
     for (Hu3DCameraNo = 0, camera = Hu3DCamera; Hu3DCameraNo < HU3D_CAM_MAX; Hu3DCameraNo++, camera++) {
         s16 bit = (s16) (1 << Hu3DCameraNo);
         int drawn = 0;
-        if (camera->fov == -1.0f || (mp4_view_cameras >= 0 && (mp4_view_cameras & bit) == 0)) {
+        if (over_count == 0 || camera->fov == -1.0f || (mp4_view_cameras >= 0 && (mp4_view_cameras & bit) == 0)) {
             continue;
         }
         GXInvalidateVtxCache();
@@ -569,6 +573,13 @@ static void draw_over_fighters(void)
         if (drawn) {
             Hu3DDrawPost();
         }
+    }
+    if (hud_late) {   /* as at the end of Hu3DExec */
+        hud_late = 0;
+        mp4_hud_full = 1;
+        HuSprDispInit();
+        HuSprExec(0);
+        mp4_hud_full = 0;
     }
     WipeExecAlways();
     mp4_camera_view = NULL;
@@ -630,12 +641,12 @@ static void draw(HSD_GObj* gobj, intptr_t pass)
         }
     }
     over_hide(1);
+    hud_late = mp4_hud_pass;
+    mp4_hud_pass = 0;
     Hu3DExec();
+    mp4_hud_pass = hud_late;
     over_hide(0);
-    over_armed = over_count > 0;
-    if (!over_armed) {
-        WipeExecAlways();   /* else after the models over the fighters, so it covers them all */
-    }
+    over_armed = 1;   /* the HUD, the models over the fighters, and the wipe, after the fighters */
     mp4_camera_view = NULL;
     mp4_camera_scale = 1.0f;
     gx_restore();
