@@ -16,7 +16,7 @@
 #include "game/wipe.h"
 #include "math.h"
 #include "version.h"
-#include "mp4.h"   /* Melee Party: mp4_player_speed */
+#include "mp4.h"   /* Melee Party: mp4_player_speed, mp4_model_over_fighters */
 
 // bss
 s16 lbl_1_bss_7A0;
@@ -444,6 +444,7 @@ void fn_1_8BC(void)
         CharMotionDataClose(lbl_1_data_0[GWPlayerCfg[var_r28].character]);
         var_r27 = HuDataSelHeapReadNum(DATA_MAKE_NUM(DATADIR_M412, 0x1C), MEMORY_DEFAULT_NUM, HEAP_DATA);
         temp_r30->unk6 = var_r29 = Hu3DModelCreate(var_r27);
+        mp4_model_over_fighters(var_r29);   /* Melee Party: the snowman draws over its fighter */
         Hu3DModelLayerSet(var_r29, 1);
         Hu3DModelAttrSet(var_r29, HU3D_MOTATTR_LOOP);
         Hu3DModelAttrSet(var_r29, HU3D_ATTR_DISPOFF);

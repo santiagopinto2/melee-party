@@ -121,13 +121,15 @@ export WINEPREFIX="$HOME/.cache/wine-melee" WINEDEBUG=-all WINEARCH=win64
 export WINEDLLOVERRIDES="d3dcompiler_47=n"
 sys32="$WINEPREFIX/drive_c/windows/system32"
 [ -d "$sys32" ] || xvfb-run -a wineboot -i > "$out/wine.log" 2>&1
-if [ ! -f "$sys32/d3dcompiler_47.dll" ]; then
+# Wine's own stand-in has the same name ("Wine builtin DLL" in its header): only Microsoft's counts
+native_d3dc() { [ -f "$sys32/d3dcompiler_47.dll" ] && ! head -c 128 "$sys32/d3dcompiler_47.dll" | grep -aq 'Wine builtin DLL'; }
+if ! native_d3dc; then
   # winetricks copies the DLL, then fails on a 32-bit registry step this 64-bit-only Wine cannot
   # run; the override comes from WINEDLLOVERRIDES anyway, so the DLL being there is what counts
   curl -sL -o /tmp/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && chmod +x /tmp/winetricks
   xvfb-run -a /tmp/winetricks -q d3dcompiler_47 >> "$out/wine.log" 2>&1
 fi
-[ -f "$sys32/d3dcompiler_47.dll" ] && say "d3dcompiler_47: in the prefix" || { say "d3dcompiler_47: missing (wine.log)"; fail=1; }
+native_d3dc && say "d3dcompiler_47: in the prefix" || { say "d3dcompiler_47: missing (wine.log)"; fail=1; }
 dxvk_dir=$(ls -d "$cache"/dxvk-*/ 2>/dev/null | tail -1)
 if [ -n "$dxvk_dir" ] && [ ! -f "$dxvk_dir/x64/d3d11.dll" ]; then rm -rf "$dxvk_dir"; dxvk_dir=""; fi   # cut off mid-unpack
 if [ -z "$dxvk_dir" ]; then

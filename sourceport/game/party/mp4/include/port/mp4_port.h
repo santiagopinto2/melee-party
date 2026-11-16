@@ -11,6 +11,14 @@
 
 #include <stdbool.h>
 
+/* GXTexObj, from Melee's Dolphin SDK headers, is 32 bytes, but the SDK's GXTexture.c fills it as
+ * __GXTexObjInt, whose void* userData makes it 36 on a 64-bit build: GXInitTexObj and
+ * GXInitTexObjCI write 4 bytes past the object. MP4's cached texture objects (AnimTexData,
+ * HSFATTRIBUTE) are followed by their palettes' GXTlutObj, so the texture's init overwrote the
+ * palette's format with 0 (IA8): from the second draw on, every C8 sprite with an RGB5A3
+ * palette came out gray and dark (the START!, FINISH!, and "X WON!" letters). Those structs keep
+ * a spill area after each GXTexObj. */
+
 /* Melee's headers take TRUE and FALSE away (Runtime/platform.h); MP4's code uses them. */
 #undef TRUE
 #undef FALSE

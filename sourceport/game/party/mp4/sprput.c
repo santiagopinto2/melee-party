@@ -44,6 +44,12 @@ void HuSprDispInit(void)
     GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
     GXSetCullMode(GX_CULL_NONE);
     GXSetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
+#ifdef TARGET_PC
+    /* a 3D material drawn before (hsfdraw.c's swapped textures) or Melee's own draw can leave the
+     * sprite's two stages swapped: the colors as they are (mp4_party.c, gx_swap_defaults) */
+    GXSetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
+    GXSetTevSwapMode(GX_TEVSTAGE1, GX_TEV_SWAP0, GX_TEV_SWAP0);
+#endif
 }
 
 void HuSprDisp(HUSPRITE *sprite)
